@@ -6,7 +6,7 @@ Go backend parsing official GTFS and GTFS-RT streams from START Romagna
 
 ```env
 START_GTFS_ROOT=
-START_GTFS-RT_ROOT=
+START_GTFS_RT_ROOT=
 WEB_AUTH_USER=
 WEB_AUTH_PASSWORD=
 
