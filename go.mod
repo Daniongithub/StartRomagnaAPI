@@ -1,3 +1,3 @@
-module github.com/Daniongithub/StartRomagnaAPI
+module StartRomagnaAPI
 
 go 1.24.4
