@@ -17,3 +17,21 @@ DB_PASSWORD=
 
 PORT=":5005"
 ```
+
+## Features roadmap
+
+### Data importer
+
+- [X] Load config env
+- [ ] Fetch static GTFS
+- [ ] Store static GTFS
+- [ ] Fetch GTFS-RT
+- [ ] Store GTFS-RT
+
+### HTTP endpoints
+
+- [ ] CORS HTTP Headers
+- [ ] Handlers setup
+- [ ] GET /busesinservice
+- [ ] GET /busesinservice/{id} separazione dei bacini di FC, RA, RN.
+- [ ] To be defined...
