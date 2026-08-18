@@ -12,7 +12,18 @@ func main() {
 	config.LoadConf()
 
 	mux := http.NewServeMux()
+	//Redirect root to healthcheck
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			http.Redirect(w, r, "/health", http.StatusFound)
+			return
+		}
+
+		http.NotFound(w, r)
+	})
+
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
+	mux.HandleFunc("GET /test", handler.GTFSHandler)
 
 	//Listen on port and start API
 	fmt.Println("Server started on port " + config.PORT)
