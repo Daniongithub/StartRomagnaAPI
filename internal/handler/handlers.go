@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 
 	gtfs "github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 	"google.golang.org/protobuf/proto"
@@ -81,8 +82,8 @@ func GTFSHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func VehiclesHandler(w http.ResponseWriter, r *http.Request) {
-	url := config.START_GTFS_RT_ROOT + "/start-gtfs-rt-vehicle-positions-ra.pb"
+func TripsHandler(w http.ResponseWriter, r *http.Request) {
+	url := config.START_GTFS_RT_ROOT + "/start-gtfs-rt-trip-updates-ra.pb"
 
 	req, err := auth.BasicAuth("GET", url, nil)
 	if err != nil {
@@ -115,35 +116,44 @@ func VehiclesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type Vehicle struct {
-		ID        string  `json:"id"`
-		Label     string  `json:"label"`
-		TripID    string  `json:"trip_id"`
-		StartTime string  `json:"start_time"`
-		StartDate string  `json:"start_date"`
-		Latitude  float32 `json:"latitude"`
-		Longitude float32 `json:"longitude"`
+	type Trip struct {
+		ID                   string `json:"id"`
+		VehicleID            string `json:"vehicle_id"`
+		VehicleLabel         string `json:"vehicle_label"`
+		TripID               string `json:"trip_id"`
+		RouteID              string `json:"route_id"`
+		StartTime            string `json:"start_time"`
+		StartDate            string `json:"start_date"`
+		ScheduleRelationship string `json:"schedule_relationship"`
 	}
 
-	vehicles := make([]Vehicle, 0)
+	trips := make([]Trip, 0)
 
 	for _, entity := range feed.Entity {
-		v := entity.GetVehicle()
-		if v == nil {
+		tu := entity.GetTripUpdate()
+		if tu == nil {
 			continue
 		}
 
-		vehicles = append(vehicles, Vehicle{
-			ID:        v.GetVehicle().GetId(),
-			Label:     v.GetVehicle().GetLabel(),
-			TripID:    v.GetTrip().GetTripId(),
-			StartTime: v.GetTrip().GetStartTime(),
-			StartDate: v.GetTrip().GetStartDate(),
-			Latitude:  v.GetPosition().GetLatitude(),
-			Longitude: v.GetPosition().GetLongitude(),
+		trip := tu.GetTrip()
+		vehicle := tu.GetVehicle()
+
+		trips = append(trips, Trip{
+			ID:                   entity.GetId(),
+			VehicleID:            vehicle.GetId(),
+			VehicleLabel:         vehicle.GetLabel(),
+			TripID:               trip.GetTripId(),
+			RouteID:              trip.GetRouteId(),
+			StartTime:            trip.GetStartTime(),
+			StartDate:            trip.GetStartDate(),
+			ScheduleRelationship: trip.GetScheduleRelationship().String(),
 		})
 	}
 
+	sort.Slice(trips, func(i, j int) bool {
+		return trips[i].VehicleLabel < trips[j].VehicleLabel
+	})
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(vehicles)
+	json.NewEncoder(w).Encode(trips)
 }

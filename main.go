@@ -24,7 +24,7 @@ func main() {
 
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
 	mux.HandleFunc("GET /test", handler.GTFSHandler)
-	mux.HandleFunc("GET /realtime", handler.VehiclesHandler)
+	mux.HandleFunc("GET /realtime", handler.TripsHandler)
 
 	//Listen on port and start API
 	fmt.Println("Server started on port " + config.PORT)
