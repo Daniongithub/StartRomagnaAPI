@@ -3,14 +3,15 @@ package handler
 import (
 	"StartRomagnaAPI/config"
 	"StartRomagnaAPI/internal/auth"
+	"StartRomagnaAPI/internal/repository"
 	"archive/zip"
 	"bytes"
 	"encoding/csv"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"sort"
+	"strings"
 
 	gtfs "github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 	"google.golang.org/protobuf/proto"
@@ -26,60 +27,10 @@ func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 * Very experimental handler: using for testing purpose only
 **/
 func GTFSHandler(w http.ResponseWriter, r *http.Request) {
-	url := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Ravenna.zip"
+	results := repository.GetTrips()
 
-	req, err := auth.BasicAuth("GET", url, nil)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
-		return
-	}
-	defer resp.Body.Close()
-
-	w.WriteHeader(resp.StatusCode)
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-
-	reader := bytes.NewReader(body)
-
-	zipReader, err := zip.NewReader(reader, int64(len(body)))
-	if err != nil {
-		return
-	}
-
-	for _, file := range zipReader.File {
-		if file.Name != "trips.txt" {
-			continue
-		}
-
-		rc, err := file.Open()
-		if err != nil {
-			return
-		}
-		defer rc.Close()
-
-		csvReader := csv.NewReader(rc)
-
-		for {
-			record, err := csvReader.Read()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return
-			}
-
-			fmt.Println(record)
-		}
-	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
 }
 
 func TripsHandler(w http.ResponseWriter, r *http.Request) {
@@ -156,4 +107,64 @@ func TripsHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(trips)
+}
+
+
+func pasteBin(w http.ResponseWriter, r *http.Request) {
+		url := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Ravenna.zip"
+
+	req, err := auth.BasicAuth("GET", url, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	w.WriteHeader(resp.StatusCode)
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	reader := bytes.NewReader(body)
+
+	zipReader, err := zip.NewReader(reader, int64(len(body)))
+	if err != nil {
+		return
+	}
+
+	var records []string
+
+	for _, file := range zipReader.File {
+		if file.Name != "trips.txt" {
+			continue
+		}
+
+		rc, err := file.Open()
+		if err != nil {
+			return
+		}
+		defer rc.Close()
+
+		csvReader := csv.NewReader(rc)
+
+		for {
+			record, err := csvReader.Read()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return
+			}
+
+			records = append(records, strings.Join(record, " "))
+		}
+	}
 }

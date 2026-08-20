@@ -3,6 +3,7 @@ package main
 import (
 	"StartRomagnaAPI/config"
 	"StartRomagnaAPI/internal/handler"
+	"StartRomagnaAPI/internal/repository"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 
 func main() {
 	config.LoadConf()
+	repository.InitContent()
 
 	mux := http.NewServeMux()
 	//Redirect root to healthcheck
