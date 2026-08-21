@@ -2,19 +2,16 @@ package handler
 
 import (
 	"StartRomagnaAPI/config"
-	"StartRomagnaAPI/internal/auth"
+	//"StartRomagnaAPI/internal/auth"
+	"StartRomagnaAPI/internal/gtfs"
 	"StartRomagnaAPI/internal/repository"
-	"archive/zip"
-	"bytes"
-	"encoding/csv"
 	"encoding/json"
-	"io"
+	"fmt"
+	//"io"
 	"net/http"
-	"sort"
-	"strings"
+	//"sort"
 
-	gtfs "github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
-	"google.golang.org/protobuf/proto"
+	//"google.golang.org/protobuf/proto"
 )
 
 func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,14 +23,14 @@ func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 /**
 * Very experimental handler: using for testing purpose only
 **/
-func GTFSHandler(w http.ResponseWriter, r *http.Request) {
+func TripsHandler(w http.ResponseWriter, r *http.Request) {
 	results := repository.GetTrips()
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
-
-func TripsHandler(w http.ResponseWriter, r *http.Request) {
+/*
+func RTHandler(w http.ResponseWriter, r *http.Request) {
 	url := config.START_GTFS_RT_ROOT + "/start-gtfs-rt-trip-updates-ra.pb"
 
 	req, err := auth.BasicAuth("GET", url, nil)
@@ -107,64 +104,30 @@ func TripsHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(trips)
-}
+}*/
 
 
-func pasteBin(w http.ResponseWriter, r *http.Request) {
-		url := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Ravenna.zip"
+func PasteBin(w http.ResponseWriter, r *http.Request) {
+	//urlRA := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Ravenna.zip"
+	urlFC := config.START_GTFS_ROOT + "/AVM/GTFSStatic_FOCE.zip"
+	urlRN := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Rimini.zip"
 
-	req, err := auth.BasicAuth("GET", url, nil)
+	/*feedRA, err := gtfs.GetStaticFeed(urlRA)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	resp, err := http.DefaultClient.Do(req)
+		fmt.Println("TripsHandler error reading feed:", err)
+	}*/
+	feedFC, err := gtfs.GetStaticFeed(urlFC)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
-		return
+		fmt.Println("TripsHandler error reading feed:", err)
 	}
-	defer resp.Body.Close()
-
-	w.WriteHeader(resp.StatusCode)
-
-	body, err := io.ReadAll(resp.Body)
+	feedRN, err := gtfs.GetStaticFeed(urlRN)
 	if err != nil {
-		return
+		fmt.Println("TripsHandler error reading feed:", err)
 	}
-
-	reader := bytes.NewReader(body)
-
-	zipReader, err := zip.NewReader(reader, int64(len(body)))
-	if err != nil {
-		return
-	}
-
-	var records []string
-
-	for _, file := range zipReader.File {
-		if file.Name != "trips.txt" {
-			continue
-		}
-
-		rc, err := file.Open()
-		if err != nil {
-			return
-		}
-		defer rc.Close()
-
-		csvReader := csv.NewReader(rc)
-
-		for {
-			record, err := csvReader.Read()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return
-			}
-
-			records = append(records, strings.Join(record, " "))
-		}
-	}
+	out := []string{feedFC.Trips["F_R956592"].Route.Id, feedRN.Trips["RN4093119"].Route.Id}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(out)
+	//fmt.Println(feedRA.Trips["RA2889361"].Route.Id)
+	//fmt.Println(feedFC.Trips["F_R956592"].Route.Id)
+	//fmt.Println(feedRN.Trips["RN4093119"].Route.Id)
 }
