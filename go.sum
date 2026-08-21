@@ -1,8 +1,10 @@
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
 filippo.io/edwards25519 v1.2.0 h1:crnVqOiS4jqYleHd9vaKZ+HKtHfllngJIiOpNpoJsjo=
 filippo.io/edwards25519 v1.2.0/go.mod h1:xzAOLCNug/yB62zG1bQ8uziwrIqIuxhctzJT18Q77mc=
-github.com/Leocraft1/gtfsparser-with-reader v0.0.0-20260821090527-a385a453cd3f h1:ZfvFAEjCOrKo8X1PPgf08vXSGwheyJ7Ndb48kKdqAjE=
-github.com/Leocraft1/gtfsparser-with-reader v0.0.0-20260821090527-a385a453cd3f/go.mod h1:AYXkziG5auCuzxKf2HwJFT37otfjwRcd5gbMbrVCNw0=
+github.com/Leocraft1/gtfsparser-with-reader v0.0.0-20260821101429-138887962e9b h1:WCGlXkDWBSxQ+LZZu7cYLzoNnMMAeBws59Q6NNGfwR0=
+github.com/Leocraft1/gtfsparser-with-reader v0.0.0-20260821101429-138887962e9b/go.mod h1:AYXkziG5auCuzxKf2HwJFT37otfjwRcd5gbMbrVCNw0=
+github.com/Leocraft1/gtfsparser-with-reader v1.1.1 h1:S0RNE9AuwBCR5pTy4tSzXFHbUZgP/4bbFKf2IzcbsQ4=
+github.com/Leocraft1/gtfsparser-with-reader v1.1.1/go.mod h1:AYXkziG5auCuzxKf2HwJFT37otfjwRcd5gbMbrVCNw0=
 github.com/dimchansky/utfbom v1.1.1 h1:vV6w1AhK4VMnhBno/TPVCoK9U/LP0PkLCS9tbxHdi/U=
 github.com/dimchansky/utfbom v1.1.1/go.mod h1:SxdoEBH5qIqFocHMyGOXVAybYJdr71b1Q/j0mACtrfE=
 github.com/go-sql-driver/mysql v1.8.1/go.mod h1:wEBSXgmK//2ZFJyE+qWnIsVGmvmEKlqwuVSjsCm7DZg=
@@ -20,5 +22,5 @@ github.com/mattn/go-sqlite3 v1.14.22 h1:2gZY6PC6kBnID23Tichd1K+Z0oS6nE/XwU+Vz/5o
 github.com/mattn/go-sqlite3 v1.14.22/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
 github.com/valyala/fastjson v1.6.10 h1:/yjJg8jaVQdYR3arGxPE2X5z89xrlhS0eGXdv+ADTh4=
 github.com/valyala/fastjson v1.6.10/go.mod h1:e6FubmQouUNP73jtMLmcbxS6ydWIpOfhz34TSfO3JaE=
-golang.org/x/text v0.39.0 h1:UbZz4pLOvn600D6Oh6GGEI6VAmndrEBLv8/6BEXzyus=
-golang.org/x/text v0.39.0/go.mod h1:3UwRclnC2g0TU9x8PZiyfOajCd1zaUNHF9cvqcQZ+ZM=
+golang.org/x/text v0.41.0 h1:vz/seA0lnX87Othu2f/0L24RcgrXD9/YFTSuGjj3rH8=
+golang.org/x/text v0.41.0/go.mod h1:jvf1O8ajNzZqhSrQBPbutR/EB83Cc0CFrezNQIwbb5M=

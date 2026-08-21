@@ -2,6 +2,7 @@ package main
 
 import (
 	"StartRomagnaAPI/config"
+	"StartRomagnaAPI/internal/gtfs"
 	"StartRomagnaAPI/internal/handler"
 	"StartRomagnaAPI/internal/repository"
 	"fmt"
@@ -25,8 +26,10 @@ func main() {
 	})
 
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
-	mux.HandleFunc("GET /trips", handler.PasteBin)
+	mux.HandleFunc("GET /trips", handler.TripsHandler)
 	//mux.HandleFunc("GET /realtime", handler.RTHandler)
+
+	gtfs.UpdateStatic()
 
 	//Listen on port and start API
 	fmt.Println("Server started on port " + config.PORT)
