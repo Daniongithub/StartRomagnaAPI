@@ -108,14 +108,14 @@ func RTHandler(w http.ResponseWriter, r *http.Request) {
 
 
 func PasteBin(w http.ResponseWriter, r *http.Request) {
-	//urlRA := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Ravenna.zip"
+	urlRA := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Ravenna.zip"
 	urlFC := config.START_GTFS_ROOT + "/AVM/GTFSStatic_FOCE.zip"
 	urlRN := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Rimini.zip"
 
-	/*feedRA, err := gtfs.GetStaticFeed(urlRA)
+	feedRA, err := gtfs.GetStaticFeed(urlRA)
 	if err != nil {
 		fmt.Println("TripsHandler error reading feed:", err)
-	}*/
+	}
 	feedFC, err := gtfs.GetStaticFeed(urlFC)
 	if err != nil {
 		fmt.Println("TripsHandler error reading feed:", err)
@@ -124,7 +124,7 @@ func PasteBin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("TripsHandler error reading feed:", err)
 	}
-	out := []string{feedFC.Trips["F_R956592"].Route.Id, feedRN.Trips["RN4093119"].Route.Id}
+	out := []string{feedRA.Trips["RA2889361"].Route.Id, feedFC.Trips["F_R956592"].Route.Id, feedRN.Trips["RN4093119"].Route.Id}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(out)
 	//fmt.Println(feedRA.Trips["RA2889361"].Route.Id)
