@@ -16,6 +16,10 @@ DB_USERNAME=
 DB_PASSWORD=
 
 PORT=":5005"
+
+# Array of allowed origins
+ALLOWED_ORIGINS="https://example.com,https://example.com"
+
 ```
 
 ## Features roadmap
@@ -25,32 +29,32 @@ PORT=":5005"
 - [X] Load config env
 - [X] Healthcheck
 - [ ] HTTP server structure
-- [ ] CORS
-- [ ] Logging
+- [X] CORS
 
 ### GTFS static importer
 
-- [ ] Fetch GTFS ZIP
-- [ ] Open ZIP in memory
-- [ ] Parse agency
-- [ ] Parse routes
-- [ ] Parse trips
-- [ ] Parse stops
-- [ ] Parse stop_times
-- [ ] Parse shapes
-- [ ] Parse calendar_dates
-- [ ] Validate relationships
-- [ ] Support RA
-- [ ] Support FC
-- [ ] Support RN
+- [X] Fetch GTFS ZIP
+- [X] Open ZIP in memory
+- [X] Parse agency
+- [X] Parse routes
+- [X] Parse trips
+- [X] Parse stops
+- [X] Parse stop_times
+- [X] Parse shapes
+- [X] Parse calendar_dates
+- [X] Validate relationships
+- [X] Support RA
+- [X] Support FC
+- [X] Support RN
 
 ### Database
 
-- [ ] Define domain model
-- [ ] Design schema
-- [ ] Migrations
-- [ ] Store static GTFS
+- [X] Define domain model
+- [X] Design schema
+- [X] Migrations
+- [X] Store static GTFS
 - [ ] Update static GTFS safely
+- [X] Check if DB is primary
 
 ### GTFS-RT importer
 

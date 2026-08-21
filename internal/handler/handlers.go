@@ -5,14 +5,16 @@ import (
 	//"StartRomagnaAPI/internal/auth"
 	"StartRomagnaAPI/internal/repository"
 	"encoding/json"
+
 	//"io"
 	"net/http"
 	//"sort"
-
 	//"google.golang.org/protobuf/proto"
 )
 
 func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
+
 	message := "API is healthy and running on port " + config.PORT
 
 	w.Write([]byte(message))
@@ -27,6 +29,7 @@ func TripsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
+
 /*
 func RTHandler(w http.ResponseWriter, r *http.Request) {
 	url := config.START_GTFS_RT_ROOT + "/start-gtfs-rt-trip-updates-ra.pb"

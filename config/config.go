@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -19,8 +20,9 @@ var (
 	DB_USERNAME string
 	DB_PASSWORD string
 
-	PORT     string
-	IS_SLAVE bool
+	PORT string
+
+	ALLOWED_ORIGINS []string
 )
 
 func LoadConf() {
@@ -39,5 +41,6 @@ func LoadConf() {
 	DB_PASSWORD = os.Getenv("DB_PASSWORD")
 
 	PORT = os.Getenv("PORT")
-	IS_SLAVE, _ = strconv.ParseBool(os.Getenv("IS_SLAVE"))
+
+	ALLOWED_ORIGINS = strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
 }
