@@ -19,7 +19,8 @@ var (
 	DB_USERNAME string
 	DB_PASSWORD string
 
-	PORT string
+	PORT     string
+	IS_SLAVE bool
 )
 
 func LoadConf() {
@@ -38,4 +39,5 @@ func LoadConf() {
 	DB_PASSWORD = os.Getenv("DB_PASSWORD")
 
 	PORT = os.Getenv("PORT")
+	IS_SLAVE, _ = strconv.ParseBool(os.Getenv("IS_SLAVE"))
 }
