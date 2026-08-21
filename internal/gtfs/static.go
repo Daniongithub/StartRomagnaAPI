@@ -23,7 +23,7 @@ func GetStaticFeed(url string, skip_valid bool) (*gtfsparserwr.Feed, error) {
 
 	feed := gtfsparserwr.NewFeed()
 	if skip_valid {
-		feed.Opts.SkipStopTimeValidation()
+		feed.Opts.SkipStopTimeValidation
 	}
 	if err := feed.ParseReader(resp.Body); err != nil {
         return nil, fmt.Errorf("%s: parse gtfs: %w", err)
