@@ -15,15 +15,15 @@ func UpdateStatic() {
 	urlFC := config.START_GTFS_ROOT + "/AVM/GTFSStatic_FOCE.zip"
 	urlRN := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Rimini.zip"
 
-	feedRA, err := getStaticFeed(urlRA, true)
+	feedRA, err := getStatic(urlRA, true)
 	if err != nil {
 		fmt.Println("TripsHandler error reading feed:", err)
 	}
-	feedFC, err := getStaticFeed(urlFC, false)
+	feedFC, err := getStatic(urlFC, false)
 	if err != nil {
 		fmt.Println("TripsHandler error reading feed:", err)
 	}
-	feedRN, err := getStaticFeed(urlRN, false)
+	feedRN, err := getStatic(urlRN, false)
 	if err != nil {
 		fmt.Println("TripsHandler error reading feed:", err)
 	}
@@ -33,7 +33,7 @@ func UpdateStatic() {
 }
 
 
-func getStaticFeed(url string, skip_valid bool) (*gtfsparserwr.Feed, error) {
+func getStatic(url string, skip_valid bool) (*gtfsparserwr.Feed, error) {
 	req, err := auth.BasicAuth("GET", url, nil)
 	if err != nil {
 		return nil, err

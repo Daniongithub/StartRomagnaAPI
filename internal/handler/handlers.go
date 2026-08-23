@@ -20,11 +20,49 @@ func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(message))
 }
 
-/**
-* Very experimental handler: using for testing purpose only
-**/
+// GET /trips
 func TripsHandler(w http.ResponseWriter, r *http.Request) {
 	results := repository.GetTrips()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /calendar_dates
+func CalDatesHandler(w http.ResponseWriter, r *http.Request) {
+	results := repository.GetCalDates()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /routes
+func RoutesHandler(w http.ResponseWriter, r *http.Request) {
+	results := repository.GetRoutes()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /shapes
+func ShapesHandler(w http.ResponseWriter, r *http.Request) {
+	results := repository.GetShapes()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /stop_times
+func StopTimesHandler(w http.ResponseWriter, r *http.Request) {
+	results := repository.GetStopTimes()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /stops
+func StopsHandler(w http.ResponseWriter, r *http.Request) {
+	results := repository.GetStops()
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)

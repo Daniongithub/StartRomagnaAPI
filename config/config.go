@@ -22,6 +22,7 @@ var (
 
 	PORT string
 
+	IS_PRIMARY bool
 	ALLOWED_ORIGINS []string
 )
 

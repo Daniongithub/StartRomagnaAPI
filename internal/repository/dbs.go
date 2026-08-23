@@ -12,7 +12,6 @@ import (
 var (
 	DB_CONTENT *sqlx.DB
 	err        error
-	IS_PRIMARY bool
 )
 
 func newDB(host string, port int, user, password, dbname string) (*sqlx.DB, error) {
@@ -46,7 +45,7 @@ func InitContent() {
 		fmt.Println("InitContent errore di connessione al database contenuti:", err)
 	}
 
-	IS_PRIMARY, err = isPrimary(DB_CONTENT)
+	config.IS_PRIMARY, err = isPrimary(DB_CONTENT)
 	if err != nil {
 		fmt.Println("InitContent errore determinazione DB principale:", err)
 	}
