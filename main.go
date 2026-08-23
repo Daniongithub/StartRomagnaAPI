@@ -5,6 +5,7 @@ import (
 	"StartRomagnaAPI/internal/gtfs"
 	"StartRomagnaAPI/internal/handler"
 	"StartRomagnaAPI/internal/repository"
+	"StartRomagnaAPI/internal/scheduler"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,6 +14,21 @@ import (
 func main() {
 	config.LoadConf()
 	repository.InitContent()
+
+	if repository.IS_PRIMARY {
+		//Operazioni per DB in modalità "primary" (non read only):
+
+		//Viene eseguito comunque al primo avvio del programma
+		gtfs.UpdateStatic()
+
+		s, err := scheduler.InitScheduler()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer s.Shutdown()
+	} else {
+		println("INFO: Scheduler non avviato: rilevato DB read-only")
+	}
 
 	mux := http.NewServeMux()
 	//Redirect root to healthcheck
@@ -28,8 +44,6 @@ func main() {
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
 	mux.HandleFunc("GET /trips", handler.TripsHandler)
 	//mux.HandleFunc("GET /realtime", handler.RTHandler)
-
-	gtfs.UpdateStatic()
 
 	//Listen on port and start API
 	fmt.Println("Server started on port " + config.PORT)
