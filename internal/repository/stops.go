@@ -3,6 +3,8 @@ package repository
 import (
 	"StartRomagnaAPI/internal/model"
 	"fmt"
+
+	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 )
 
 func GetStops() []model.StopsResult {
@@ -13,4 +15,48 @@ func GetStops() []model.StopsResult {
 	}
 
 	return results
+}
+
+func SaveStops(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
+	stop := GetStops()
+
+	stopMap := make(map[string]bool)
+	for _, val := range stop {
+		stopMap[val.Basin+val.Stop_id] = true
+	}
+
+	var new []model.StopsResult
+	for idx, val := range feedRA.Stops {
+		_, ok := stopMap["RA"+idx]
+		if !ok {
+			newShape := model.ToDomainStops(val)
+			newShape.Basin = "RA"
+			new = append(new, newShape)
+		}
+	}
+	for idx, val := range feedFC.Stops {
+		_, ok := stopMap["FC"+idx]
+		if !ok {
+			newShape := model.ToDomainStops(val)
+			newShape.Basin = "FC"
+			new = append(new, newShape)
+		}
+	}
+
+	for idx, val := range feedRN.Stops {
+		_, ok := stopMap["RN"+idx]
+		if !ok {
+			newShape := model.ToDomainStops(val)
+			newShape.Basin = "RN"
+			new = append(new, newShape)
+		}
+	}
+
+	//Database insert
+	for _, val := range new {
+		_, err := DB_CONTENT.Exec("INSERT INTO stops(basin,stop_id,stop_code,stop_name,stop_lat,stop_lon) VALUES(?, ?, ?, ?, ?, ?)", val.Basin, val.Stop_id, val.Stop_code, val.Stop_name, val.Stop_lat, val.Stop_lon)
+		if err != nil {
+			fmt.Println("SaveStops db error:", err)
+		}
+	}
 }

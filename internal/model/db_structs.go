@@ -59,12 +59,32 @@ type RoutesResult struct {
 	Route_type       int    `db:"route_type" json:"route_type"`
 }
 
+func ToDomainRoutes(r *gtfs.Route) RoutesResult {
+	return RoutesResult{
+		Route_id:         r.Id,
+		Agency_id:        r.Agency.Id,
+		Route_short_name: r.Short_name,
+		Route_long_name:  r.Long_name,
+		Route_type:       int(r.Type),
+	}
+}
+
 type ShapesResult struct {
-	Basin             string `db:"basin" json:"basin"`
-	Shape_id          int    `db:"shape_id" json:"shape_id"`
-	Shape_pt_lat      string `db:"shape_pt_lat" json:"shape_pt_lat"`
-	Shape_pt_lon      string `db:"shape_pt_lon" json:"shape_pt_lon"`
-	Shape_pt_sequence string `db:"shape_pt_sequence" json:"shape_pt_sequence"`
+	Basin             string  `db:"basin" json:"basin"`
+	Shape_id          string  `db:"shape_id" json:"shape_id"`
+	Shape_pt_lat      float32 `db:"shape_pt_lat" json:"shape_pt_lat"`
+	Shape_pt_lon      float32 `db:"shape_pt_lon" json:"shape_pt_lon"`
+	Shape_pt_sequence int     `db:"shape_pt_sequence" json:"shape_pt_sequence"`
+}
+
+func ToDomainShapes(basin, id string, lat, lon float32, seq int) ShapesResult {
+	return ShapesResult{
+		Basin:             basin,
+		Shape_id:          id,
+		Shape_pt_lat:      lat,
+		Shape_pt_lon:      lon,
+		Shape_pt_sequence: seq,
+	}
 }
 
 type StopTimesResult struct {
@@ -72,15 +92,36 @@ type StopTimesResult struct {
 	Trip_id        string    `db:"trip_id" json:"trip_id"`
 	Arrival_time   time.Time `db:"arrival_time" json:"arrival_time"`
 	Departure_time time.Time `db:"departure_time" json:"departure_time"`
-	Stop_id        int       `db:"stop_id" json:"stop_id"`
+	Stop_id        string    `db:"stop_id" json:"stop_id"`
 	Stop_sequence  int       `db:"stop_sequence" json:"stop_sequence"`
+}
+
+func ToDomainStopTimes(basin, id string, arr, dep time.Time, sid string, seq int) StopTimesResult {
+	return StopTimesResult{
+		Basin:          basin,
+		Trip_id:        id,
+		Arrival_time:   arr,
+		Departure_time: dep,
+		Stop_id:        sid,
+		Stop_sequence:  seq,
+	}
 }
 
 type StopsResult struct {
 	Basin     string  `db:"basin" json:"basin"`
-	Stop_id   int     `db:"stop_id" json:"stop_id"`
-	Stop_code int     `db:"stop_code" json:"stop_code"`
+	Stop_id   string  `db:"stop_id" json:"stop_id"`
+	Stop_code string  `db:"stop_code" json:"stop_code"`
 	Stop_name string  `db:"stop_name" json:"stop_name"`
 	Stop_lat  float32 `db:"stop_lat" json:"stop_lat"`
 	Stop_lon  float32 `db:"stop_lon" json:"stop_lon"`
+}
+
+func ToDomainStops(r *gtfs.Stop) StopsResult {
+	return StopsResult{
+		Stop_id:   r.Id,
+		Stop_code: r.Code,
+		Stop_name: r.Name,
+		Stop_lat:  r.Lat,
+		Stop_lon:  r.Lon,
+	}
 }

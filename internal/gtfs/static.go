@@ -30,6 +30,10 @@ func UpdateStatic() {
 
 	repository.SaveTrips(feedRA, feedFC, feedRN)
 	repository.SaveCalDates(feedRA, feedFC, feedRN)
+	repository.SaveRoutes(feedRA, feedFC, feedRN)
+	repository.SaveShapes(feedRA, feedFC, feedRN)
+	repository.SaveStops(feedRA, feedFC, feedRN)
+	repository.SaveStopTimes(feedRA, feedFC, feedRN)
 	fmt.Println("Updated static GTFS")
 }
 

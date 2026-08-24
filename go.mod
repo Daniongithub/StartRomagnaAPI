@@ -3,7 +3,7 @@ module StartRomagnaAPI
 go 1.25.0
 
 require (
-	github.com/Leocraft1/gtfsparser-with-reader v1.1.1
+	github.com/Leocraft1/gtfsparser-with-reader v1.2.1
 	github.com/go-sql-driver/mysql v1.10.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
