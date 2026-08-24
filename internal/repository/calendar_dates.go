@@ -4,7 +4,7 @@ import (
 	"StartRomagnaAPI/internal/model"
 	"fmt"
 
-	"github.com/Leocraft1/gtfsparser-with-reader"
+	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 )
 
 func GetCalDates() []model.CalendarDatesResult {
@@ -13,17 +13,17 @@ func GetCalDates() []model.CalendarDatesResult {
 	if err != nil {
 		fmt.Println("GetCalDates error:", err)
 	}
-	
+
 	return results
 }
 
-//Same as SaveTrips
+// Same as SaveTrips
 func SaveCalDates(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
 	dates := GetCalDates()
 
 	datesMap := make(map[string]bool)
 	for _, val := range dates {
-		datesMap[val.Basin + val.Service_id+val.Date.Format("2006-01-02")] = true
+		datesMap[val.Basin+val.Service_id+val.Date.Format("2006-01-02")] = true
 	}
 
 	var new []model.CalendarDatesResult

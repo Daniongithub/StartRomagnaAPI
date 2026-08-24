@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Leocraft1/gtfsparser-with-reader"
+	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 )
 
 func UpdateStatic() {
@@ -27,11 +27,10 @@ func UpdateStatic() {
 	if err != nil {
 		fmt.Println("TripsHandler error reading feed:", err)
 	}
-	
+
 	repository.SaveTrips(feedRA, feedFC, feedRN)
 	repository.SaveCalDates(feedRA, feedFC, feedRN)
 }
-
 
 func getStatic(url string, skip_valid bool) (*gtfsparserwr.Feed, error) {
 	req, err := auth.BasicAuth("GET", url, nil)
@@ -53,8 +52,8 @@ func getStatic(url string, skip_valid bool) (*gtfsparserwr.Feed, error) {
 	}
 
 	if err := feed.ParseReader(resp.Body); err != nil {
-        return nil, fmt.Errorf("GetStaticFeed: parse gtfs: %w", err)
-    }
+		return nil, fmt.Errorf("GetStaticFeed: parse gtfs: %w", err)
+	}
 
 	return feed, nil
 }
