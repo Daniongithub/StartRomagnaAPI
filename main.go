@@ -19,7 +19,7 @@ func main() {
 		//Operazioni per DB in modalità "primary" (non read only):
 
 		//Viene eseguito comunque al primo avvio del programma
-		gtfs.UpdateStatic()
+		go gtfs.UpdateStatic()
 
 		s, err := scheduler.InitScheduler()
 		if err != nil {

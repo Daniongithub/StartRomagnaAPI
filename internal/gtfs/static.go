@@ -30,6 +30,7 @@ func UpdateStatic() {
 
 	repository.SaveTrips(feedRA, feedFC, feedRN)
 	repository.SaveCalDates(feedRA, feedFC, feedRN)
+	fmt.Println("Updated static GTFS")
 }
 
 func getStatic(url string, skip_valid bool) (*gtfsparserwr.Feed, error) {
