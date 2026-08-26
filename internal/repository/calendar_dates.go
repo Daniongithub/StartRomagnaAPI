@@ -43,10 +43,19 @@ func SaveCalDates(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *
 	collect(feedRN, "RN")
 
 	//Database insert
+	values := make([][]any, 0, len(new))
+
 	for _, val := range new {
-		_, err := DB_CONTENT.Exec("INSERT INTO calendar_dates(basin,service_id,date,exception_type) VALUES(?, ?, ?, ?)", val.Basin, val.Service_id, val.Date, val.Exception_type)
-		if err != nil {
-			fmt.Println("SaveCalDates db error:", err)
-		}
+		values = append(values, []any{
+			val.Basin,
+			val.Service_id,
+			val.Date,
+			val.Exception_type,
+		})
+	}
+
+	err := BatchInsert(DB_CONTENT, "calendar_dates", []string{"basin", "service_id", "date", "exception_type"}, values)
+	if err != nil {
+		fmt.Println("SaveCalDates db error:", err)
 	}
 }

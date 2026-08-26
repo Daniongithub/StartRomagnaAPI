@@ -4,7 +4,7 @@ import (
 	"StartRomagnaAPI/internal/model"
 	"fmt"
 
-	"github.com/Leocraft1/gtfsparser-with-reader"
+	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 )
 
 func GetRoutes() []model.RoutesResult {
@@ -52,10 +52,21 @@ func SaveRoutes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gt
 	}
 
 	//Database insert
+	values := make([][]any, 0, len(new))
+
 	for _, val := range new {
-		_, err := DB_CONTENT.Exec("INSERT INTO routes(basin,route_id,agency_id,route_short_name,route_long_name,route_type) VALUES(?, ?, ?, ?, ?, ?)", val.Basin, val.Route_id, val.Agency_id, val.Route_short_name, val.Route_long_name, val.Route_type)
-		if err != nil {
-			fmt.Println("SaveRoutes db error:", err)
-		}
+		values = append(values, []any{
+			val.Basin,
+			val.Route_id,
+			val.Agency_id,
+			val.Route_short_name,
+			val.Route_long_name,
+			val.Route_type,
+		})
+	}
+
+	err := BatchInsert(DB_CONTENT, "routes", []string{"basin", "route_id", "agency_id", "route_short_name", "route_long_name", "route_type"}, values)
+	if err != nil {
+		fmt.Println("SaveRoutes db error:", err)
 	}
 }

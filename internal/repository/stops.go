@@ -53,10 +53,21 @@ func SaveStops(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 	}
 
 	//Database insert
+	values := make([][]any, 0, len(new))
+
 	for _, val := range new {
-		_, err := DB_CONTENT.Exec("INSERT INTO stops(basin,stop_id,stop_code,stop_name,stop_lat,stop_lon) VALUES(?, ?, ?, ?, ?, ?)", val.Basin, val.Stop_id, val.Stop_code, val.Stop_name, val.Stop_lat, val.Stop_lon)
-		if err != nil {
-			fmt.Println("SaveStops db error:", err)
-		}
+		values = append(values, []any{
+			val.Basin,
+			val.Stop_id,
+			val.Stop_code,
+			val.Stop_name,
+			val.Stop_lat,
+			val.Stop_lon,
+		})
+	}
+
+	err := BatchInsert(DB_CONTENT, "stops", []string{"basin", "stop_id", "stop_code", "stop_name", "stop_lat", "stop_lon"}, values)
+	if err != nil {
+		fmt.Println("SaveStops db error:", err)
 	}
 }

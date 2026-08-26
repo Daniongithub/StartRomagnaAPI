@@ -6,11 +6,13 @@ import (
 	"StartRomagnaAPI/internal/repository"
 	"fmt"
 	"net/http"
+	"time"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 )
 
 func UpdateStatic() {
+	start := time.Now()
 	urlRA := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Ravenna.zip"
 	urlFC := config.START_GTFS_ROOT + "/AVM/GTFSStatic_FOCE.zip"
 	urlRN := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Rimini.zip"
@@ -28,13 +30,15 @@ func UpdateStatic() {
 		fmt.Println("TripsHandler error reading feed:", err)
 	}
 
-	repository.SaveTrips(feedRA, feedFC, feedRN)
 	repository.SaveCalDates(feedRA, feedFC, feedRN)
 	repository.SaveRoutes(feedRA, feedFC, feedRN)
 	repository.SaveShapes(feedRA, feedFC, feedRN)
-	repository.SaveStops(feedRA, feedFC, feedRN)
 	repository.SaveStopTimes(feedRA, feedFC, feedRN)
-	fmt.Println("Updated static GTFS")
+	repository.SaveStops(feedRA, feedFC, feedRN)
+	repository.SaveTrips(feedRA, feedFC, feedRN)
+
+	elapsed := time.Since(start)
+	fmt.Printf("Updated static GTFS. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)
 }
 
 func getStatic(url string, skip_valid bool) (*gtfsparserwr.Feed, error) {

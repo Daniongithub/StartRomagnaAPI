@@ -4,7 +4,7 @@ import (
 	"StartRomagnaAPI/internal/model"
 	"fmt"
 
-	"github.com/Leocraft1/gtfsparser-with-reader"
+	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 )
 
 func GetShapes() []model.ShapesResult {
@@ -55,10 +55,20 @@ func SaveShapes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gt
 	}
 
 	//Database insert
+	values := make([][]any, 0, len(new))
+
 	for _, val := range new {
-		_, err := DB_CONTENT.Exec("INSERT INTO shapes(basin,shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence) VALUES(?, ?, ?, ?, ?)", val.Basin, val.Shape_id, val.Shape_pt_lat, val.Shape_pt_lon, val.Shape_pt_sequence)
-		if err != nil {
-			fmt.Println("SaveShapes db error:", err)
-		}
+		values = append(values, []any{
+			val.Basin,
+			val.Shape_id,
+			val.Shape_pt_lat,
+			val.Shape_pt_lon,
+			val.Shape_pt_sequence,
+		})
+	}
+
+	err := BatchInsert(DB_CONTENT, "shapes", []string{"basin", "shape_id", "shape_pt_lat", "shape_pt_lon", "shape_pt_sequence"}, values)
+	if err != nil {
+		fmt.Println("SaveShapes db error:", err)
 	}
 }

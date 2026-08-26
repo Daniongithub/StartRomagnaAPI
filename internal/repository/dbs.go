@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Masterminds/squirrel"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
@@ -49,4 +50,34 @@ func InitContent() {
 	if err != nil {
 		fmt.Println("InitContent errore determinazione DB principale:", err)
 	}
+}
+
+const insertBatchSize = 5000
+
+func BatchInsert(db *sqlx.DB, table string, columns []string, new [][]any) error {
+	if len(new) == 0 {
+		return nil
+	}
+
+	for start := 0; start < len(new); start += insertBatchSize {
+		end := min(start+insertBatchSize, len(new))
+
+		q := squirrel.Insert(table).
+			Columns(columns...)
+
+		for _, row := range new[start:end] {
+			q = q.Values(row...)
+		}
+
+		query, args, err := q.ToSql()
+		if err != nil {
+			return fmt.Errorf("build insert query: %w", err)
+		}
+
+		if _, err := db.Exec(query, args...); err != nil {
+			return fmt.Errorf("execute insert into %s: %w", table, err)
+		}
+	}
+
+	return nil
 }

@@ -55,10 +55,22 @@ func SaveTrips(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 	}
 
 	//Database insert
+	values := make([][]any, 0, len(new))
+
 	for _, val := range new {
-		_, err := DB_CONTENT.Exec("INSERT INTO trips(basin,route_id,service_id,trip_id,trip_headsign,direction_id,shape_id) VALUES(?, ?, ?, ?, ?, ?, ?)", val.Basin, val.Route_id, val.Service_id, val.Trip_id, val.Trip_headsign, val.Direction_id, val.Shape_id)
-		if err != nil {
-			fmt.Println("SaveTrips db error:", err)
-		}
+		values = append(values, []any{
+			val.Basin,
+			val.Route_id,
+			val.Service_id,
+			val.Trip_id,
+			val.Trip_headsign,
+			val.Direction_id,
+			val.Shape_id,
+		})
+	}
+
+	err := BatchInsert(DB_CONTENT, "trips", []string{"basin", "route_id", "service_id", "trip_id", "trip_headsign", "direcion_id", "shape_id"}, values)
+	if err != nil {
+		fmt.Println("SaveTrips db error:", err)
 	}
 }

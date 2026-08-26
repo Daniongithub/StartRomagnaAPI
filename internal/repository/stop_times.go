@@ -4,9 +4,8 @@ import (
 	"StartRomagnaAPI/internal/model"
 	"fmt"
 
-	"github.com/Leocraft1/gtfsparser-with-reader"
+	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 	"github.com/Leocraft1/gtfsparser-with-reader/gtfs"
-	"github.com/Masterminds/squirrel"
 )
 
 func GetStopTimes() []model.StopTimesResult {
@@ -33,9 +32,9 @@ func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN 
 		if !ok {
 			for _, val2 := range val.StopTimes {
 				var gdate gtfs.Date
-				gdate.SetYear(2010)
-				gdate.SetMonth(9)
-				gdate.SetDay(11)
+				gdate.SetYear(2000)
+				gdate.SetMonth(1)
+				gdate.SetDay(1)
 				newShape := model.ToDomainStopTimes("RA", val.Id, val2.Arrival_time().GetLocationTime(gdate, feedRA.Agencies["START RA"]), val2.Departure_time().GetLocationTime(gdate, feedRA.Agencies["START RA"]), val2.Stop().Id, val2.Sequence())
 				new = append(new, newShape)
 			}
@@ -60,10 +59,11 @@ func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN 
 		}
 	}
 
-	values := make([][]interface{}, 0, len(stopTimes))
+	//Database insert
+	values := make([][]any, 0, len(new))
 
-	for _, val := range stopTimes {
-		values = append(values, []interface{}{
+	for _, val := range new {
+		values = append(values, []any{
 			val.Basin,
 			val.Trip_id,
 			val.Arrival_time,
@@ -73,40 +73,9 @@ func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN 
 		})
 	}
 
-	//Database insert
-	const batchSize = 5000
-
-	for start := 0; start < len(new); start += batchSize {
-		end := start + batchSize
-		if end > len(new) {
-			end = len(new)
-		}
-
-		q := squirrel.Insert("stop_times").
-			Columns(
-				"basin",
-				"trip_id",
-				"arrival_time",
-				"departure_time",
-				"stop_id",
-				"stop_sequence",
-			)
-
-		for _, val := range new[start:end] {
-			q = q.Values(
-				val.Basin,
-				val.Trip_id,
-				val.Arrival_time,
-				val.Departure_time,
-				val.Stop_id,
-				val.Stop_sequence,
-			)
-		}
-
-		sql, args, _ := q.ToSql()
-
-		if _, err := DB_CONTENT.Exec(sql, args...); err != nil {
-			fmt.Println("SaveStopTimes db error:", err)
-		}
+	err := BatchInsert(DB_CONTENT, "stop_times", []string{"basin", "trip_id", "arrival_time", "departure_time", "stop_id", "stop_sequence"}, values)
+	if err != nil {
+		fmt.Println("SaveStopTimes db error:", err)
 	}
+
 }
