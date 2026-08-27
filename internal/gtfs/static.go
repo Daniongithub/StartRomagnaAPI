@@ -20,15 +20,15 @@ func UpdateStatic() {
 
 	feedRA, err := getStatic(urlRA, true)
 	if err != nil {
-		fmt.Println("TripsHandler error reading feed:", err)
+		fmt.Println("UpdateStatic error reading feed:", err)
 	}
 	feedFC, err := getStatic(urlFC, false)
 	if err != nil {
-		fmt.Println("TripsHandler error reading feed:", err)
+		fmt.Println("UpdateStatic error reading feed:", err)
 	}
 	feedRN, err := getStatic(urlRN, false)
 	if err != nil {
-		fmt.Println("TripsHandler error reading feed:", err)
+		fmt.Println("UpdateStatic error reading feed:", err)
 	}
 
 	repository.SaveCalDates(feedRA, feedFC, feedRN)
