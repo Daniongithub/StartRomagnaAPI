@@ -18,6 +18,16 @@ func GetStopTimes() []model.StopTimesResult {
 	return results
 }
 
+func GetStopTimesBasin(basin string) []model.StopTimesResult {
+	var results []model.StopTimesResult
+	err := DB_CONTENT.Select(&results, "SELECT * FROM stop_times WHERE basin = ?", basin)
+	if err != nil {
+		fmt.Println("GetStopTimes errore db:", err)
+	}
+
+	return results
+}
+
 func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
 	stopTimes := GetStopTimes()
 

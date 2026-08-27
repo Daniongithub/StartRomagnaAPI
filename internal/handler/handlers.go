@@ -31,6 +31,23 @@ func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 func TripsHandler(w http.ResponseWriter, r *http.Request) {
 	results := repository.GetTrips()
 
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /static/trips/{basin}
+func TripsBasinHandler(w http.ResponseWriter, r *http.Request) {
+	basin := r.PathValue("basin")
+
+	if basin != "RA" && basin != "FC" && basin != "RN" {
+		http.Error(w, "invalid basin", http.StatusBadRequest)
+		return
+	}
+
+	results := repository.GetTripsBasin(basin)
+
+	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
@@ -38,6 +55,22 @@ func TripsHandler(w http.ResponseWriter, r *http.Request) {
 // GET /static/calendar_dates
 func CalDatesHandler(w http.ResponseWriter, r *http.Request) {
 	results := repository.GetCalDates()
+
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /static/calendar_dates/{basin}
+func CalDatesBasinHandler(w http.ResponseWriter, r *http.Request) {
+	basin := r.PathValue("basin")
+
+	if basin != "RA" && basin != "FC" && basin != "RN" {
+		http.Error(w, "invalid basin", http.StatusBadRequest)
+		return
+	}
+
+	results := repository.GetCalDatesBasin(basin)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
@@ -47,6 +80,23 @@ func CalDatesHandler(w http.ResponseWriter, r *http.Request) {
 func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 	results := repository.GetRoutes()
 
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /static/routes/{basin}
+func RoutesBasinHandler(w http.ResponseWriter, r *http.Request) {
+	basin := r.PathValue("basin")
+
+	if basin != "RA" && basin != "FC" && basin != "RN" {
+		http.Error(w, "invalid basin", http.StatusBadRequest)
+		return
+	}
+
+	results := repository.GetRoutesBasin(basin)
+
+	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
@@ -55,6 +105,23 @@ func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 func ShapesHandler(w http.ResponseWriter, r *http.Request) {
 	results := repository.GetShapes()
 
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /static/shapes/{basin}
+func ShapesBasinHandler(w http.ResponseWriter, r *http.Request) {
+	basin := r.PathValue("basin")
+
+	if basin != "RA" && basin != "FC" && basin != "RN" {
+		http.Error(w, "invalid basin", http.StatusBadRequest)
+		return
+	}
+
+	results := repository.GetShapesBasin(basin)
+
+	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
@@ -63,6 +130,22 @@ func ShapesHandler(w http.ResponseWriter, r *http.Request) {
 func StopTimesHandler(w http.ResponseWriter, r *http.Request) {
 	results := repository.GetStopTimes()
 
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /static/stop_times/{basin}
+func StopTimesBasinHandler(w http.ResponseWriter, r *http.Request) {
+	basin := r.PathValue("basin")
+
+	if basin != "RA" && basin != "FC" && basin != "RN" {
+		http.Error(w, "invalid basin", http.StatusBadRequest)
+		return
+	}
+
+	results := repository.GetStopTimesBasin(basin)
+
+	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
@@ -86,6 +169,7 @@ func StopsBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 	results := repository.GetStopsBasin(basin)
 
+	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }

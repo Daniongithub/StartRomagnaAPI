@@ -17,6 +17,16 @@ func GetTrips() []model.TripsResult {
 	return results
 }
 
+func GetTripsBasin(basin string) []model.TripsResult {
+	var results []model.TripsResult
+	err := DB_CONTENT.Select(&results, "SELECT * FROM trips WHERE basin = ? ORDER BY route_id", basin)
+	if err != nil {
+		fmt.Println("GetTripsBasin error:", err)
+	}
+
+	return results
+}
+
 // Checks if trips already exist inside the respective basins, otherwise adds them
 func SaveTrips(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
 	trips := GetTrips()

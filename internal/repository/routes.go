@@ -17,6 +17,16 @@ func GetRoutes() []model.RoutesResult {
 	return results
 }
 
+func GetRoutesBasin(basin string) []model.RoutesResult {
+	var results []model.RoutesResult
+	err := DB_CONTENT.Select(&results, "SELECT * FROM routes WHERE basin = ?", basin)
+	if err != nil {
+		fmt.Println("GetRoutes errore db:", err)
+	}
+
+	return results
+}
+
 func SaveRoutes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
 	routes := GetRoutes()
 

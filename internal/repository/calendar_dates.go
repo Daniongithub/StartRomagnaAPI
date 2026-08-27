@@ -17,6 +17,16 @@ func GetCalDates() []model.CalendarDatesResult {
 	return results
 }
 
+func GetCalDatesBasin(basin string) []model.CalendarDatesResult {
+	var results []model.CalendarDatesResult
+	err = DB_CONTENT.Select(&results, "SELECT * FROM calendar_dates WHERE basin = ?", basin)
+	if err != nil {
+		fmt.Println("GetCalDates error:", err)
+	}
+
+	return results
+}
+
 // Same as SaveTrips
 func SaveCalDates(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
 	dates := GetCalDates()

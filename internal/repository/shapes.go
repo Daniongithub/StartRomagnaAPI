@@ -17,6 +17,16 @@ func GetShapes() []model.ShapesResult {
 	return results
 }
 
+func GetShapesBasin(basin string) []model.ShapesResult {
+	var results []model.ShapesResult
+	err := DB_CONTENT.Select(&results, "SELECT * FROM shapes WHERE basin = ?")
+	if err != nil {
+		fmt.Println("GetShapes errore db:", err)
+	}
+
+	return results
+}
+
 func SaveShapes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
 	shapes := GetShapes()
 
