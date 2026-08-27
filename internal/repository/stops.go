@@ -17,6 +17,37 @@ func GetStops() []model.StopsResult {
 	return results
 }
 
+func GetStopsFiltered() []model.StopsResult {
+	var results []model.StopsResult
+	err := DB_CONTENT.Select(&results, `SELECT * FROM stops WHERE LOCATE('semaforo', stop_name) = 0
+      AND LOCATE('fi1', stop_name) = 0
+	  AND LOCATE('FITTIZIO', stop_name) = 0
+      AND LOCATE('Fittizio', stop_name) = 0
+      AND LOCATE('FITTIZIA', stop_name) = 0
+      AND LOCATE('Fittizia', stop_name) = 0`)
+	if err != nil {
+		fmt.Println("GetStopsFiltered errore db:", err)
+	}
+
+	return results
+}
+
+func GetStopsBasin(basin string) []model.StopsResult {
+	var results []model.StopsResult
+	err := DB_CONTENT.Select(&results, `SELECT * FROM stops WHERE basin = ? AND LOCATE('semaforo', stop_name) = 0
+	  AND LOCATE('fi1', stop_name) = 0
+      AND LOCATE('FITTIZIO', stop_name) = 0
+      AND LOCATE('Fittizio', stop_name) = 0
+      AND LOCATE('FITTIZIA', stop_name) = 0
+      AND LOCATE('Fittizia', stop_name) = 0
+	  ORDER BY stop_code`, basin)
+	if err != nil {
+		fmt.Println("GetStopsBasin errore db:", err)
+	}
+
+	return results
+}
+
 func SaveStops(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
 	stop := GetStops()
 

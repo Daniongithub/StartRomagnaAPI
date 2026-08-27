@@ -2,15 +2,22 @@ package handler
 
 import (
 	"StartRomagnaAPI/config"
+	"time"
+
 	//"StartRomagnaAPI/internal/auth"
+	"StartRomagnaAPI/internal/model"
 	"StartRomagnaAPI/internal/repository"
 	"encoding/json"
 
 	//"io"
 	"net/http"
+
+	"github.com/mmcdole/gofeed"
 	//"sort"
 	//"google.golang.org/protobuf/proto"
 )
+
+const feedURL = "https://www.startromagna.it/infobus/feed/"
 
 func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	AddCORS(w, r)
@@ -20,7 +27,7 @@ func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(message))
 }
 
-// GET /trips
+// GET /static/trips
 func TripsHandler(w http.ResponseWriter, r *http.Request) {
 	results := repository.GetTrips()
 
@@ -28,7 +35,7 @@ func TripsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// GET /calendar_dates
+// GET /static/calendar_dates
 func CalDatesHandler(w http.ResponseWriter, r *http.Request) {
 	results := repository.GetCalDates()
 
@@ -36,7 +43,7 @@ func CalDatesHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// GET /routes
+// GET /static/routes
 func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 	results := repository.GetRoutes()
 
@@ -44,7 +51,7 @@ func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// GET /shapes
+// GET /static/shapes
 func ShapesHandler(w http.ResponseWriter, r *http.Request) {
 	results := repository.GetShapes()
 
@@ -52,7 +59,7 @@ func ShapesHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// GET /stop_times
+// GET /static/stop_times
 func StopTimesHandler(w http.ResponseWriter, r *http.Request) {
 	results := repository.GetStopTimes()
 
@@ -60,12 +67,74 @@ func StopTimesHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// GET /stops
+// GET /static/stops
 func StopsHandler(w http.ResponseWriter, r *http.Request) {
-	results := repository.GetStops()
+	results := repository.GetStopsFiltered()
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
+}
+
+// GET /static/stops/{basin}
+func StopsBasinHandler(w http.ResponseWriter, r *http.Request) {
+	basin := r.PathValue("basin")
+
+	if basin != "RA" && basin != "FC" && basin != "RN" {
+		http.Error(w, "invalid basin", http.StatusBadRequest)
+		return
+	}
+
+	results := repository.GetStopsBasin(basin)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+func FeedHandler(w http.ResponseWriter, r *http.Request) {
+	parser := gofeed.NewParser()
+	feed, err := parser.ParseURL(feedURL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := model.FeedResponse{
+		Title:       feed.Title,
+		Description: feed.Description,
+		Link:        feed.Link,
+		Items:       make([]model.FeedItem, 0, len(feed.Items)),
+	}
+
+	for _, item := range feed.Items {
+		author := ""
+
+		if len(item.Authors) > 0 && item.Authors[0] != nil {
+			author = item.Authors[0].Name
+		}
+
+		var published time.Time
+		if item.PublishedParsed != nil {
+			published = *item.PublishedParsed
+		}
+
+		response.Items = append(response.Items, model.FeedItem{
+			Title:           item.Title,
+			Description:     item.Description,
+			Content:         item.Content,
+			Link:            item.Link,
+			Author:          author,
+			Published:       item.Published,
+			PublishedParsed: published,
+		})
+	}
+
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-cache")
+
+	encoder := json.NewEncoder(w)
+	encoder.SetIndent("", "  ")
+	encoder.Encode(response)
 }
 
 /*

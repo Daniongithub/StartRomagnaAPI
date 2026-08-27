@@ -12,6 +12,7 @@ import (
 )
 
 func UpdateStatic() {
+	fmt.Println("Updating static GTFS...")
 	start := time.Now()
 	urlRA := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Ravenna.zip"
 	urlFC := config.START_GTFS_ROOT + "/AVM/GTFSStatic_FOCE.zip"

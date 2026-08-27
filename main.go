@@ -42,12 +42,14 @@ func main() {
 	})
 
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
+	mux.HandleFunc("GET /feed", handler.FeedHandler)
 	mux.HandleFunc("GET /static/trips", handler.TripsHandler)
 	mux.HandleFunc("GET /static/calendar_dates", handler.CalDatesHandler)
 	mux.HandleFunc("GET /static/routes", handler.RoutesHandler)
 	mux.HandleFunc("GET /static/shapes", handler.ShapesHandler)
 	mux.HandleFunc("GET /static/stop_times", handler.StopTimesHandler)
 	mux.HandleFunc("GET /static/stops", handler.StopsHandler)
+	mux.HandleFunc("GET /static/stops/{basin}", handler.StopsBasinHandler)
 	//mux.HandleFunc("GET /realtime", handler.RTHandler)
 
 	//Listen on port and start API
