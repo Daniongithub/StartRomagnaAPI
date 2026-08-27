@@ -20,17 +20,23 @@ func GetCalDates() []model.CalendarDatesResult {
 // Same as SaveTrips
 func SaveCalDates(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
 	dates := GetCalDates()
-
 	datesMap := make(map[string]bool)
 	for _, val := range dates {
 		datesMap[val.Basin+val.Service_id+val.Date.Format("2006-01-02")] = true
 	}
 
 	var new []model.CalendarDatesResult
+	var remove []model.CalendarDatesResult
+
+	//Track every row in gtfs
+	feedKeys := make(map[string]bool)
+
 	collect := func(feed *gtfsparserwr.Feed, basin string) {
 		for serviceId, service := range feed.Services {
 			for date, added := range service.Exceptions() {
 				key := basin + serviceId + date.GetTime().Format("2006-01-02")
+				feedKeys[key] = true
+
 				if _, ok := datesMap[key]; !ok {
 					new = append(new, model.ToDomainException(feed.Services[serviceId], basin, date, added))
 				}
@@ -41,6 +47,18 @@ func SaveCalDates(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *
 	collect(feedRA, "RA")
 	collect(feedFC, "FC")
 	collect(feedRN, "RN")
+
+	//Removes old entries
+	for _, val := range dates {
+		key := val.Basin + val.Service_id + val.Date.Format("2006-01-02")
+		if _, ok := feedKeys[key]; !ok {
+			var row model.CalendarDatesResult
+			row.Basin = val.Basin
+			row.Service_id = val.Service_id
+			row.Date = val.Date
+			remove = append(remove, row)
+		}
+	}
 
 	//Database insert
 	values := make([][]any, 0, len(new))
@@ -58,4 +76,13 @@ func SaveCalDates(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *
 	if err != nil {
 		fmt.Println("SaveCalDates db error:", err)
 	}
+
+	//Database delete
+	for _, val := range remove {
+		_, err = DB_CONTENT.Exec("DELETE FROM calendar_dates WHERE basin = ? AND service_id = ? AND date = ?", val.Basin, val.Service_id, val.Date)
+		if err != nil {
+			fmt.Println("SaveCalDates db error:", err)
+		}
+	}
+
 }
