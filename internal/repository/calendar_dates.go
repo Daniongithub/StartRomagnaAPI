@@ -36,7 +36,7 @@ func SaveCalDates(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *
 	}
 
 	var new []model.CalendarDatesResult
-	var remove []model.CalendarDatesResult
+	var old []model.CalendarDatesResult
 
 	//Track every row in gtfs
 	feedKeys := make(map[string]bool)
@@ -66,7 +66,7 @@ func SaveCalDates(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *
 			row.Basin = val.Basin
 			row.Service_id = val.Service_id
 			row.Date = val.Date
-			remove = append(remove, row)
+			old = append(old, row)
 		}
 	}
 
@@ -88,11 +88,10 @@ func SaveCalDates(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *
 	}
 
 	//Database delete
-	for _, val := range remove {
+	for _, val := range old {
 		_, err = DB_CONTENT.Exec("DELETE FROM calendar_dates WHERE basin = ? AND service_id = ? AND date = ?", val.Basin, val.Service_id, val.Date)
 		if err != nil {
 			fmt.Println("SaveCalDates db error:", err)
 		}
 	}
-
 }

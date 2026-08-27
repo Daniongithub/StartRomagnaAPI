@@ -51,12 +51,14 @@ func convertExceptionType(ex bool) string {
 }
 
 type RoutesResult struct {
-	Basin            string `db:"basin" json:"basin"`
-	Route_id         string `db:"route_id" json:"route_id"`
-	Agency_id        string `db:"agency_id" json:"agency_id"`
-	Route_short_name string `db:"route_short_name" json:"route_short_name"`
-	Route_long_name  string `db:"route_long_name" json:"route_long_name"`
-	Route_type       int    `db:"route_type" json:"route_type"`
+	Basin            string  `db:"basin" json:"basin"`
+	Route_id         string  `db:"route_id" json:"route_id"`
+	Agency_id        string  `db:"agency_id" json:"agency_id"`
+	Route_short_name string  `db:"route_short_name" json:"route_short_name"`
+	Route_long_name  string  `db:"route_long_name" json:"route_long_name"`
+	Route_type       int     `db:"route_type" json:"route_type"`
+	Disp_line        *string `db:"disp_linea" json:"disp_linea"`
+	Disp_dest        *string `db:"disp_dest" json:"disp_dest"`
 }
 
 func ToDomainRoutes(r *gtfs.Route) RoutesResult {

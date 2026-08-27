@@ -36,8 +36,11 @@ func SaveShapes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gt
 	}
 
 	var new []model.ShapesResult
+	var old []model.ShapesResult
+	feedKeys := make(map[string]bool)
 	for idx, val := range feedRA.Shapes {
 		_, ok := shapesMap["RA"+idx]
+		feedKeys["RA"+idx] = true
 		if !ok {
 			for _, val2 := range val.Points {
 				newShape := model.ToDomainShapes("RA", val.Id, val2.Lat, val2.Lon, int(val2.Sequence))
@@ -47,6 +50,7 @@ func SaveShapes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gt
 	}
 	for idx, val := range feedFC.Shapes {
 		_, ok := shapesMap["FC"+idx]
+		feedKeys["FC"+idx] = true
 		if !ok {
 			for _, val2 := range val.Points {
 				newShape := model.ToDomainShapes("FC", val.Id, val2.Lat, val2.Lon, int(val2.Sequence))
@@ -56,11 +60,23 @@ func SaveShapes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gt
 	}
 	for idx, val := range feedRN.Shapes {
 		_, ok := shapesMap["RN"+idx]
+		feedKeys["RN"+idx] = true
 		if !ok {
 			for _, val2 := range val.Points {
 				newShape := model.ToDomainShapes("RN", val.Id, val2.Lat, val2.Lon, int(val2.Sequence))
 				new = append(new, newShape)
 			}
+		}
+	}
+
+	for _, val := range shapes {
+		_, ok := feedKeys[val.Basin+val.Shape_id]
+		if !ok {
+			var oldShape model.ShapesResult
+			oldShape.Basin = val.Basin
+			oldShape.Shape_id = val.Shape_id
+			oldShape.Shape_pt_sequence = val.Shape_pt_sequence
+			old = append(old, oldShape)
 		}
 	}
 
@@ -80,5 +96,13 @@ func SaveShapes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gt
 	err := BatchInsert(DB_CONTENT, "shapes", []string{"basin", "shape_id", "shape_pt_lat", "shape_pt_lon", "shape_pt_sequence"}, values)
 	if err != nil {
 		fmt.Println("SaveShapes db error:", err)
+	}
+
+	//Database delete
+	for _, val := range old {
+		_, err = DB_CONTENT.Exec("DELETE FROM shapes WHERE basin = ? AND shape_id = ? AND shape_pt_sequence = ?", val.Basin, val.Shape_id, val.Shape_pt_sequence)
+		if err != nil {
+			fmt.Println("SaveStops db error:", err)
+		}
 	}
 }

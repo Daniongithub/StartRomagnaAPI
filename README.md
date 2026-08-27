@@ -19,7 +19,6 @@ PORT=":5005"
 
 # Array of allowed origins
 ALLOWED_ORIGINS="https://example.com,https://example.com"
-
 ```
 
 ## Features roadmap
@@ -28,7 +27,7 @@ ALLOWED_ORIGINS="https://example.com,https://example.com"
 
 - [X] Load config env
 - [X] Healthcheck
-- [ ] HTTP server structure
+- [X] HTTP server structure
 - [X] CORS
 
 ### GTFS static importer

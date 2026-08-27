@@ -49,16 +49,19 @@ func GetStopsBasin(basin string) []model.StopsResult {
 }
 
 func SaveStops(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
-	stop := GetStops()
+	stops := GetStops()
 
 	stopMap := make(map[string]bool)
-	for _, val := range stop {
+	for _, val := range stops {
 		stopMap[val.Basin+val.Stop_id] = true
 	}
 
 	var new []model.StopsResult
+	var old []model.StopsResult
+	feedKeys := make(map[string]bool)
 	for idx, val := range feedRA.Stops {
 		_, ok := stopMap["RA"+idx]
+		feedKeys["RA"+idx] = true
 		if !ok {
 			newShape := model.ToDomainStops(val)
 			newShape.Basin = "RA"
@@ -67,6 +70,7 @@ func SaveStops(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 	}
 	for idx, val := range feedFC.Stops {
 		_, ok := stopMap["FC"+idx]
+		feedKeys["FC"+idx] = true
 		if !ok {
 			newShape := model.ToDomainStops(val)
 			newShape.Basin = "FC"
@@ -76,10 +80,21 @@ func SaveStops(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 
 	for idx, val := range feedRN.Stops {
 		_, ok := stopMap["RN"+idx]
+		feedKeys["RN"+idx] = true
 		if !ok {
 			newShape := model.ToDomainStops(val)
 			newShape.Basin = "RN"
 			new = append(new, newShape)
+		}
+	}
+
+	for _, val := range stops {
+		_, ok := feedKeys[val.Basin+val.Stop_id]
+		if !ok {
+			var oldStop model.StopsResult
+			oldStop.Basin = val.Basin
+			oldStop.Stop_id = val.Stop_id
+			old = append(old, oldStop)
 		}
 	}
 
@@ -100,5 +115,13 @@ func SaveStops(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 	err := BatchInsert(DB_CONTENT, "stops", []string{"basin", "stop_id", "stop_code", "stop_name", "stop_lat", "stop_lon"}, values)
 	if err != nil {
 		fmt.Println("SaveStops db error:", err)
+	}
+
+	//Database delete
+	for _, val := range old {
+		_, err = DB_CONTENT.Exec("DELETE FROM stops WHERE basin = ? AND stop_id = ?", val.Basin, val.Stop_id)
+		if err != nil {
+			fmt.Println("SaveStops db error:", err)
+		}
 	}
 }

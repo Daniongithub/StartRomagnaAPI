@@ -39,8 +39,11 @@ func SaveTrips(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 	}
 
 	var new []model.TripsResult
+	var old []model.TripsResult
+	feedKeys := make(map[string]bool)
 	for _, val := range feedRA.Trips {
 		_, ok := tripMap[val.Id]
+		feedKeys[val.Id] = true
 		if !ok {
 			var newTrip = model.ToDomainTrip(val)
 			newTrip.Basin = "RA"
@@ -49,6 +52,7 @@ func SaveTrips(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 	}
 	for _, val := range feedFC.Trips {
 		_, ok := tripMap[val.Id]
+		feedKeys[val.Id] = true
 		if !ok {
 			var newTrip = model.ToDomainTrip(val)
 			newTrip.Basin = "FC"
@@ -57,10 +61,21 @@ func SaveTrips(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 	}
 	for _, val := range feedRN.Trips {
 		_, ok := tripMap[val.Id]
+		feedKeys[val.Id] = true
 		if !ok {
 			var newTrip = model.ToDomainTrip(val)
 			newTrip.Basin = "RN"
 			new = append(new, newTrip)
+		}
+	}
+
+	for _, val := range trips {
+		_, ok := feedKeys[val.Trip_id]
+		if !ok {
+			var oldTrip model.TripsResult
+			oldTrip.Basin = val.Basin
+			oldTrip.Trip_id = val.Trip_id
+			old = append(old, oldTrip)
 		}
 	}
 
@@ -82,5 +97,13 @@ func SaveTrips(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 	err := BatchInsert(DB_CONTENT, "trips", []string{"basin", "route_id", "service_id", "trip_id", "trip_headsign", "direcion_id", "shape_id"}, values)
 	if err != nil {
 		fmt.Println("SaveTrips db error:", err)
+	}
+
+	//Database delete
+	for _, val := range old {
+		_, err = DB_CONTENT.Exec("DELETE FROM trips WHERE trip_id = ?", val.Trip_id)
+		if err != nil {
+			fmt.Println("SaveTrips db error:", err)
+		}
 	}
 }

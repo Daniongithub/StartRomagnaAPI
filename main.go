@@ -31,29 +31,14 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	//Redirect root to healthcheck
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
-			http.Redirect(w, r, "/health", http.StatusFound)
-			return
-		}
-
-		http.NotFound(w, r)
-	})
 
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
-	mux.HandleFunc("GET /feed", handler.FeedHandler)
-	mux.HandleFunc("GET /static/trips", handler.TripsHandler)
+	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
 	mux.HandleFunc("GET /static/trips/{basin}", handler.TripsBasinHandler)
-	mux.HandleFunc("GET /static/calendar_dates", handler.CalDatesHandler)
 	mux.HandleFunc("GET /static/calendar_dates/{basin}", handler.CalDatesBasinHandler)
-	mux.HandleFunc("GET /static/routes", handler.RoutesHandler)
 	mux.HandleFunc("GET /static/routes/{basin}", handler.RoutesBasinHandler)
-	mux.HandleFunc("GET /static/shapes", handler.ShapesHandler)
 	mux.HandleFunc("GET /static/shapes/{basin}", handler.RoutesBasinHandler)
-	mux.HandleFunc("GET /static/stop_times", handler.StopTimesHandler)
 	mux.HandleFunc("GET /static/stop_times/{basin}", handler.StopTimesBasinHandler)
-	mux.HandleFunc("GET /static/stops", handler.StopsHandler)
 	mux.HandleFunc("GET /static/stops/{basin}", handler.StopsBasinHandler)
 	//mux.HandleFunc("GET /realtime", handler.RTHandler)
 
