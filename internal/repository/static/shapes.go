@@ -1,7 +1,8 @@
-package repository
+package static
 
 import (
 	"StartRomagnaAPI/internal/model"
+	"StartRomagnaAPI/internal/repository"
 	"fmt"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
@@ -9,7 +10,7 @@ import (
 
 func GetShapes() []model.ShapesResult {
 	var results []model.ShapesResult
-	err := DB_CONTENT.Select(&results, "SELECT * FROM shapes")
+	err := repository.DB_STATIC.Select(&results, "SELECT * FROM shapes")
 	if err != nil {
 		fmt.Println("GetShapes errore db:", err)
 	}
@@ -19,7 +20,7 @@ func GetShapes() []model.ShapesResult {
 
 func GetShapesBasin(basin string) []model.ShapesResult {
 	var results []model.ShapesResult
-	err := DB_CONTENT.Select(&results, "SELECT * FROM shapes WHERE basin = ?")
+	err := repository.DB_STATIC.Select(&results, "SELECT * FROM shapes WHERE basin = ?")
 	if err != nil {
 		fmt.Println("GetShapes errore db:", err)
 	}
@@ -93,14 +94,14 @@ func SaveShapes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gt
 		})
 	}
 
-	err := BatchInsert(DB_CONTENT, "shapes", []string{"basin", "shape_id", "shape_pt_lat", "shape_pt_lon", "shape_pt_sequence"}, values)
+	err := repository.BatchInsert(repository.DB_STATIC, "shapes", []string{"basin", "shape_id", "shape_pt_lat", "shape_pt_lon", "shape_pt_sequence"}, values)
 	if err != nil {
 		fmt.Println("SaveShapes db error:", err)
 	}
 
 	//Database delete
 	for _, val := range old {
-		_, err = DB_CONTENT.Exec("DELETE FROM shapes WHERE basin = ? AND shape_id = ? AND shape_pt_sequence = ?", val.Basin, val.Shape_id, val.Shape_pt_sequence)
+		_, err = repository.DB_STATIC.Exec("DELETE FROM shapes WHERE basin = ? AND shape_id = ? AND shape_pt_sequence = ?", val.Basin, val.Shape_id, val.Shape_pt_sequence)
 		if err != nil {
 			fmt.Println("SaveStops db error:", err)
 		}

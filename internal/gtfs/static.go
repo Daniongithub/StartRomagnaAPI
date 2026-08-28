@@ -3,7 +3,7 @@ package gtfs
 import (
 	"StartRomagnaAPI/config"
 	"StartRomagnaAPI/internal/auth"
-	"StartRomagnaAPI/internal/repository"
+	"StartRomagnaAPI/internal/repository/static"
 	"fmt"
 	"net/http"
 	"time"
@@ -31,12 +31,12 @@ func UpdateStatic() {
 		fmt.Println("UpdateStatic error reading feed:", err)
 	}
 
-	repository.SaveCalDates(feedRA, feedFC, feedRN)
-	repository.SaveRoutes(feedRA, feedFC, feedRN)
-	repository.SaveShapes(feedRA, feedFC, feedRN)
-	repository.SaveStopTimes(feedRA, feedFC, feedRN)
-	repository.SaveStops(feedRA, feedFC, feedRN)
-	repository.SaveTrips(feedRA, feedFC, feedRN)
+	static.SaveCalDates(feedRA, feedFC, feedRN)
+	static.SaveRoutes(feedRA, feedFC, feedRN)
+	static.SaveShapes(feedRA, feedFC, feedRN)
+	static.SaveStopTimes(feedRA, feedFC, feedRN)
+	static.SaveStops(feedRA, feedFC, feedRN)
+	static.SaveTrips(feedRA, feedFC, feedRN)
 
 	elapsed := time.Since(start)
 	fmt.Printf("Updated static GTFS. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)

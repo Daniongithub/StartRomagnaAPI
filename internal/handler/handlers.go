@@ -3,7 +3,7 @@ package handler
 import (
 	"StartRomagnaAPI/config"
 	"StartRomagnaAPI/internal/model"
-	"StartRomagnaAPI/internal/repository"
+	"StartRomagnaAPI/internal/repository/static"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -75,7 +75,7 @@ func TripsBasinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results := repository.GetTripsBasin(basin)
+	results := static.GetTripsBasin(basin)
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -91,7 +91,7 @@ func CalDatesBasinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results := repository.GetCalDatesBasin(basin)
+	results := static.GetCalDatesBasin(basin)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
@@ -106,7 +106,7 @@ func RoutesBasinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results := repository.GetRoutesBasin(basin)
+	results := static.GetRoutesBasin(basin)
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -122,7 +122,7 @@ func ShapesBasinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results := repository.GetShapesBasin(basin)
+	results := static.GetShapesBasin(basin)
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -138,7 +138,7 @@ func StopTimesBasinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results := repository.GetStopTimesBasin(basin)
+	results := static.GetStopTimesBasin(basin)
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -154,7 +154,7 @@ func StopsBasinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results := repository.GetStopsBasin(basin)
+	results := static.GetStopsBasin(basin)
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")

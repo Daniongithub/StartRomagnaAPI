@@ -1,7 +1,8 @@
-package repository
+package static
 
 import (
 	"StartRomagnaAPI/internal/model"
+	"StartRomagnaAPI/internal/repository"
 	"fmt"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
@@ -9,7 +10,7 @@ import (
 
 func GetCalDates() []model.CalendarDatesResult {
 	var results []model.CalendarDatesResult
-	err = DB_CONTENT.Select(&results, "SELECT * FROM calendar_dates")
+	err := repository.DB_STATIC.Select(&results, "SELECT * FROM calendar_dates")
 	if err != nil {
 		fmt.Println("GetCalDates error:", err)
 	}
@@ -19,7 +20,7 @@ func GetCalDates() []model.CalendarDatesResult {
 
 func GetCalDatesBasin(basin string) []model.CalendarDatesResult {
 	var results []model.CalendarDatesResult
-	err = DB_CONTENT.Select(&results, "SELECT * FROM calendar_dates WHERE basin = ?", basin)
+	err := repository.DB_STATIC.Select(&results, "SELECT * FROM calendar_dates WHERE basin = ?", basin)
 	if err != nil {
 		fmt.Println("GetCalDates error:", err)
 	}
@@ -82,14 +83,14 @@ func SaveCalDates(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *
 		})
 	}
 
-	err := BatchInsert(DB_CONTENT, "calendar_dates", []string{"basin", "service_id", "date", "exception_type"}, values)
+	err := repository.BatchInsert(repository.DB_STATIC, "calendar_dates", []string{"basin", "service_id", "date", "exception_type"}, values)
 	if err != nil {
 		fmt.Println("SaveCalDates db error:", err)
 	}
 
 	//Database delete
 	for _, val := range old {
-		_, err = DB_CONTENT.Exec("DELETE FROM calendar_dates WHERE basin = ? AND service_id = ? AND date = ?", val.Basin, val.Service_id, val.Date)
+		_, err = repository.DB_STATIC.Exec("DELETE FROM calendar_dates WHERE basin = ? AND service_id = ? AND date = ?", val.Basin, val.Service_id, val.Date)
 		if err != nil {
 			fmt.Println("SaveCalDates db error:", err)
 		}

@@ -3,128 +3,49 @@ package gtfs
 import (
 	"StartRomagnaAPI/config"
 	"StartRomagnaAPI/internal/auth"
-	"StartRomagnaAPI/internal/model"
-	"context"
+	"StartRomagnaAPI/internal/repository/realtime"
 	"fmt"
 	"io"
 	"net/http"
-	"sync"
-	"time"
+	"strings"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 	"google.golang.org/protobuf/proto"
 )
 
 const (
-	ServiceAlerts    model.RTFeedType = "service-alerts"
-	TripUpdates      model.RTFeedType = "trip-updates"
-	VehiclePositions model.RTFeedType = "vehicle-positions"
+	serviceAlerts    string   = "service-alerts"
+	tripUpdates      string   = "trip-updates"
+	vehiclePositions string   = "vehicle-positions"
 )
 
-func UpdateRT() {
-	fmt.Println("Updating realtime GTFS...")
-	start := time.Now()
+var basins []string = []string{"RA", "FC", "RN"}
 
-	ctx := context.Background()
+func UpdateAlerts() {
+	var feeds = make(map[string]*gtfs.FeedMessage)
+	for _, val := range basins {
+		url := rtURL(val, serviceAlerts)
 
-	type result struct {
-		area string
-		typ  model.RTFeedType
-		feed *gtfs.FeedMessage
-	}
-
-	jobs := make(chan struct {
-		area string
-		typ  model.RTFeedType
-	})
-
-	results := make(chan result, 9)
-
-	var wg sync.WaitGroup
-
-	// Massimo 3 richieste contemporaneamente.
-	for range 3 {
-
-		wg.Go(func() {
-
-			for job := range jobs {
-				url := rtURL(job.area, job.typ)
-
-				feed, err := getRT(ctx, url)
-				if err != nil {
-					fmt.Printf(
-						"Realtime GTFS error [%s/%s]: %v\n",
-						job.area,
-						job.typ,
-						err,
-					)
-					continue
-				}
-
-				results <- result{
-					area: job.area,
-					typ:  job.typ,
-					feed: feed,
-				}
-			}
-		})
-	}
-
-	for _, area := range []string{"ra", "fc", "rn"} {
-		for _, typ := range []model.RTFeedType{
-			ServiceAlerts,
-			TripUpdates,
-			VehiclePositions,
-		} {
-			jobs <- struct {
-				area string
-				typ  model.RTFeedType
-			}{
-				area: area,
-				typ:  typ,
-			}
+		rt, err := getRT(url)
+		if err != nil {
+			fmt.Println("UpdateAlerts error parsing feed")
 		}
+
+		feeds[val] = rt
 	}
 
-	close(jobs)
-
-	wg.Wait()
-	close(results)
-
-	// Qui fai il parsing/normalizzazione.
-	for result := range results {
-		fmt.Printf(
-			"Loaded %s/%s: %d entities\n",
-			result.area,
-			result.typ,
-			len(result.feed.Entity),
-		)
-	}
-
-	elapsed := time.Since(start)
-	fmt.Printf(
-		"Updated realtime GTFS. Elapsed: %d min %d sec\n",
-		int(elapsed.Minutes()),
-		int(elapsed.Seconds())%60,
-	)
+	realtime.SaveAlerts(feeds)
 }
 
-func rtURL(area string, feedType model.RTFeedType) string {
-	return fmt.Sprintf(
-		"%s/start-gtfs-rt-%s-%s.pb",
-		config.START_GTFS_RT_ROOT,
-		string(feedType),
-		area,
-	)
+func rtURL(basin, ft string) string {
+	return config.START_GTFS_RT_ROOT + "/start-gtfs-rt-" + ft + "-" + strings.ToLower(basin) + ".pb"
 }
 
-func getRT(ctx context.Context, url string) (*gtfs.FeedMessage, error) {
+func getRT(url string) (*gtfs.FeedMessage, error) {
 	req, err := auth.BasicAuth(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
-
-	req = req.WithContext(ctx)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	DB_CONTENT *sqlx.DB
-	err        error
+	DB_STATIC *sqlx.DB
+	DB_RT     *sqlx.DB
+	err       error
 )
 
 func newDB(host string, port int, user, password, dbname string) (*sqlx.DB, error) {
@@ -40,15 +41,27 @@ func isPrimary(db *sqlx.DB) (bool, error) {
 
 }
 
-func InitContent() {
-	DB_CONTENT, err = newDB(config.DB_HOST, config.DB_PORT, config.DB_USERNAME, config.DB_PASSWORD, "start_gtfs_content")
+func InitStatic() {
+	DB_STATIC, err = newDB(config.DB_HOST, config.DB_PORT, config.DB_USERNAME, config.DB_PASSWORD, "start_gtfs_static")
 	if err != nil {
-		fmt.Println("InitContent errore di connessione al database contenuti:", err)
+		fmt.Println("InitStatic errore di connessione al database del GTFS statico:", err)
 	}
 
-	config.IS_PRIMARY, err = isPrimary(DB_CONTENT)
+	config.IS_PRIMARY, err = isPrimary(DB_STATIC)
 	if err != nil {
-		fmt.Println("InitContent errore determinazione DB principale:", err)
+		fmt.Println("InitStatic errore determinazione DB principale:", err)
+	}
+}
+
+func InitRT() {
+	DB_RT, err = newDB(config.DB_HOST, config.DB_PORT, config.DB_USERNAME, config.DB_PASSWORD, "start_gtfs_rt")
+	if err != nil {
+		fmt.Println("InitRT errore di connessione al database del GTFS dinamico:", err)
+	}
+
+	config.IS_PRIMARY, err = isPrimary(DB_STATIC)
+	if err != nil {
+		fmt.Println("InitRT errore determinazione DB principale:", err)
 	}
 }
 

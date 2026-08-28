@@ -13,13 +13,15 @@ import (
 
 func main() {
 	config.LoadConf()
-	repository.InitContent()
+	repository.InitStatic()
+	repository.InitRT()
 
 	if config.IS_PRIMARY {
 		//Operazioni per DB in modalità "primary" (non read only):
 
 		//Viene eseguito comunque al primo avvio del programma
 		go gtfs.UpdateStatic()
+		go gtfs.UpdateAlerts()
 
 		s, err := scheduler.InitScheduler()
 		if err != nil {

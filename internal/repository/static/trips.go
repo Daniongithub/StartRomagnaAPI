@@ -1,7 +1,8 @@
-package repository
+package static
 
 import (
 	"StartRomagnaAPI/internal/model"
+	"StartRomagnaAPI/internal/repository"
 	"fmt"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
@@ -9,7 +10,7 @@ import (
 
 func GetTrips() []model.TripsResult {
 	var results []model.TripsResult
-	err := DB_CONTENT.Select(&results, "SELECT * FROM trips")
+	err := repository.DB_STATIC.Select(&results, "SELECT * FROM trips")
 	if err != nil {
 		fmt.Println("GetTrips error:", err)
 	}
@@ -19,7 +20,7 @@ func GetTrips() []model.TripsResult {
 
 func GetTripsBasin(basin string) []model.TripsResult {
 	var results []model.TripsResult
-	err := DB_CONTENT.Select(&results, "SELECT * FROM trips WHERE basin = ? ORDER BY route_id", basin)
+	err := repository.DB_STATIC.Select(&results, "SELECT * FROM trips WHERE basin = ? ORDER BY route_id", basin)
 	if err != nil {
 		fmt.Println("GetTripsBasin error:", err)
 	}
@@ -94,14 +95,14 @@ func SaveTrips(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 		})
 	}
 
-	err := BatchInsert(DB_CONTENT, "trips", []string{"basin", "route_id", "service_id", "trip_id", "trip_headsign", "direcion_id", "shape_id"}, values)
+	err := repository.BatchInsert(repository.DB_STATIC, "trips", []string{"basin", "route_id", "service_id", "trip_id", "trip_headsign", "direcion_id", "shape_id"}, values)
 	if err != nil {
 		fmt.Println("SaveTrips db error:", err)
 	}
 
 	//Database delete
 	for _, val := range old {
-		_, err = DB_CONTENT.Exec("DELETE FROM trips WHERE trip_id = ?", val.Trip_id)
+		_, err = repository.DB_STATIC.Exec("DELETE FROM trips WHERE trip_id = ?", val.Trip_id)
 		if err != nil {
 			fmt.Println("SaveTrips db error:", err)
 		}

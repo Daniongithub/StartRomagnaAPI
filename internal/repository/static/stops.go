@@ -1,7 +1,8 @@
-package repository
+package static
 
 import (
 	"StartRomagnaAPI/internal/model"
+	"StartRomagnaAPI/internal/repository"
 	"fmt"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
@@ -9,7 +10,7 @@ import (
 
 func GetStops() []model.StopsResult {
 	var results []model.StopsResult
-	err := DB_CONTENT.Select(&results, "SELECT * FROM stops")
+	err := repository.DB_STATIC.Select(&results, "SELECT * FROM stops")
 	if err != nil {
 		fmt.Println("GetStops errore db:", err)
 	}
@@ -19,7 +20,7 @@ func GetStops() []model.StopsResult {
 
 func GetStopsFiltered() []model.StopsResult {
 	var results []model.StopsResult
-	err := DB_CONTENT.Select(&results, `SELECT * FROM stops WHERE LOCATE('semaforo', stop_name) = 0
+	err := repository.DB_STATIC.Select(&results, `SELECT * FROM stops WHERE LOCATE('semaforo', stop_name) = 0
       AND LOCATE('fi1', stop_name) = 0
 	  AND LOCATE('FITTIZIO', stop_name) = 0
       AND LOCATE('Fittizio', stop_name) = 0
@@ -34,7 +35,7 @@ func GetStopsFiltered() []model.StopsResult {
 
 func GetStopsBasin(basin string) []model.StopsResult {
 	var results []model.StopsResult
-	err := DB_CONTENT.Select(&results, `SELECT * FROM stops WHERE basin = ? AND LOCATE('semaforo', stop_name) = 0
+	err := repository.DB_STATIC.Select(&results, `SELECT * FROM stops WHERE basin = ? AND LOCATE('semaforo', stop_name) = 0
 	  AND LOCATE('fi1', stop_name) = 0
       AND LOCATE('FITTIZIO', stop_name) = 0
       AND LOCATE('Fittizio', stop_name) = 0
@@ -112,14 +113,14 @@ func SaveStops(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 		})
 	}
 
-	err := BatchInsert(DB_CONTENT, "stops", []string{"basin", "stop_id", "stop_code", "stop_name", "stop_lat", "stop_lon"}, values)
+	err := repository.BatchInsert(repository.DB_STATIC, "stops", []string{"basin", "stop_id", "stop_code", "stop_name", "stop_lat", "stop_lon"}, values)
 	if err != nil {
 		fmt.Println("SaveStops db error:", err)
 	}
 
 	//Database delete
 	for _, val := range old {
-		_, err = DB_CONTENT.Exec("DELETE FROM stops WHERE basin = ? AND stop_id = ?", val.Basin, val.Stop_id)
+		_, err = repository.DB_STATIC.Exec("DELETE FROM stops WHERE basin = ? AND stop_id = ?", val.Basin, val.Stop_id)
 		if err != nil {
 			fmt.Println("SaveStops db error:", err)
 		}

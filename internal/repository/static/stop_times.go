@@ -1,7 +1,8 @@
-package repository
+package static
 
 import (
 	"StartRomagnaAPI/internal/model"
+	"StartRomagnaAPI/internal/repository"
 	"fmt"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
@@ -10,7 +11,7 @@ import (
 
 func GetStopTimes() []model.StopTimesResult {
 	var results []model.StopTimesResult
-	err := DB_CONTENT.Select(&results, "SELECT * FROM stop_times")
+	err := repository.DB_STATIC.Select(&results, "SELECT * FROM stop_times")
 	if err != nil {
 		fmt.Println("GetStopTimes errore db:", err)
 	}
@@ -20,7 +21,7 @@ func GetStopTimes() []model.StopTimesResult {
 
 func GetStopTimesBasin(basin string) []model.StopTimesResult {
 	var results []model.StopTimesResult
-	err := DB_CONTENT.Select(&results, "SELECT * FROM stop_times WHERE basin = ?", basin)
+	err := repository.DB_STATIC.Select(&results, "SELECT * FROM stop_times WHERE basin = ?", basin)
 	if err != nil {
 		fmt.Println("GetStopTimes errore db:", err)
 	}
@@ -83,7 +84,7 @@ func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN 
 		})
 	}
 
-	err := BatchInsert(DB_CONTENT, "stop_times", []string{"basin", "trip_id", "arrival_time", "departure_time", "stop_id", "stop_sequence"}, values)
+	err := repository.BatchInsert(repository.DB_STATIC, "stop_times", []string{"basin", "trip_id", "arrival_time", "departure_time", "stop_id", "stop_sequence"}, values)
 	if err != nil {
 		fmt.Println("SaveStopTimes db error:", err)
 	}
