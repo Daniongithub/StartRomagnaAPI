@@ -36,6 +36,7 @@ func main() {
 
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
+	mux.HandleFunc("GET /static/info", handler.StaticInfoHandler)
 	mux.HandleFunc("GET /static/trips/{basin}", handler.TripsBasinHandler)
 	mux.HandleFunc("GET /static/calendar_dates/{basin}", handler.CalDatesBasinHandler)
 	mux.HandleFunc("GET /static/routes/{basin}", handler.RoutesBasinHandler)

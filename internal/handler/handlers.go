@@ -66,6 +66,17 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(response)
 }
 
+// GET /static/info
+func StaticInfoHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
+
+	min_date, max_date := static.GetCalDatesRange()
+
+	message := "GTFS static data valid from " + min_date + " to " + max_date + "."
+
+	w.Write([]byte(message))
+}
+
 // GET /static/trips/{basin}
 func TripsBasinHandler(w http.ResponseWriter, r *http.Request) {
 	basin := r.PathValue("basin")
