@@ -14,15 +14,35 @@ import (
 )
 
 const (
-	serviceAlerts    string   = "service-alerts"
-	tripUpdates      string   = "trip-updates"
-	vehiclePositions string   = "vehicle-positions"
+	serviceAlerts    string = "service-alerts"
+	tripUpdates      string = "trip-updates"
+	vehiclePositions string = "vehicle-positions"
 )
 
 var basins []string = []string{"RA", "FC", "RN"}
 
 func UpdateAlerts() {
-	var feeds = make(map[string]*gtfs.FeedMessage)
+	feeds := make(map[string]*gtfs.FeedMessage)
+	alertsMap := make(map[string]map[string]bool)
+	tmp := make(map[string]bool)
+
+	alertsRA := realtime.GetServiceAlertsBasin("RA")
+	for _, val := range alertsRA {
+		tmp[val.Id] = true
+	}
+	alertsMap["RA"] = tmp
+	alertsFC := realtime.GetServiceAlertsBasin("FC")
+	for _, val := range alertsFC {
+		tmp[val.Id] = true
+
+	}
+	alertsMap["FC"] = tmp
+	alertsRN := realtime.GetServiceAlertsBasin("RN")
+	for _, val := range alertsRN {
+		tmp[val.Id] = true
+	}
+	alertsMap["RN"] = tmp
+
 	for _, val := range basins {
 		url := rtURL(val, serviceAlerts)
 
@@ -34,7 +54,29 @@ func UpdateAlerts() {
 		feeds[val] = rt
 	}
 
-	realtime.SaveAlerts(feeds)
+	realtime.SaveAlerts(feeds, alertsMap)
+	fmt.Println("Updated ServiceAlerts")
+}
+
+func UpdateTripUpdates() {
+	feeds := make(map[string]*gtfs.FeedMessage)
+
+	for _, val := range basins {
+		url := rtURL(val, tripUpdates)
+
+		rt, err := getRT(url)
+		if err != nil {
+			fmt.Println("UpdateAlerts error parsing feed")
+		}
+
+		feeds[val] = rt
+	}
+
+	realtime.DeleteAllStopTimeUpd()
+	realtime.DeleteAllTripUpdates()
+	realtime.SaveTripUpdates(feeds)
+	realtime.SaveStopTimeUpd(feeds)
+	fmt.Println("Updated TripUpdates")
 }
 
 func rtURL(basin, ft string) string {
