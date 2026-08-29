@@ -1,5 +1,7 @@
 # StartRomagnaAPI
 
+# WORK IN PROGRESS, NOT FOR PRODUCTION!
+
 Go backend parsing official GTFS and GTFS-RT streams from START Romagna
 
 ## .env example
@@ -59,14 +61,14 @@ ALLOWED_ORIGINS="https://example.com,https://example.com"
 
 - [ ] Fetch vehicle positions
 - [ ] Parse vehicle positions
-- [ ] Fetch trip updates
-- [ ] Parse trip updates
-- [ ] Fetch service alerts
-- [ ] Parse service alerts
+- [X] Fetch trip updates
+- [X] Parse trip updates
+- [X] Fetch service alerts
+- [X] Parse service alerts
 - [ ] Update realtime state
-- [ ] Support RA
-- [ ] Support FC
-- [ ] Support RN
+- [X] Support RA
+- [X] Support FC
+- [X] Support RN
 
 ### HTTP API
 

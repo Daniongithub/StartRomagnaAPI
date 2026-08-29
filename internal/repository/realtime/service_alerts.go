@@ -29,7 +29,7 @@ func GetServiceAlertsBasin(basin string) []model.ServiceAlertsResult {
 	return results
 }
 
-func SaveAlerts(feeds map[string]*gtfs.FeedMessage, dbContent map[string]map[string]bool) {
+/*func SaveAlerts(feeds map[string]*gtfs.FeedMessage, dbContent map[string]map[string]bool) {
 	//Database insert
 	for idx, val := range feeds {
 		for _, val2 := range val.Entity {
@@ -37,7 +37,7 @@ func SaveAlerts(feeds map[string]*gtfs.FeedMessage, dbContent map[string]map[str
 			if !ok {
 				startS := val2.Alert.ActivePeriod[0].Start
 				endS := val2.Alert.ActivePeriod[0].End
-				
+
 				start := secondsToTime(int(*startS))
 				end := secondsToTime(int(*endS))
 				_, err := repository.DB_RT.Exec("INSERT INTO service_alerts VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", idx, val2.Id, val2.Id, start, end, val2.Alert.InformedEntity[0].RouteId, val2.Alert.InformedEntity[0].RouteType, val2.Alert.InformedEntity[0].Trip.TripId, val2.Alert.InformedEntity[0].Trip.DirectionId, val2.Alert.InformedEntity[0].Trip.StartTime, val2.Alert.InformedEntity[0].Trip.StartDate, val2.Alert.InformedEntity[0].StopId)
@@ -46,6 +46,61 @@ func SaveAlerts(feeds map[string]*gtfs.FeedMessage, dbContent map[string]map[str
 				}
 			}
 		}
+	}
+}*/
+
+func SaveAlerts(feeds map[string]*gtfs.FeedMessage, dbContent map[string]map[string]bool) {
+	rows := make([][]any, 0)
+
+	for idx, val := range feeds {
+		for _, val2 := range val.Entity {
+			if _, ok := dbContent[idx][*val2.Id]; ok {
+				continue
+			}
+
+			startS := val2.Alert.ActivePeriod[0].Start
+			endS := val2.Alert.ActivePeriod[0].End
+
+			start := secondsToTime(int(*startS))
+			end := secondsToTime(int(*endS))
+
+			rows = append(rows, []any{
+				idx,
+				val2.Id,
+				start,
+				end,
+				val2.Alert.InformedEntity[0].RouteId,
+				val2.Alert.InformedEntity[0].RouteType,
+				val2.Alert.InformedEntity[0].Trip.TripId,
+				val2.Alert.InformedEntity[0].Trip.DirectionId,
+				val2.Alert.InformedEntity[0].Trip.StartTime,
+				val2.Alert.InformedEntity[0].Trip.StartDate,
+				val2.Alert.InformedEntity[0].StopId,
+			})
+		}
+	}
+
+	if len(rows) == 0 {
+		return
+	}
+
+	columns := []string{
+		"basin",
+		"id",
+		"start",
+		"end",
+		"route_id",
+		"route_type",
+		"trip_id",
+		"direction_id",
+		"start_time",
+		"start_date",
+		"stop_id",
+	}
+
+	err := repository.BatchInsert(repository.DB_RT, "service_alerts", columns, rows)
+	if err != nil {
+		fmt.Println("SaveAlerts db error:", err)
 	}
 }
 

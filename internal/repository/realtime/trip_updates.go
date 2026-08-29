@@ -28,15 +28,30 @@ func GetTripUpdatesBasin(basin string) []model.TripUpdatesResult {
 }
 
 func SaveTripUpdates(feeds map[string]*gtfs.FeedMessage) {
-	//Database inserts
-	for idx, val := range feeds {
-		for _, val2 := range val.Entity {
-			schedRel := getSchedRel(val2)
-			_, err := repository.DB_RT.Exec("INSERT INTO trip_updates VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", idx, val2.Id, val2.TripUpdate.Trip.TripId, val2.TripUpdate.Trip.RouteId, val2.TripUpdate.Trip.DirectionId, val2.TripUpdate.Trip.StartTime, val2.TripUpdate.Trip.StartDate, schedRel, val2.TripUpdate.Vehicle.Label, time.Unix(int64(*val2.TripUpdate.Timestamp), 0))
-			if err != nil {
-				fmt.Println("SaveTripUpdates db error:", err)
-			}
+	values := make([][]any, 0)
+
+	for idx, feed := range feeds {
+		for _, entity := range feed.Entity {
+			schedRel := getSchedRel(entity)
+
+			values = append(values, []any{
+				idx,
+				entity.Id,
+				entity.TripUpdate.Trip.TripId,
+				entity.TripUpdate.Trip.RouteId,
+				entity.TripUpdate.Trip.DirectionId,
+				entity.TripUpdate.Trip.StartTime,
+				entity.TripUpdate.Trip.StartDate,
+				schedRel,
+				entity.TripUpdate.Vehicle.Label,
+				time.Unix(int64(*entity.TripUpdate.Timestamp), 0),
+			})
 		}
+	}
+
+	err := repository.BatchInsert(repository.DB_RT, "trip_updates", []string{"basin", "id", "trip_id", "route_id", "direction_id", "start_time", "start_date", "schedule_relationship", "vehicle", "timestamp"}, values)
+	if err != nil {
+		fmt.Println("SaveTripUpdates db error:", err)
 	}
 }
 
@@ -47,10 +62,10 @@ func DeleteAllTripUpdates() {
 	}
 }
 
-func getSchedRel(val2 *gtfs.FeedEntity) *string{
+func getSchedRel(val2 *gtfs.FeedEntity) *string {
 	if val2.TripUpdate.Trip.ScheduleRelationship == nil {
-		return nil;
+		return nil
 	}
 	out := val2.TripUpdate.Trip.ScheduleRelationship.String()
-	return &out;
+	return &out
 }
