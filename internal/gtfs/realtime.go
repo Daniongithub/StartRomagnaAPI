@@ -1,12 +1,13 @@
 package gtfs
 
 import (
-	"startromagnaapi/config"
-	"startromagnaapi/internal/auth"
-	"startromagnaapi/internal/repository/realtime"
 	"fmt"
 	"io"
 	"net/http"
+	"startromagnaapi/config"
+	"startromagnaapi/internal/auth"
+	"startromagnaapi/internal/repository"
+	"startromagnaapi/internal/repository/realtime"
 	"strings"
 	"time"
 
@@ -76,12 +77,12 @@ func UpdateTripUpdates() {
 		feeds[val] = rt
 	}
 
-	realtime.StartTransaction()
+	repository.StartTransactionTU()
 	realtime.DeleteAllStopTimeUpd()
 	realtime.DeleteAllTripUpdates()
 	realtime.SaveTripUpdates(feeds)
 	realtime.SaveStopTimeUpd(feeds)
-	realtime.CommitTransaction()
+	repository.CommitTransactionTU()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Updated TripUpdates. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)
@@ -102,10 +103,10 @@ func UpdateVehiclePositions() {
 		feeds[val] = rt
 	}
 
-	realtime.StartTransaction()
+	repository.StartTransactionVP()
 	realtime.DeleteAllVehiclePositions()
 	realtime.SaveVehiclePositions(feeds)
-	realtime.CommitTransaction()
+	repository.CommitTransactionVP()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Updated UpdateVehiclePositions. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)

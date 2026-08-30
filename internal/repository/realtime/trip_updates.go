@@ -49,14 +49,14 @@ func SaveTripUpdates(feeds map[string]*gtfs.FeedMessage) {
 		}
 	}
 
-	err := repository.BatchInsertTX(TX, "trip_updates", []string{"basin", "id", "trip_id", "route_id", "direction_id", "start_time", "start_date", "schedule_relationship", "vehicle", "timestamp"}, values)
+	err := repository.BatchInsertTX(repository.TX_TU, "trip_updates", []string{"basin", "id", "trip_id", "route_id", "direction_id", "start_time", "start_date", "schedule_relationship", "vehicle", "timestamp"}, values)
 	if err != nil {
 		fmt.Println("SaveTripUpdates db error:", err)
 	}
 }
 
 func DeleteAllTripUpdates() {
-	_, err := TX.Exec("DELETE FROM trip_updates")
+	_, err := repository.TX_TU.Exec("DELETE FROM trip_updates")
 	if err != nil {
 		fmt.Println("DeleteAllTripUpdates db error:", err)
 	}

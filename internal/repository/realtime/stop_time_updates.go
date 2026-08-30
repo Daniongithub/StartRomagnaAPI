@@ -1,15 +1,12 @@
 package realtime
 
 import (
+	"fmt"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
-	"fmt"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
-	"github.com/jmoiron/sqlx"
 )
-
-var TX *sqlx.Tx
 
 func GetStopTimeUpdByTripId(trip_id string) []model.StopTime {
 	var results []model.StopTime
@@ -42,7 +39,7 @@ func SaveStopTimeUpd(feeds map[string]*gtfs.FeedMessage) {
 				}
 			}
 
-			err := repository.BatchInsertTX(TX, "stop_time_updates", []string{"trip_id", "stop_sequence", "delay"}, values)
+			err := repository.BatchInsertTX(repository.TX_TU, "stop_time_updates", []string{"trip_id", "stop_sequence", "delay"}, values)
 			if err != nil {
 				fmt.Println("SaveStopTimeUpd db error:", err)
 			}
@@ -51,7 +48,7 @@ func SaveStopTimeUpd(feeds map[string]*gtfs.FeedMessage) {
 }
 
 func DeleteAllStopTimeUpd() {
-	_, err := TX.Exec("DELETE FROM stop_time_updates")
+	_, err := repository.TX_TU.Exec("DELETE FROM stop_time_updates")
 	if err != nil {
 		fmt.Println("DeleteAllStopTimeUpd db error:", err)
 	}
@@ -63,19 +60,4 @@ func convertDelay(delay *int32) int32 {
 	}
 	out := delay
 	return *out
-}
-
-func StartTransaction() {
-	var err error
-	TX, err = repository.DB_RT.Beginx()
-	if err != nil {
-		fmt.Println("StartTransaction db error:", err)
-	}
-}
-
-func CommitTransaction() {
-	err := TX.Commit()
-	if err != nil {
-		fmt.Println("CommitTransaction db error:", err)
-	}
 }
