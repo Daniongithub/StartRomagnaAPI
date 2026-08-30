@@ -1,7 +1,7 @@
 package scheduler
 
 import (
-	"StartRomagnaAPI/internal/gtfs"
+	"startromagnaapi/internal/gtfs"
 	"fmt"
 
 	"github.com/go-co-op/gocron/v2"

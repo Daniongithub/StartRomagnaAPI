@@ -1,11 +1,11 @@
 package main
 
 import (
-	"StartRomagnaAPI/config"
-	"StartRomagnaAPI/internal/gtfs"
-	"StartRomagnaAPI/internal/handler"
-	"StartRomagnaAPI/internal/repository"
-	"StartRomagnaAPI/internal/scheduler"
+	"startromagnaapi/config"
+	"startromagnaapi/internal/gtfs"
+	"startromagnaapi/internal/handler"
+	"startromagnaapi/internal/repository"
+	"startromagnaapi/internal/scheduler"
 	"fmt"
 	"log"
 	"net/http"

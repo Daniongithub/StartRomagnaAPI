@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"StartRomagnaAPI/config"
+	"startromagnaapi/config"
 	"net/http"
 	"strings"
 )

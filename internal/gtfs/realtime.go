@@ -1,9 +1,9 @@
 package gtfs
 
 import (
-	"StartRomagnaAPI/config"
-	"StartRomagnaAPI/internal/auth"
-	"StartRomagnaAPI/internal/repository/realtime"
+	"startromagnaapi/config"
+	"startromagnaapi/internal/auth"
+	"startromagnaapi/internal/repository/realtime"
 	"fmt"
 	"io"
 	"net/http"

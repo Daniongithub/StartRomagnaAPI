@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"StartRomagnaAPI/config"
+	"startromagnaapi/config"
 	"fmt"
 	"time"
 

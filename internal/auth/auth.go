@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"StartRomagnaAPI/config"
+	"startromagnaapi/config"
 	"io"
 	"net/http"
 )

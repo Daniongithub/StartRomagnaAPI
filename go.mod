@@ -1,4 +1,4 @@
-module StartRomagnaAPI
+module startromagnaapi
 
 go 1.25.0
 

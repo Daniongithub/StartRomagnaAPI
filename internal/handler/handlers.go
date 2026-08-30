@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"StartRomagnaAPI/config"
-	"StartRomagnaAPI/internal/model"
-	"StartRomagnaAPI/internal/repository/static"
+	"startromagnaapi/config"
+	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/repository/static"
 	"encoding/json"
 	"net/http"
 	"time"

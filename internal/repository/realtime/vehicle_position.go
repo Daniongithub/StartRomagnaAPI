@@ -1,7 +1,7 @@
 package realtime
 
 import (
-	"StartRomagnaAPI/internal/repository"
+	"startromagnaapi/internal/repository"
 	"fmt"
 	"time"
 
