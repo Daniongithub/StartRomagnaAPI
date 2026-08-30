@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 	"google.golang.org/protobuf/proto"
@@ -22,6 +23,7 @@ const (
 var basins []string = []string{"RA", "FC", "RN"}
 
 func UpdateAlerts() {
+	start := time.Now()
 	feeds := make(map[string]*gtfs.FeedMessage)
 	alertsMap := make(map[string]map[string]bool)
 	tmp := make(map[string]bool)
@@ -55,10 +57,12 @@ func UpdateAlerts() {
 	}
 
 	realtime.SaveAlerts(feeds, alertsMap)
-	fmt.Println("Updated ServiceAlerts")
+	elapsed := time.Since(start)
+	fmt.Printf("Updated ServiceAlerts. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)
 }
 
 func UpdateTripUpdates() {
+	start := time.Now()
 	feeds := make(map[string]*gtfs.FeedMessage)
 
 	for _, val := range basins {
@@ -76,7 +80,9 @@ func UpdateTripUpdates() {
 	realtime.DeleteAllTripUpdates()
 	realtime.SaveTripUpdates(feeds)
 	realtime.SaveStopTimeUpd(feeds)
-	fmt.Println("Updated TripUpdates")
+
+	elapsed := time.Since(start)
+	fmt.Printf("Updated TripUpdates. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)
 }
 
 func rtURL(basin, ft string) string {
