@@ -84,6 +84,13 @@ func SaveAlerts(feeds map[string]*gtfs.FeedMessage, dbContent map[string]map[str
 	}
 }
 
+func DeleteAllServiceAlerts() {
+	_, err := repository.DB_RT.Exec("DELETE FROM service_alerts")
+	if err != nil {
+		fmt.Println("DeleteAllServiceAlerts db error:", err)
+	}
+}
+
 func secondsToTime(seconds int) time.Time {
 	base := time.Now()
 	midnight := time.Date(base.Year(), base.Month(), base.Day(), 0, 0, 0, 0, base.Location())

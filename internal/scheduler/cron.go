@@ -1,7 +1,8 @@
 package scheduler
 
 import (
-	"startromagnaapi/internal/gtfs"
+	"StartRomagnaAPI/internal/gtfs"
+	"StartRomagnaAPI/internal/repository/realtime"
 	"fmt"
 
 	"github.com/go-co-op/gocron/v2"
@@ -14,6 +15,8 @@ func InitScheduler() (gocron.Scheduler, error) {
 	}
 
 	_, err = s.NewJob(gocron.CronJob("0 4 * * *", false), gocron.NewTask(updateStaticTask))
+
+	_, err = s.NewJob(gocron.CronJob("0 0 * * *", false), gocron.NewTask(deleteServiceAlerts))
 
 	_, err = s.NewJob(gocron.CronJob("* * * * *", false), gocron.NewTask(updateServiceAlerts))
 
@@ -38,6 +41,12 @@ func updateStaticTask() {
 func updateServiceAlerts() {
 	fmt.Println("Task update Service Alerts")
 	gtfs.UpdateAlerts()
+	fmt.Println("Task OK.")
+}
+
+func deleteServiceAlerts() {
+	fmt.Println("Task delete Service Alerts")
+	realtime.DeleteAllServiceAlerts()
 	fmt.Println("Task OK.")
 }
 
