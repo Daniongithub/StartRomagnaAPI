@@ -1,8 +1,8 @@
 package scheduler
 
 import (
-	"StartRomagnaAPI/internal/gtfs"
-	"StartRomagnaAPI/internal/repository/realtime"
+	"startromagnaapi/internal/gtfs"
+	"startromagnaapi/internal/repository/realtime"
 	"fmt"
 
 	"github.com/go-co-op/gocron/v2"
