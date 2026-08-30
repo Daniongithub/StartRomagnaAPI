@@ -70,7 +70,7 @@ func UpdateTripUpdates() {
 
 		rt, err := getRT(url)
 		if err != nil {
-			fmt.Println("UpdateAlerts error parsing feed")
+			fmt.Println("UpdateTripUpdates error parsing feed")
 		}
 
 		feeds[val] = rt
@@ -83,6 +83,28 @@ func UpdateTripUpdates() {
 
 	elapsed := time.Since(start)
 	fmt.Printf("Updated TripUpdates. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)
+}
+
+func UpdateVehiclePositions() {
+	start := time.Now()
+	feeds := make(map[string]*gtfs.FeedMessage)
+
+	for _, val := range basins {
+		url := rtURL(val, vehiclePositions)
+
+		rt, err := getRT(url)
+		if err != nil {
+			fmt.Println("UpdateVehiclePositions error parsing feed")
+		}
+
+		feeds[val] = rt
+	}
+
+	realtime.DeleteAllVehiclePositions()
+	realtime.SaveVehiclePositions(feeds)
+
+	elapsed := time.Since(start)
+	fmt.Printf("Updated UpdateVehiclePositions. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)
 }
 
 func rtURL(basin, ft string) string {

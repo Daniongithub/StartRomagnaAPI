@@ -19,6 +19,8 @@ func InitScheduler() (gocron.Scheduler, error) {
 
 	_, err = s.NewJob(gocron.CronJob("*/20 * * * * *", true), gocron.NewTask(updateTripUpdates))
 
+	_, err = s.NewJob(gocron.CronJob("*/20 * * * * *", true), gocron.NewTask(updateVehiclePositions))
+
 	if err != nil {
 		return nil, err
 	}
@@ -45,8 +47,8 @@ func updateTripUpdates() {
 	fmt.Println("Task OK.")
 }
 
-/*func updateVehiclePositions() {
+func updateVehiclePositions() {
 	fmt.Println("Task update ")
-	gtfs.()
+	gtfs.UpdateVehiclePositions()
 	fmt.Println("Task OK.")
-}*/
+}
