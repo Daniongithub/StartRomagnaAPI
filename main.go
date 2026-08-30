@@ -21,8 +21,6 @@ func main() {
 
 		//Viene eseguito comunque al primo avvio del programma
 		go gtfs.UpdateStatic()
-		go gtfs.UpdateAlerts()
-		go gtfs.UpdateTripUpdates()
 
 		s, err := scheduler.InitScheduler()
 		if err != nil {
