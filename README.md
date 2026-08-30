@@ -54,18 +54,18 @@ ALLOWED_ORIGINS="https://example.com,https://example.com"
 - [X] Design schema
 - [X] Migrations
 - [X] Store static GTFS
-- [ ] Update static GTFS safely
+- [X] Update static GTFS safely
 - [X] Check if DB is primary
 
 ### GTFS-RT importer
 
-- [ ] Fetch vehicle positions
-- [ ] Parse vehicle positions
+- [X] Fetch vehicle positions
+- [X] Parse vehicle positions
 - [X] Fetch trip updates
 - [X] Parse trip updates
 - [X] Fetch service alerts
 - [X] Parse service alerts
-- [ ] Update realtime state
+- [X] Update realtime state
 - [X] Support RA
 - [X] Support FC
 - [X] Support RN
@@ -74,13 +74,19 @@ ALLOWED_ORIGINS="https://example.com,https://example.com"
 
 - [ ] GET /busesinservice
 - [ ] GET /busesinservice/{basin}
-- [ ] GET /routes
-- [ ] GET /routes/{route}
-- [ ] GET /trips/{trip}
-- [ ] GET /trips/{trip}/stops
-- [ ] GET /trips/{trip}/shape
-- [ ] GET /stops/{stop}
+- [X] GET /static/info
+- [X] GET /static/trips/{basin}
+- [ ] GET /static/trips/{trip_id}
+- [X] GET /static/calendar_dates/{basin}
+- [X] GET /static/routes/{basin}
+- [X] GET /static/shapes/{basin}
+- [X] GET /static/stop_times/{basin}
+- [X] GET /static/stops/{basin}
 - [ ] ...
+
+### Backend integration
+
+- [ ] Scan realtime and interface with ertpl_mezzi "fermi"
 
 ### Frontend integration
 
