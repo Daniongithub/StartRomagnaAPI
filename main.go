@@ -34,7 +34,9 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
+
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
+
 	mux.HandleFunc("GET /static/info", handler.StaticInfoHandler)
 	mux.HandleFunc("GET /static/trips/{basin}", handler.TripsBasinHandler)
 	mux.HandleFunc("GET /static/calendar_dates/{basin}", handler.CalDatesBasinHandler)
@@ -42,6 +44,7 @@ func main() {
 	mux.HandleFunc("GET /static/shapes/{basin}", handler.RoutesBasinHandler)
 	mux.HandleFunc("GET /static/stop_times/{basin}", handler.StopTimesBasinHandler)
 	mux.HandleFunc("GET /static/stops/{basin}", handler.StopsBasinHandler)
+
 	//mux.HandleFunc("GET /realtime", handler.RTHandler)
 
 	//Listen on port and start API
