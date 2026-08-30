@@ -76,10 +76,12 @@ func UpdateTripUpdates() {
 		feeds[val] = rt
 	}
 
+	realtime.StartTransaction()
 	realtime.DeleteAllStopTimeUpd()
 	realtime.DeleteAllTripUpdates()
 	realtime.SaveTripUpdates(feeds)
 	realtime.SaveStopTimeUpd(feeds)
+	realtime.CommitTransaction()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Updated TripUpdates. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)
@@ -100,8 +102,10 @@ func UpdateVehiclePositions() {
 		feeds[val] = rt
 	}
 
+	realtime.StartTransaction()
 	realtime.DeleteAllVehiclePositions()
 	realtime.SaveVehiclePositions(feeds)
+	realtime.CommitTransaction()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Updated UpdateVehiclePositions. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)

@@ -29,14 +29,14 @@ func SaveVehiclePositions(feeds map[string]*gtfs.FeedMessage) {
 		}
 	}
 
-	err := repository.BatchInsert(repository.DB_RT, "vehicle_positions", []string{"basin", "id", "trip_id", "direction_id", "start_time", "start_date", "vehicle", "`lat`", "`long`", "timestamp", "occupancy_status"}, values)
+	err := repository.BatchInsertTX(TX, "vehicle_positions", []string{"basin", "id", "trip_id", "direction_id", "start_time", "start_date", "vehicle", "`lat`", "`long`", "timestamp", "occupancy_status"}, values)
 	if err != nil {
 		fmt.Println("SaveVehiclePositions db error:", err)
 	}
 }
 
 func DeleteAllVehiclePositions() {
-	_, err := repository.DB_RT.Exec("DELETE FROM vehicle_positions")
+	_, err := TX.Exec("DELETE FROM vehicle_positions")
 	if err != nil {
 		fmt.Println("DeleteAllVehiclePositions db error:", err)
 	}
