@@ -30,9 +30,12 @@ func ProcessCorsesopp(basin string) []model.CorseSopp {
 	return corseSopp
 }
 
-func checkVehicle(vehicle string) *string {
-	if vehicle == "0" {
+func checkVehicle(vehicle *string) *string {
+	if vehicle == nil {
 		return nil
 	}
-	return &vehicle
+	if *vehicle == "0" {
+		return nil
+	}
+	return vehicle
 }

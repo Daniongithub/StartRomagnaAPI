@@ -27,14 +27,17 @@ func GetTripUpdatesBasin(basin string) []model.TripUpdatesResult {
 	return results
 }
 
-func GetVehicleByTripId(tripId string) string {
+func GetVehicleByTripId(tripId string) *string {
 	var results []string
 	err := repository.DB_RT.Select(&results, `SELECT vehicle FROM trip_updates WHERE trip_id = ?`, tripId)
 	if err != nil {
 		fmt.Println("GetTripUpdates error:", err)
 	}
 
-	return results[0]
+	if len(results) == 0 {
+		return nil
+	}
+	return &results[0]
 }
 
 func SaveTripUpdates(feeds map[string]*gtfs.FeedMessage) {
