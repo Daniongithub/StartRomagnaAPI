@@ -3,12 +3,13 @@ package main
 import (
 	"startromagnaapi/config"
 	//"startromagnaapi/internal/gtfs"
-	"startromagnaapi/internal/handler"
-	"startromagnaapi/internal/repository"
-	"startromagnaapi/internal/scheduler"
 	"fmt"
 	"log"
 	"net/http"
+	"startromagnaapi/internal/gtfs"
+	"startromagnaapi/internal/handler"
+	"startromagnaapi/internal/repository"
+	"startromagnaapi/internal/scheduler"
 )
 
 func main() {
@@ -16,11 +17,11 @@ func main() {
 	repository.InitStatic()
 	repository.InitRT()
 
-	if false {
+	if config.IS_PRIMARY {
 		//Operazioni per DB in modalità "primary" (non read only):
 
 		//Viene eseguito comunque al primo avvio del programma
-		//go gtfs.UpdateStatic()
+		go gtfs.UpdateStatic()
 
 		s, err := scheduler.InitScheduler()
 		if err != nil {
