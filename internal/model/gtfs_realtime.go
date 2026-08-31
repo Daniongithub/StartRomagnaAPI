@@ -77,3 +77,7 @@ func (mt *MySQLTime) Scan(value interface{}) error {
 func (mt MySQLTime) Value() (driver.Value, error) {
 	return mt.Time.Format("15:04:05"), nil
 }
+
+func (mt MySQLTime) String() (driver.Value, error) {
+	return mt.Time.Format("15:04:05"), nil
+}

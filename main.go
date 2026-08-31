@@ -2,7 +2,6 @@ package main
 
 import (
 	"startromagnaapi/config"
-	//"startromagnaapi/internal/gtfs"
 	"fmt"
 	"log"
 	"net/http"
@@ -38,7 +37,7 @@ func main() {
 
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
 
-	mux.HandleFunc("GET /corsesopp", handler.CorsesoppHandler)
+	mux.HandleFunc("GET /corsesopp/{basin}", handler.CorsesoppHandler)
 	//mux.HandleFunc("GET /timetable/{routeid}", handler.TimetableHandler)
 
 	mux.HandleFunc("GET /static/info", handler.StaticInfoHandler)

@@ -67,22 +67,16 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(response)
 }
 
-// GET /timetable/{routeid}
-/*
-func TimetableHandler(w http.ResponseWriter, r *http.Request) {
-	routeId := r.PathValue("routeid")
-
-	results := service.ProcessTimetable(routeId)
-
-	AddCORS(w, r)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
-}*/
-
-// GET /corsesopp
+// GET /corsesopp/{basin}
 func CorsesoppHandler(w http.ResponseWriter, r *http.Request) {
-	results := service.ProcessCorsesopp("RA")
+	basin := r.PathValue("basin")
 
+	results := service.ProcessCorsesopp(basin)
+
+	if len(results) == 0 {
+		http.Error(w, "No suppressed trips for selected basin.", http.StatusNotFound)
+		return 
+	}
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)

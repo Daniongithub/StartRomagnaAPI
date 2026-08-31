@@ -1,16 +1,15 @@
 package model
 
-import "time"
-
 type CorseSopp struct {
 	RouteId     string        `json:"route_id"`
-	Start       MySQLTime     `json:"start"`
-	End         MySQLTime     `json:"end"`
-	StartDate   time.Time     `json:"start_date"`
+	Start       string        `json:"start"`
+	End         string        `json:"end"`
+	StartDate   string        `json:"start_date"`
 	TripId      string        `json:"trip_id"`
-	DirectionId string        `json:"direction_id"`
+	DirectionId int           `json:"direction_id"`
 	FirstStop   CorseSoppStop `json:"first_stop"`
 	LastStop    CorseSoppStop `json:"last_stop"`
+	Vehicle     *string       `json:"vehicle"`
 }
 
 type CorseSoppStop struct {
