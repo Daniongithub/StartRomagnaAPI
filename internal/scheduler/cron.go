@@ -18,7 +18,7 @@ func InitScheduler() (gocron.Scheduler, error) {
 
 	_, err = s.NewJob(gocron.CronJob("0 0 * * *", false), gocron.NewTask(deleteServiceAlerts))
 
-	_, err = s.NewJob(gocron.CronJob("* * * * *", false), gocron.NewTask(updateServiceAlerts))
+	_, err = s.NewJob(gocron.CronJob("*/20 * * * * *", true), gocron.NewTask(updateServiceAlerts))
 
 	_, err = s.NewJob(gocron.CronJob("*/20 * * * * *", true), gocron.NewTask(updateTripUpdates), gocron.WithSingletonMode(gocron.LimitModeReschedule))
 

@@ -16,3 +16,4 @@ type CorseSoppStop struct {
 	StopCode string `db:"stop_code" json:"stop_code"`
 	StopName string `db:"stop_name" json:"stop_name"`
 }
+

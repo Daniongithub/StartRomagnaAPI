@@ -82,6 +82,17 @@ func CorsesoppHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
+// GET /linelist/{basin}
+func LinelistHandler(w http.ResponseWriter, r *http.Request) {
+	basin := r.PathValue("basin")
+
+	results := static.GetRouteName(basin)
+
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
 // ------------------------
 // - RAW GTFS ENDPOINTS
 // ------------------------

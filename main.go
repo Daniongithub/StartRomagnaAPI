@@ -38,6 +38,7 @@ func main() {
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
 
 	mux.HandleFunc("GET /corsesopp/{basin}", handler.CorsesoppHandler)
+	mux.HandleFunc("GET /linelist/{basin}", handler.LinelistHandler)
 	//mux.HandleFunc("GET /timetable/{routeid}", handler.TimetableHandler)
 
 	mux.HandleFunc("GET /static/info", handler.StaticInfoHandler)

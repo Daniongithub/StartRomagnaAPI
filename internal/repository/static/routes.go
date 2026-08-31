@@ -28,6 +28,16 @@ func GetRoutesBasin(basin string) []model.RoutesResult {
 	return results
 }
 
+func GetRouteName(basin string) string {
+	var result []string
+	err := repository.DB_STATIC.Select(&result, "SELECT CASE WHEN basin = 'RA' THEN route_short_name WHEN route_long_name IS NOT NULL AND route_long_name <> '' THEN route_long_name ELSE route_short_name END FROM routes WHERE basin = ? LIMIT 1", basin)
+	if err != nil {
+		fmt.Println("GetRouteName errore db:", err)
+	}
+
+	return result[0]
+}
+
 func GetRouteNamefromId(basin, routeId string) string {
 	var result []string
 	err := repository.DB_STATIC.Select(&result, "SELECT CASE WHEN basin = 'RA' THEN route_short_name WHEN route_long_name IS NOT NULL AND route_long_name <> '' THEN route_long_name ELSE route_short_name END FROM routes WHERE route_id = ? AND basin = ? LIMIT 1", routeId, basin)
