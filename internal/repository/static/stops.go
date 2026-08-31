@@ -1,9 +1,9 @@
 package static
 
 import (
+	"fmt"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
-	"fmt"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 )

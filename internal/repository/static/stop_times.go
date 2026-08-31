@@ -23,7 +23,7 @@ func GetStopTimesBasin(basin string) []model.StopTimesResult {
 	var results []model.StopTimesResult
 	err := repository.DB_STATIC.Select(&results, "SELECT * FROM stop_times WHERE basin = ?", basin)
 	if err != nil {
-		fmt.Println("GetStopTimes errore db:", err)
+		fmt.Println("GetStopTimesBasin errore db:", err)
 	}
 
 	return results

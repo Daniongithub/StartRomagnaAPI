@@ -1,9 +1,9 @@
 package static
 
 import (
+	"fmt"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
-	"fmt"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 )
@@ -22,10 +22,20 @@ func GetRoutesBasin(basin string) []model.RoutesResult {
 	var results []model.RoutesResult
 	err := repository.DB_STATIC.Select(&results, "SELECT * FROM routes WHERE basin = ?", basin)
 	if err != nil {
-		fmt.Println("GetRoutes errore db:", err)
+		fmt.Println("GetRoutesBasin errore db:", err)
 	}
 
 	return results
+}
+
+func GetRouteNamefromId(basin, routeId string) string {
+	var result []string
+	err := repository.DB_STATIC.Select(&result, "SELECT CASE WHEN basin = 'RA' THEN route_short_name WHEN route_long_name IS NOT NULL AND route_long_name <> '' THEN route_long_name ELSE route_short_name END FROM routes WHERE route_id = ? AND basin = ? LIMIT 1", routeId, basin)
+	if err != nil {
+		fmt.Println("GetRouteNamefromId errore db:", err)
+	}
+
+	return result[0]
 }
 
 func SaveRoutes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
@@ -48,7 +58,7 @@ func SaveRoutes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gt
 			new = append(new, newRoute)
 		}
 	}
-	
+
 	for idx, val := range feedFC.Routes {
 		_, ok := routesMap["FC"+idx]
 		feedKeys["FC"+idx] = true

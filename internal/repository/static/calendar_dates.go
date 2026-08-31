@@ -1,9 +1,9 @@
 package static
 
 import (
+	"fmt"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
-	"fmt"
 	"time"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
@@ -23,7 +23,7 @@ func GetCalDatesBasin(basin string) []model.CalendarDatesResult {
 	var results []model.CalendarDatesResult
 	err := repository.DB_STATIC.Select(&results, "SELECT * FROM calendar_dates WHERE basin = ?", basin)
 	if err != nil {
-		fmt.Println("GetCalDates error:", err)
+		fmt.Println("GetCalDatesBasin error:", err)
 	}
 
 	return results

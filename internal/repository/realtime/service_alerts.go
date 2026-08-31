@@ -33,7 +33,7 @@ func GetDistinctSAByBasin(basin string) []model.ServiceAlertsResult {
 	var results []model.ServiceAlertsResult
 	err := repository.DB_RT.Select(&results, "SELECT DISTINCT basin, start, end, route_id, route_type, trip_id, direction_id, start_time, start_date FROM service_alerts WHERE basin = ?", basin)
 	if err != nil {
-		fmt.Println("GetServiceAlertsBasin error:", err)
+		fmt.Println("GetDistinctSAByBasin error:", err)
 	}
 
 	return results
@@ -77,7 +77,7 @@ func GetLastStop(tripId string) model.CorseSoppStop {
 		);
 	`, tripId, tripId)
 	if err != nil {
-		fmt.Println("GetFirstStop error:", err)
+		fmt.Println("GetLastStop error:", err)
 	}
 
 	return results[0]

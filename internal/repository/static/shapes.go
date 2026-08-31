@@ -1,9 +1,9 @@
 package static
 
 import (
+	"fmt"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
-	"fmt"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 )
@@ -22,7 +22,7 @@ func GetShapesBasin(basin string) []model.ShapesResult {
 	var results []model.ShapesResult
 	err := repository.DB_STATIC.Select(&results, "SELECT * FROM shapes WHERE basin = ?")
 	if err != nil {
-		fmt.Println("GetShapes errore db:", err)
+		fmt.Println("GetShapesBasin errore db:", err)
 	}
 
 	return results

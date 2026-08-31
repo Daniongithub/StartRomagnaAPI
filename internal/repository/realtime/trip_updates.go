@@ -1,9 +1,9 @@
 package realtime
 
 import (
+	"fmt"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
-	"fmt"
 	"time"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
@@ -19,7 +19,7 @@ func GetTripUpdatesBasin(basin string) []model.TripUpdatesResult {
 		var stopTimeUpdate []model.StopTime
 		err = repository.DB_RT.Select(&stopTimeUpdate, "SELECT * FROM stop_time_update WHERE trip_id = ?", val.Trip_id)
 		if err != nil {
-			fmt.Println("GetTripUpdates error:", err)
+			fmt.Println("GetTripUpdatesBasin error:", err)
 		}
 		results[idx].Stop_time_updates = stopTimeUpdate
 	}
@@ -31,7 +31,7 @@ func GetVehicleByTripId(tripId string) *string {
 	var results []string
 	err := repository.DB_RT.Select(&results, `SELECT vehicle FROM trip_updates WHERE trip_id = ?`, tripId)
 	if err != nil {
-		fmt.Println("GetTripUpdates error:", err)
+		fmt.Println("GetVehicleByTripId error:", err)
 	}
 
 	if len(results) == 0 {
