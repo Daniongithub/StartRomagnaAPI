@@ -1,11 +1,11 @@
 package gtfs
 
 import (
+	"fmt"
+	"net/http"
 	"startromagnaapi/config"
 	"startromagnaapi/internal/auth"
 	"startromagnaapi/internal/repository/static"
-	"fmt"
-	"net/http"
 	"time"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
@@ -31,12 +31,12 @@ func UpdateStatic() {
 		fmt.Println("UpdateStatic error reading feed:", err)
 	}
 
+	static.SaveTrips(feedRA, feedFC, feedRN)
 	static.SaveCalDates(feedRA, feedFC, feedRN)
 	static.SaveRoutes(feedRA, feedFC, feedRN)
 	static.SaveShapes(feedRA, feedFC, feedRN)
 	static.SaveStopTimes(feedRA, feedFC, feedRN)
 	static.SaveStops(feedRA, feedFC, feedRN)
-	static.SaveTrips(feedRA, feedFC, feedRN)
 
 	elapsed := time.Since(start)
 	fmt.Printf("Updated static GTFS. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)

@@ -1,9 +1,9 @@
 package static
 
 import (
+	"fmt"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
-	"fmt"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 )
@@ -95,7 +95,7 @@ func SaveTrips(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 		})
 	}
 
-	err := repository.BatchInsert(repository.DB_STATIC, "trips", []string{"basin", "route_id", "service_id", "trip_id", "trip_headsign", "direcion_id", "shape_id"}, values)
+	err := repository.BatchInsert(repository.DB_STATIC, "trips", []string{"basin", "route_id", "service_id", "trip_id", "trip_headsign", "direction_id", "shape_id"}, values)
 	if err != nil {
 		fmt.Println("SaveTrips db error:", err)
 	}

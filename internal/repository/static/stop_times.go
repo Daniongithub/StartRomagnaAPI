@@ -1,9 +1,9 @@
 package static
 
 import (
+	"fmt"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
-	"fmt"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 	"github.com/Leocraft1/gtfsparser-with-reader/gtfs"
@@ -38,8 +38,11 @@ func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN 
 	}
 
 	var new []model.StopTimesResult
+	var old []model.StopTimesResult
+	feedKeys := make(map[string]bool)
 	for idx, val := range feedRA.Trips {
 		_, ok := stopTimesMap["RA"+idx]
+		feedKeys["RA"+idx] = true
 		if !ok {
 			for _, val2 := range val.StopTimes {
 				var gdate gtfs.Date
@@ -53,20 +56,40 @@ func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN 
 	}
 	for idx, val := range feedFC.Trips {
 		_, ok := stopTimesMap["FC"+idx]
+		feedKeys["FC"+idx] = true
 		if !ok {
 			for _, val2 := range val.StopTimes {
-				newShape := model.ToDomainStopTimes("FC", val.Id, val2.Arrival_time().GetTime(), val2.Departure_time().GetTime(), val2.Stop().Id, val2.Sequence())
+				var gdate gtfs.Date
+				gdate.SetYear(2000)
+				gdate.SetMonth(1)
+				gdate.SetDay(1)
+				newShape := model.ToDomainStopTimes("FC", val.Id, val2.Arrival_time().GetLocationTime(gdate, feedFC.Agencies["Start FOCE"]), val2.Departure_time().GetLocationTime(gdate, feedFC.Agencies["Start FOCE"]), val2.Stop().Id, val2.Sequence())
 				new = append(new, newShape)
 			}
 		}
 	}
 	for idx, val := range feedRN.Trips {
 		_, ok := stopTimesMap["RN"+idx]
+		feedKeys["RN"+idx] = true
 		if !ok {
 			for _, val2 := range val.StopTimes {
-				newShape := model.ToDomainStopTimes("RN", val.Id, val2.Arrival_time().GetTime(), val2.Departure_time().GetTime(), val2.Stop().Id, val2.Sequence())
+				var gdate gtfs.Date
+				gdate.SetYear(2000)
+				gdate.SetMonth(1)
+				gdate.SetDay(1)
+				newShape := model.ToDomainStopTimes("RN", val.Id, val2.Arrival_time().GetLocationTime(gdate, feedRN.Agencies["START RN"]), val2.Departure_time().GetLocationTime(gdate, feedRN.Agencies["START RN"]), val2.Stop().Id, val2.Sequence())
 				new = append(new, newShape)
 			}
+		}
+	}
+
+	for _, val := range stopTimes {
+		_, ok := feedKeys[val.Basin+val.Trip_id]
+		if !ok {
+			var oldStopTime model.StopTimesResult
+			oldStopTime.Basin = val.Basin
+			oldStopTime.Trip_id = val.Trip_id
+			old = append(old, oldStopTime)
 		}
 	}
 
@@ -89,4 +112,11 @@ func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN 
 		fmt.Println("SaveStopTimes db error:", err)
 	}
 
+	//Database delete
+	for _, val := range old {
+		_, err = repository.DB_STATIC.Exec("DELETE FROM stop_times WHERE basin = ? AND trip_id = ?", val.Basin, val.Trip_id)
+		if err != nil {
+			fmt.Println("SaveStopTimes db error:", err)
+		}
+	}
 }
