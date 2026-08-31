@@ -51,8 +51,6 @@ func GetFirstStop(tripId string) model.CorseSoppStop {
 			SELECT MIN(t.stop_sequence) FROM service_alerts AS s
 			INNER JOIN start_gtfs_static.stop_times AS t
 			ON s.trip_id = t.trip_id
-			INNER JOIN start_gtfs_static.stops AS n
-			ON t.stop_id = n.stop_id
 			WHERE s.trip_id = ?
 		);
 	`, tripId, tripId)
@@ -75,8 +73,6 @@ func GetLastStop(tripId string) model.CorseSoppStop {
 			SELECT MAX(t.stop_sequence) FROM service_alerts AS s
 			INNER JOIN start_gtfs_static.stop_times AS t
 			ON s.trip_id = t.trip_id
-			INNER JOIN start_gtfs_static.stops AS n
-			ON t.stop_id = n.stop_id
 			WHERE s.trip_id = ?
 		);
 	`, tripId, tripId)
