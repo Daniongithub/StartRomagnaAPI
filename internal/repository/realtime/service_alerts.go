@@ -146,7 +146,8 @@ func DeleteAllServiceAlerts() {
 }
 
 func secondsToTime(seconds int) time.Time {
+	loc, _ := time.LoadLocation("Europe/Rome")
 	base := time.Now()
-	midnight := time.Date(base.Year(), base.Month(), base.Day(), 0, 0, 0, 0, base.Location())
+	midnight := time.Date(base.Year(), base.Month(), base.Day(), 0, 0, 0, 0, loc)
 	return midnight.Add(time.Duration(seconds) * time.Second)
 }
