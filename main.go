@@ -2,7 +2,7 @@ package main
 
 import (
 	"startromagnaapi/config"
-	"startromagnaapi/internal/gtfs"
+	//"startromagnaapi/internal/gtfs"
 	"startromagnaapi/internal/handler"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/scheduler"
@@ -16,11 +16,11 @@ func main() {
 	repository.InitStatic()
 	repository.InitRT()
 
-	if config.IS_PRIMARY {
+	if false {
 		//Operazioni per DB in modalità "primary" (non read only):
 
 		//Viene eseguito comunque al primo avvio del programma
-		go gtfs.UpdateStatic()
+		//go gtfs.UpdateStatic()
 
 		s, err := scheduler.InitScheduler()
 		if err != nil {
@@ -36,6 +36,9 @@ func main() {
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
 
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
+
+	mux.HandleFunc("GET /corsesopp", handler.CorsesoppHandler)
+	//mux.HandleFunc("GET /timetable/{routeid}", handler.TimetableHandler)
 
 	mux.HandleFunc("GET /static/info", handler.StaticInfoHandler)
 	mux.HandleFunc("GET /static/trips/{basin}", handler.TripsBasinHandler)

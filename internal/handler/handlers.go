@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
+	"net/http"
 	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository/static"
-	"encoding/json"
-	"net/http"
+	"startromagnaapi/internal/service"
 	"time"
 
 	"github.com/mmcdole/gofeed"
@@ -65,6 +66,31 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 	encoder.SetIndent("", "  ")
 	encoder.Encode(response)
 }
+
+// GET /timetable/{routeid}
+/*
+func TimetableHandler(w http.ResponseWriter, r *http.Request) {
+	routeId := r.PathValue("routeid")
+
+	results := service.ProcessTimetable(routeId)
+
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}*/
+
+// GET /corsesopp
+func CorsesoppHandler(w http.ResponseWriter, r *http.Request) {
+	results := service.ProcessCorsesopp("RA")
+
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// ------------------------
+// - RAW GTFS ENDPOINTS
+// ------------------------
 
 // GET /static/info
 func StaticInfoHandler(w http.ResponseWriter, r *http.Request) {
