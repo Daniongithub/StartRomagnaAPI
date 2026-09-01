@@ -44,8 +44,6 @@ func GetVehicles() []string {
 	var results []string
 	err := repository.DB_RT.Select(&results, `
 		SELECT DISTINCT t.vehicle FROM trip_updates AS t
-		LEFT JOIN vehicle_positions AS v
-		ON t.vehicle = v.vehicle
 		WHERE t.vehicle != 0 ORDER BY t.vehicle
 	`)
 	if err != nil {
