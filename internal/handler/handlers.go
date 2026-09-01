@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/repository/realtime"
 	"startromagnaapi/internal/repository/static"
 	"startromagnaapi/internal/service"
 	"time"
@@ -67,16 +68,10 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(response)
 }
 
-// GET /corsesopp/{basin}
-func CorsesoppHandler(w http.ResponseWriter, r *http.Request) {
-	basin := r.PathValue("basin")
+// GET /activevehicles
+func ActivevehiclesHandler(w http.ResponseWriter, r *http.Request) {
+	results := realtime.GetVehicles()
 
-	results := service.ProcessCorsesopp(basin)
-
-	if len(results) == 0 {
-		http.Error(w, "No suppressed trips for selected basin.", http.StatusNotFound)
-		return 
-	}
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
@@ -103,6 +98,13 @@ func NextstopsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
+
+
+
+
+
+
+
 
 // ------------------------
 // - RAW GTFS ENDPOINTS

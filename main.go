@@ -37,7 +37,7 @@ func main() {
 
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
 
-	mux.HandleFunc("GET /corsesopp/{basin}", handler.CorsesoppHandler)
+	mux.HandleFunc("GET /activevehicles", handler.ActivevehiclesHandler)
 	mux.HandleFunc("GET /linelist/{basin}", handler.LinelistHandler)
 	mux.HandleFunc("GET /nextstops/{tripid}", handler.NextstopsHandler)
 	//mux.HandleFunc("GET /timetable/{routeid}", handler.TimetableHandler)
