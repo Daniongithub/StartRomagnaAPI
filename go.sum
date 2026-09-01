@@ -5,6 +5,14 @@ github.com/Leocraft1/gtfsparser-with-reader v1.2.2 h1:PCdcH50cVPAuAJ3z4qQEUg0CAX
 github.com/Leocraft1/gtfsparser-with-reader v1.2.2/go.mod h1:AYXkziG5auCuzxKf2HwJFT37otfjwRcd5gbMbrVCNw0=
 github.com/Leocraft1/gtfsparser-with-reader v1.2.3 h1:ShbozrMzbtaBFLluxCaIVILjHZseYS9SqpnGdsUbVJE=
 github.com/Leocraft1/gtfsparser-with-reader v1.2.3/go.mod h1:AYXkziG5auCuzxKf2HwJFT37otfjwRcd5gbMbrVCNw0=
+github.com/Leocraft1/gtfsparser-with-reader v1.2.4 h1:nptmNQq9r0Y8QAUU0TZO4il+x1Ixvt3mdYLB7/qnVg0=
+github.com/Leocraft1/gtfsparser-with-reader v1.2.4/go.mod h1:AYXkziG5auCuzxKf2HwJFT37otfjwRcd5gbMbrVCNw0=
+github.com/Leocraft1/gtfsparser-with-reader v1.2.5 h1:83mm80gXTS+yDnng/OmokyZMc2bchSntE/aIMiVOayI=
+github.com/Leocraft1/gtfsparser-with-reader v1.2.5/go.mod h1:AYXkziG5auCuzxKf2HwJFT37otfjwRcd5gbMbrVCNw0=
+github.com/Leocraft1/gtfsparser-with-reader v1.2.6 h1:jSEzjVHSIsYnTWJTEiJ5lR6Ue19eMXYewG4an9XYlQU=
+github.com/Leocraft1/gtfsparser-with-reader v1.2.6/go.mod h1:AYXkziG5auCuzxKf2HwJFT37otfjwRcd5gbMbrVCNw0=
+github.com/Leocraft1/gtfsparser-with-reader v1.2.7 h1:PMTtFPwS/Ye1RbaXtc+ze6bq3OjlWSXEmHc7Y1dw/vc=
+github.com/Leocraft1/gtfsparser-with-reader v1.2.7/go.mod h1:AYXkziG5auCuzxKf2HwJFT37otfjwRcd5gbMbrVCNw0=
 github.com/Masterminds/squirrel v1.5.4 h1:uUcX/aBc8O7Fg9kaISIUsHXdKuqehiXAMQTYX8afzqM=
 github.com/Masterminds/squirrel v1.5.4/go.mod h1:NNaOrjSoIDfDA40n7sr2tPNZRfjzjA400rg+riTZj10=
 github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs v1.0.0 h1:f4P+fVYmSIWj4b/jvbMdmrmsx/Xb+5xCpYYtVXOdKoc=
