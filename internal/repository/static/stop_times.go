@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
+	"time"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 	"github.com/Leocraft1/gtfsparser-with-reader/gtfs"
@@ -37,6 +38,8 @@ func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN 
 		stopTimesMap[val.Basin+val.Trip_id] = true
 	}
 
+	now := time.Now()
+
 	var new []model.StopTimesResult
 	var old []model.StopTimesResult
 	feedKeys := make(map[string]bool)
@@ -46,9 +49,9 @@ func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN 
 		if !ok {
 			for _, val2 := range val.StopTimes {
 				var gdate gtfs.Date
-				gdate.SetYear(2000)
-				gdate.SetMonth(1)
-				gdate.SetDay(1)
+				gdate.SetYear(uint16(now.Year()))
+				gdate.SetMonth(uint8(now.Month()))
+				gdate.SetDay(uint8(now.Day()))
 				newShape := model.ToDomainStopTimes("RA", val.Id, val2.Arrival_time().GetLocationTime(gdate, feedRA.Agencies["START RA"]), val2.Departure_time().GetLocationTime(gdate, feedRA.Agencies["START RA"]), val2.Stop().Id, val2.Sequence())
 				new = append(new, newShape)
 			}
@@ -60,9 +63,9 @@ func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN 
 		if !ok {
 			for _, val2 := range val.StopTimes {
 				var gdate gtfs.Date
-				gdate.SetYear(2000)
-				gdate.SetMonth(1)
-				gdate.SetDay(1)
+				gdate.SetYear(uint16(now.Year()))
+				gdate.SetMonth(uint8(now.Month()))
+				gdate.SetDay(uint8(now.Day()))
 				newShape := model.ToDomainStopTimes("FC", val.Id, val2.Arrival_time().GetLocationTime(gdate, feedFC.Agencies["Start FOCE"]), val2.Departure_time().GetLocationTime(gdate, feedFC.Agencies["Start FOCE"]), val2.Stop().Id, val2.Sequence())
 				new = append(new, newShape)
 			}
@@ -74,9 +77,9 @@ func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN 
 		if !ok {
 			for _, val2 := range val.StopTimes {
 				var gdate gtfs.Date
-				gdate.SetYear(2000)
-				gdate.SetMonth(1)
-				gdate.SetDay(1)
+				gdate.SetYear(uint16(now.Year()))
+				gdate.SetMonth(uint8(now.Month()))
+				gdate.SetDay(uint8(now.Day()))
 				newShape := model.ToDomainStopTimes("RN", val.Id, val2.Arrival_time().GetLocationTime(gdate, feedRN.Agencies["START RN"]), val2.Departure_time().GetLocationTime(gdate, feedRN.Agencies["START RN"]), val2.Stop().Id, val2.Sequence())
 				new = append(new, newShape)
 			}
