@@ -27,6 +27,12 @@ func GetNextStops(tripId string) model.NextStops {
 		INNER JOIN start_gtfs_static.stops AS s
 		ON st.stop_id = s.stop_id
 		WHERE stu.trip_id = ? AND s.basin = st.basin
+		AND LOCATE('semaforo', stop_name) = 0
+		AND LOCATE('fi1', stop_name) = 0
+		AND LOCATE('FITTIZIO', stop_name) = 0
+		AND LOCATE('Fittizio', stop_name) = 0
+		AND LOCATE('FITTIZIA', stop_name) = 0
+		AND LOCATE('Fittizia', stop_name) = 0
 		ORDER BY st.stop_sequence
 	`, tripId)
 	if err != nil {
