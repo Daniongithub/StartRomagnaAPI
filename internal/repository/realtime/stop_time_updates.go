@@ -18,6 +18,28 @@ func GetStopTimeUpdByTripId(trip_id string) []model.StopTime {
 	return results
 }
 
+func GetNextStops(tripId string) model.NextStops {
+	var results []model.StopWDel
+	err := repository.DB_RT.Select(&results, `
+		SELECT stu.delay, st.basin, st.arrival_time, st.departure_time, st.stop_id, st.stop_id, s.stop_code, s.stop_name, s.stop_lat, s.stop_lon FROM stop_time_updates AS stu
+		INNER JOIN start_gtfs_static.stop_times AS st
+		ON stu.trip_id = st.trip_id AND stu.stop_sequence = st.stop_sequence
+		INNER JOIN start_gtfs_static.stops AS s
+		ON st.stop_id = s.stop_id
+		WHERE stu.trip_id = ? AND s.basin = st.basin
+		ORDER BY st.stop_sequence
+	`, tripId)
+	if err != nil {
+		fmt.Println("GetNextStops db error:", err)
+	}
+
+	out := model.NextStops{
+		Stops: results,
+	}
+
+	return out
+}
+
 func SaveStopTimeUpd(feeds map[string]*gtfs.FeedMessage) {
 	//Database inserts
 	for _, val := range feeds {

@@ -39,6 +39,7 @@ func main() {
 
 	mux.HandleFunc("GET /corsesopp/{basin}", handler.CorsesoppHandler)
 	mux.HandleFunc("GET /linelist/{basin}", handler.LinelistHandler)
+	mux.HandleFunc("GET /nextstops/{tripid}", handler.NextstopsHandler)
 	//mux.HandleFunc("GET /timetable/{routeid}", handler.TimetableHandler)
 
 	mux.HandleFunc("GET /static/info", handler.StaticInfoHandler)

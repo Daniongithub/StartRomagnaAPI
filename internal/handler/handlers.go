@@ -93,6 +93,17 @@ func LinelistHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
+// GET /nextstops/{tripid}
+func NextstopsHandler(w http.ResponseWriter, r *http.Request) {
+	tripid := r.PathValue("tripid")
+
+	results := service.ProcessNextstops(tripid)
+
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
 // ------------------------
 // - RAW GTFS ENDPOINTS
 // ------------------------
