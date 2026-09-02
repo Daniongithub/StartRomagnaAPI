@@ -31,7 +31,9 @@ func ProcessBusesInService() []model.BusInService {
 		if mezzi.GetVehicleInServiceByID(val.Vehicle) != nil {
 			val.VehicleInfo = mezzi.GetVehicleInServiceByID(val.Vehicle)
 		} else {
-			val.VehicleInfo.Number = val.Vehicle
+			val.VehicleInfo = &model.VehicleInService{
+				Number: val.Vehicle,
+			}
 		}
 	}
 
