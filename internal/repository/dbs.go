@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"startromagnaapi/config"
 	"fmt"
+	"startromagnaapi/config"
 	"time"
 
 	"github.com/Masterminds/squirrel"
@@ -13,6 +13,7 @@ import (
 var (
 	DB_STATIC *sqlx.DB
 	DB_RT     *sqlx.DB
+	DB_MEZZI  *sqlx.DB
 	err       error
 )
 
@@ -59,9 +60,21 @@ func InitRT() {
 		fmt.Println("InitRT errore di connessione al database del GTFS dinamico:", err)
 	}
 
-	config.IS_PRIMARY, err = isPrimary(DB_STATIC)
+	config.IS_PRIMARY, err = isPrimary(DB_RT)
 	if err != nil {
 		fmt.Println("InitRT errore determinazione DB principale:", err)
+	}
+}
+
+func InitMezzi() {
+	DB_MEZZI, err = newDB(config.DB_HOST, config.DB_PORT, config.DB_USERNAME, config.DB_PASSWORD, "ertpl_mezzi")
+	if err != nil {
+		fmt.Println("InitMezzi errore di connessione al database del GTFS dinamico:", err)
+	}
+
+	config.IS_PRIMARY, err = isPrimary(DB_MEZZI)
+	if err != nil {
+		fmt.Println("InitMezzi errore determinazione DB principale:", err)
 	}
 }
 

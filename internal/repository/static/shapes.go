@@ -38,6 +38,16 @@ func GetShapePoints(shapeId string) []model.ShapesResult {
 	return results
 }
 
+func GetShapeIDs() []model.ShapeID {
+	var results []model.ShapeID
+	err := repository.DB_STATIC.Select(&results, "SELECT DISTINCT basin, shape_id FROM shapes")
+	if err != nil {
+		fmt.Println("GetShapeIDs errore db:", err)
+	}
+
+	return results
+}
+
 func SaveShapes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
 	shapes := GetShapes()
 

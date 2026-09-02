@@ -15,6 +15,7 @@ func main() {
 	config.LoadConf()
 	repository.InitStatic()
 	repository.InitRT()
+	repository.InitMezzi()
 
 	if config.IS_PRIMARY {
 		//Operazioni per DB in modalità "primary" (non read only):

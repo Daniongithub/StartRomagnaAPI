@@ -127,3 +127,15 @@ func ToDomainStops(r *gtfs.Stop) StopsResult {
 		Stop_lon:  r.Lon,
 	}
 }
+
+type ShapeID struct {
+	Basin   string `db:"basin"`
+	ShapeID string `db:"shape_id"`
+}
+
+type Headsign struct {
+	Basin    string  `db:"basin" json:"basin"`
+	ShapeID  string  `db:"shape_id" json:"shape_id"`
+	DispLine *string `db:"disp_linea" json:"disp_linea"`
+	DispDest *string `db:"disp_dest" json:"disp_dest"`
+}

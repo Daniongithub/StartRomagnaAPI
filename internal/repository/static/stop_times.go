@@ -30,6 +30,24 @@ func GetStopTimesBasin(basin string) []model.StopTimesResult {
 	return results
 }
 
+func GetTerminusName(tripId string) string {
+	var results []string
+	err := repository.DB_STATIC.Select(&results, `
+		SELECT s.stop_name FROM stop_times AS st
+		INNER JOIN start_gtfs_static.stops AS s
+		ON st.stop_id = s.stop_id
+		WHERE st.basin = s.basin AND st.trip_id = ? AND st.stop_sequence = (
+			SELECT MAX(stop_sequence) FROM stop_times
+			WHERE trip_id = ?
+		);
+	`, tripId, tripId)
+	if err != nil {
+		fmt.Println("GetLastStop error:", err)
+	}
+
+	return results[0]
+}
+
 func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
 	stopTimes := GetStopTimes()
 

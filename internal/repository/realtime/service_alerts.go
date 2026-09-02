@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
-	"startromagnaapi/internal/utils"
 	"time"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
@@ -38,36 +37,6 @@ func GetDistinctSAByBasin(basin string) []model.ServiceAlertsResult {
 	}
 
 	return results
-}
-
-func GetFirstStop(tripId string) model.StopWDel {
-	var results []model.StopWDel
-	err := repository.DB_RT.Select(&results, `
-		SELECT stu.delay, st.basin, st.arrival_time, st.departure_time, st.stop_id, st.stop_id, s.stop_code, s.stop_name, s.stop_lat, s.stop_lon FROM stop_time_updates AS stu
-		INNER JOIN start_gtfs_static.stop_times AS st
-		ON stu.trip_id = st.trip_id
-		INNER JOIN start_gtfs_static.stops AS s
-		ON st.stop_id = s.stop_id
-		WHERE st.basin = s.basin AND stu.trip_id = ? AND st.stop_sequence = (
-			SELECT MIN(stu.stop_sequence) FROM stop_time_updates AS stu
-			WHERE stu.trip_id = ?
-		);
-	`, tripId, tripId)
-	if err != nil {
-		fmt.Println("GetFirstStop error:", err)
-	}
-	if len(results) == 0 {
-		results = append(results,
-			model.StopWDel{
-				Error: "Trip not available",
-			},
-		)
-
-		return results[0]
-	}
-	utils.FixStopWDel(results)
-
-	return results[0]
 }
 
 /*
