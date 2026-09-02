@@ -18,11 +18,11 @@ func InitScheduler() (gocron.Scheduler, error) {
 
 	_, err = s.NewJob(gocron.CronJob("0 0 * * *", false), gocron.NewTask(deleteServiceAlerts))
 
-	_, err = s.NewJob(gocron.CronJob(" * * * * *", false), gocron.NewTask(updateServiceAlerts))
+	_, err = s.NewJob(gocron.CronJob("* * * * *", false), gocron.NewTask(updateServiceAlerts))
 
-	_, err = s.NewJob(gocron.CronJob("*/20 * * * * *", true), gocron.NewTask(updateTripUpdates), gocron.WithSingletonMode(gocron.LimitModeReschedule))
+	_, err = s.NewJob(gocron.CronJob("*/30 * * * * *", true), gocron.NewTask(updateTripUpdates), gocron.WithSingletonMode(gocron.LimitModeReschedule))
 
-	_, err = s.NewJob(gocron.CronJob("*/20 * * * * *", true), gocron.NewTask(updateVehiclePositions), gocron.WithSingletonMode(gocron.LimitModeReschedule))
+	_, err = s.NewJob(gocron.CronJob("*/30 * * * * *", true), gocron.NewTask(updateVehiclePositions), gocron.WithSingletonMode(gocron.LimitModeReschedule))
 
 	if err != nil {
 		return nil, err
