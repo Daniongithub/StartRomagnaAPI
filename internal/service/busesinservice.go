@@ -28,7 +28,11 @@ func ProcessBusesInService() []model.BusInService {
 				val.Destination = strings.ToUpper(static.GetTerminusName(val.TripId))
 			}
 		}
-		val.VehicleInfo = mezzi.GetVehicleInServiceByID(val.Vehicle)
+		if mezzi.GetVehicleInServiceByID(val.Vehicle) != nil {
+			val.VehicleInfo = mezzi.GetVehicleInServiceByID(val.Vehicle)
+		} else {
+			val.VehicleInfo.Number = val.Vehicle
+		}
 	}
 
 	return buses
