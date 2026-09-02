@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/Leocraft1/gtfsparser-with-reader v1.2.7
-	github.com/go-sql-driver/mysql v1.10.0
+	github.com/go-sql-driver/mysql v1.10.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
 	google.golang.org/protobuf v1.36.12
@@ -26,7 +26,7 @@ require (
 	github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs v1.0.0
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/go-co-op/gocron/v2 v2.22.0
-	github.com/klauspost/compress v1.19.2 // indirect
+	github.com/klauspost/compress v1.20.0 // indirect
 	github.com/mmcdole/gofeed v1.4.2
 	github.com/valyala/fastjson v1.6.10 // indirect
 	golang.org/x/text v0.41.0 // indirect

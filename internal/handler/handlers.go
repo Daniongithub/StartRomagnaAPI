@@ -214,6 +214,17 @@ func ShapesBasinHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
+// GET /static/shapes/{shapeId}
+func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
+	shape_id := r.PathValue("shapeId")
+
+	results := static.GetShapePoints(shape_id)
+
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
 // GET /static/stop_times/{basin}
 func StopTimesBasinHandler(w http.ResponseWriter, r *http.Request) {
 	basin := r.PathValue("basin")

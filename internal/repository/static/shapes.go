@@ -20,9 +20,19 @@ func GetShapes() []model.ShapesResult {
 
 func GetShapesBasin(basin string) []model.ShapesResult {
 	var results []model.ShapesResult
-	err := repository.DB_STATIC.Select(&results, "SELECT * FROM shapes WHERE basin = ?")
+	err := repository.DB_STATIC.Select(&results, "SELECT * FROM shapes WHERE basin = ?", basin)
 	if err != nil {
 		fmt.Println("GetShapesBasin errore db:", err)
+	}
+
+	return results
+}
+
+func GetShapePoints(shapeId string) []model.ShapesResult {
+	var results []model.ShapesResult
+	err := repository.DB_STATIC.Select(&results, "SELECT * FROM shapes WHERE shape_id = ?", shapeId)
+	if err != nil {
+		fmt.Println("GetShapePoints errore db:", err)
 	}
 
 	return results
