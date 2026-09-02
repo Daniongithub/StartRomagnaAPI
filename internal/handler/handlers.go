@@ -81,6 +81,11 @@ func ActivevehiclesHandler(w http.ResponseWriter, r *http.Request) {
 func LinelistHandler(w http.ResponseWriter, r *http.Request) {
 	basin := r.PathValue("basin")
 
+	if basin != "RA" && basin != "FC" && basin != "RN" {
+		http.Error(w, "Invalid basin", http.StatusBadRequest)
+		return
+	}
+
 	results := static.GetRouteName(basin)
 
 	AddCORS(w, r)
@@ -99,12 +104,28 @@ func NextstopsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
+func VehiclepositionsHandler(w http.ResponseWriter, r *http.Request) {
+	results := realtime.GetVehiclePositions()
 
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
 
+func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
+	basin := r.PathValue("basin")
 
+	if basin != "RA" && basin != "FC" && basin != "RN" {
+		http.Error(w, "Invalid basin", http.StatusBadRequest)
+		return
+	}
 
+	results := realtime.GetVehiclePositionsBasin(basin)
 
-
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
 
 // ------------------------
 // - RAW GTFS ENDPOINTS

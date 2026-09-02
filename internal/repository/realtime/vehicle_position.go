@@ -1,12 +1,33 @@
 package realtime
 
 import (
-	"startromagnaapi/internal/repository"
 	"fmt"
+	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/repository"
 	"time"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 )
+
+func GetVehiclePositions() []model.VehiclePositionsResult {
+	var results []model.VehiclePositionsResult
+	err := repository.DB_RT.Select(&results, "SELECT basin, trip_id, vehicle, lat, `long` FROM vehicle_positions")
+	if err != nil {
+		fmt.Println("GetVehiclePositions error:", err)
+	}
+
+	return results
+}
+
+func GetVehiclePositionsBasin(basin string) []model.VehiclePositionsResult {
+	var results []model.VehiclePositionsResult
+	err := repository.DB_RT.Select(&results, "SELECT basin, trip_id, vehicle, lat, `long` FROM vehicle_positions WHERE basin = ?", basin)
+	if err != nil {
+		fmt.Println("GetVehiclePositionsBasin error:", err)
+	}
+
+	return results
+}
 
 func SaveVehiclePositions(feeds map[string]*gtfs.FeedMessage) {
 	values := make([][]any, 0)

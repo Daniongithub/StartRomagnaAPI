@@ -36,6 +36,14 @@ type TripUpdatesResult struct {
 	Stop_time_updates     []StopTime
 }
 
+type VehiclePositionsResult struct {
+	Basin   string  `db:"basin" json:"basin"`
+	Trip_id string  `db:"trip_id" json:"trip_id"`
+	Vehicle string  `db:"vehicle" json:"vehicle"`
+	Lat     float32 `db:"lat" json:"lat"`
+	Long    float32 `db:"long" json:"long"`
+}
+
 type StopTime struct {
 	Trip_id       string `db:"trip_id" json:"trip_id"`
 	Stop_sequence int    `db:"stop_sequence" json:"stop_sequence"`

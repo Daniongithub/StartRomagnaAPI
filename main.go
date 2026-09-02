@@ -1,10 +1,10 @@
 package main
 
 import (
-	"startromagnaapi/config"
 	"fmt"
 	"log"
 	"net/http"
+	"startromagnaapi/config"
 	"startromagnaapi/internal/gtfs"
 	"startromagnaapi/internal/handler"
 	"startromagnaapi/internal/repository"
@@ -40,6 +40,8 @@ func main() {
 	mux.HandleFunc("GET /activevehicles", handler.ActivevehiclesHandler)
 	mux.HandleFunc("GET /linelist/{basin}", handler.LinelistHandler)
 	mux.HandleFunc("GET /nextstops/{tripid}", handler.NextstopsHandler)
+	mux.HandleFunc("GET /vehiclepositions", handler.VehiclepositionsHandler)
+	mux.HandleFunc("GET /vehiclepositions/{basin}", handler.VehiclepositionsBasinHandler)
 	//mux.HandleFunc("GET /timetable/{routeid}", handler.TimetableHandler)
 
 	mux.HandleFunc("GET /static/info", handler.StaticInfoHandler)
