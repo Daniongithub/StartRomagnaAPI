@@ -47,7 +47,22 @@ func GetVehicles() []string {
 		WHERE t.vehicle != 0 ORDER BY t.vehicle
 	`)
 	if err != nil {
-		fmt.Println("GetActiveVehicles error:", err)
+		fmt.Println("GetVehicles error:", err)
+	}
+
+	return results
+}
+
+func GetBuses() []model.BusInService {
+	var results []model.BusInService
+	err := repository.DB_RT.Select(&results, `
+		SELECT tu.basin, tu.trip_id, tu.vehicle, tu.timestamp, tu.route_id FROM trip_updates AS tu
+		INNER JOIN vehicle_positions AS vp
+		ON tu.trip_id = vp.trip_id
+		ORDER BY tu.basin, tu.route_id
+	`)
+	if err != nil {
+		fmt.Println("GetVehicles error:", err)
 	}
 
 	return results

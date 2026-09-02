@@ -1,30 +1,15 @@
 package model
 
-import "time"
-
-type CorseSopp struct {
-	RouteId     string        `json:"route_id"`
-	Start       string        `json:"start"`
-	End         string        `json:"end"`
-	StartDate   string        `json:"start_date"`
-	TripId      string        `json:"trip_id"`
-	DirectionId int           `json:"direction_id"`
-	FirstStop   CorseSoppStop `json:"first_stop"`
-	LastStop    CorseSoppStop `json:"last_stop"`
-	Vehicle     *string       `json:"vehicle"`
-}
-
-type CorseSoppStop struct {
-	StopCode string `db:"stop_code" json:"stop_code"`
-	StopName string `db:"stop_name" json:"stop_name"`
-}
+import (
+	"time"
+)
 
 type NextStops struct {
 	Stops []StopWDel `json:"stops"`
 }
 
 type StopWDel struct {
-	Basin            string    `db:"basin" json:"basin"`
+	Basin            string    `db:"basin" json:"-"`
 	StopId           string    `db:"stop_id" json:"stop_id"`
 	StopCode         string    `db:"stop_code" json:"stop_code"`
 	StopName         string    `db:"stop_name" json:"stop_name"`
@@ -36,4 +21,17 @@ type StopWDel struct {
 	DepartureTimeStr string    `json:"departure_time"`
 	Delay            int       `db:"delay" json:"-"`
 	DelayMin         int       `json:"delay"`
+	Error            string    `json:"error,omitempty"`
+}
+
+type BusInService struct {
+	Basin        string    `db:"basin" json:"basin"`
+	Line         string    `db:"disp_linea" json:"line"`
+	Destination  string    `db:"disp_dest" json:"destination"`
+	TripId       string    `db:"trip_id" json:"trip_id"`
+	RouteId      string    `db:"route_id" json:"route_id"`
+	OfficialLine string    `json:"official_line"`
+	Vehicle      string    `db:"vehicle" json:"vehicle"`
+	LastUpdate   time.Time `db:"timestamp" json:"last_update"`
+	NextStop     StopWDel  `json:"next_stop"`
 }
