@@ -38,7 +38,7 @@ func GetRouteName(basin string) string {
 	return result[0]
 }
 
-func GetRouteNamefromId(basin, routeId string) string {
+func GetRouteNamefromID(basin, routeId string) string {
 	var result []string
 	err := repository.DB_STATIC.Select(&result, "SELECT CASE WHEN basin = 'RA' THEN route_short_name WHEN route_long_name IS NOT NULL AND route_long_name <> '' THEN route_long_name ELSE route_short_name END FROM routes WHERE route_id = ? AND basin = ? LIMIT 1", routeId, basin)
 	if err != nil {

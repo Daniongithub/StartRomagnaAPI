@@ -14,7 +14,7 @@ func ProcessBusesInService() []model.BusInService {
 	for idx := range buses {
 		val := &buses[idx]
 		val.NextStop = realtime.GetFirstStop(val.TripId)
-		val.OfficialLine = static.GetRouteNamefromId(val.Basin, val.RouteId)
+		val.OfficialLine = static.GetRouteNamefromID(val.Basin, val.RouteId)
 		headsign := static.GetHeadsignsByID(val.ShapeId)
 		if headsign != nil {
 			if headsign.DispLine != nil {

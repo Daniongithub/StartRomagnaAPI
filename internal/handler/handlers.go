@@ -113,14 +113,16 @@ func NextstopsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
+//GET /vehiclepositions
 func VehiclepositionsHandler(w http.ResponseWriter, r *http.Request) {
-	results := realtime.GetVehiclePositions()
+	results := service.ProcessVehiclePositions()
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
+//GET /vehiclepositions/{basin}
 func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
 	basin := r.PathValue("basin")
 
@@ -129,7 +131,7 @@ func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results := realtime.GetVehiclePositionsBasin(basin)
+	results := service.ProcessVehiclePositionsBasin(basin)
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")

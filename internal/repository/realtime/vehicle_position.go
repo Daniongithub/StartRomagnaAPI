@@ -9,19 +9,30 @@ import (
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 )
 
-func GetVehiclePositions() []model.VehiclePositionsResult {
-	var results []model.VehiclePositionsResult
-	err := repository.DB_RT.Select(&results, "SELECT basin, trip_id, vehicle, lat, `long` FROM vehicle_positions")
+func GetVehiclePositions() []model.VehiclePosition {
+	var results []model.VehiclePosition
+	err := repository.DB_RT.Select(&results, `
+		SELECT vp.basin, vp.trip_id, vp.vehicle, vp.timestamp, t.route_id, t.shape_id, vp.lat, vp.long FROM vehicle_positions AS vp
+		INNER JOIN start_gtfs_static.trips AS t
+		ON vp.trip_id = t.trip_id
+		ORDER BY vp.basin, t.route_id
+	`)
 	if err != nil {
-		fmt.Println("GetVehiclePositions error:", err)
+		fmt.Println("GetVehicles error:", err)
 	}
 
 	return results
 }
 
-func GetVehiclePositionsBasin(basin string) []model.VehiclePositionsResult {
-	var results []model.VehiclePositionsResult
-	err := repository.DB_RT.Select(&results, "SELECT basin, trip_id, vehicle, lat, `long` FROM vehicle_positions WHERE basin = ?", basin)
+func GetVehiclePositionsBasin(basin string) []model.VehiclePosition {
+	var results []model.VehiclePosition
+	err := repository.DB_RT.Select(&results, `
+		SELECT vp.basin, vp.trip_id, vp.vehicle, vp.timestamp, t.route_id, t.shape_id, vp.lat, vp.long FROM vehicle_positions AS vp
+		INNER JOIN start_gtfs_static.trips AS t
+		ON vp.trip_id = t.trip_id
+		WHERE vp.basin = ?
+		ORDER BY vp.basin, t.route_id
+	`, basin)
 	if err != nil {
 		fmt.Println("GetVehiclePositionsBasin error:", err)
 	}
