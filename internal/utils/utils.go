@@ -20,8 +20,8 @@ func FixStopWDel(stops []model.StopWDel) {
 	for idx := range stops {
 		val := &stops[idx]
 		//Adds delay
-		val.ArrivalTime = val.ArrivalTime.Add(time.Duration(val.Delay) * time.Second)
-		val.DepartureTime = val.DepartureTime.Add(time.Duration(val.Delay) * time.Second)
+		val.ArrivalTime.Time = val.ArrivalTime.Add(time.Duration(val.Delay) * time.Second)
+		val.DepartureTime.Time = val.DepartureTime.Add(time.Duration(val.Delay) * time.Second)
 		//Converts delay into minutes
 		val.DelayMin = ConvertDelay(val.Delay)
 		//Formats times

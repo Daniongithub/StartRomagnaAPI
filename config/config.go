@@ -24,6 +24,8 @@ var (
 
 	IS_PRIMARY bool
 	ALLOWED_ORIGINS []string
+
+	ARRIVALS_LOAD_INTERVAL int
 )
 
 func LoadConf() {
@@ -44,4 +46,6 @@ func LoadConf() {
 	PORT = os.Getenv("PORT")
 
 	ALLOWED_ORIGINS = strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
+
+	ARRIVALS_LOAD_INTERVAL, _ = strconv.Atoi(os.Getenv("ARRIVALS_LOAD_INTERVAL"))
 }

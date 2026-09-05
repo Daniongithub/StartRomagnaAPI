@@ -21,6 +21,9 @@ PORT=":5005"
 
 # Array of allowed origins
 ALLOWED_ORIGINS="https://example.com,https://example.com"
+
+# Interval (in minutes) where future arrivals get displayed in /arrivals endpoint
+ARRIVALS_LOAD_INTERVAL=90
 ```
 
 ## Features roadmap

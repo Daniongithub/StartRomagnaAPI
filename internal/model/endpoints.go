@@ -15,9 +15,9 @@ type StopWDel struct {
 	StopName         string    `db:"stop_name" json:"stop_name"`
 	StopLat          float32   `db:"stop_lat" json:"stop_lat"`
 	StopLon          float32   `db:"stop_lon" json:"stop_lon"`
-	ArrivalTime      time.Time `db:"arrival_time" json:"-"`
+	ArrivalTime      MySQLTime `db:"arrival_time" json:"-"`
 	ArrivalTimeStr   string    `json:"arrival_time"`
-	DepartureTime    time.Time `db:"departure_time" json:"-"`
+	DepartureTime    MySQLTime `db:"departure_time" json:"-"`
 	DepartureTimeStr string    `json:"departure_time"`
 	Delay            int       `db:"delay" json:"-"`
 	DelayMin         int       `json:"delay"`
@@ -37,7 +37,7 @@ type BusInService struct {
 	Lat          *float32         `db:"lat" json:"vehicle_lat"`
 	Long         *float32         `db:"long" json:"vehicle_long"`
 	LastUpdate   time.Time        `db:"timestamp" json:"last_update"`
-	NextStop     StopWDel         `json:"next_stop"`
+	NextStop     *StopWDel        `json:"next_stop"`
 }
 
 type VehiclePosition struct {
@@ -53,4 +53,19 @@ type VehiclePosition struct {
 	Lat          float32          `db:"lat" json:"lat"`
 	Long         float32          `db:"long" json:"long"`
 	LastUpdate   time.Time        `db:"timestamp" json:"last_update"`
+}
+
+type Arrival struct {
+	Basin          string    `db:"basin" json:"basin"`
+	Line           string    `db:"disp_linea" json:"line"`
+	Destination    string    `db:"disp_dest" json:"destination"`
+	ArrivalTime    MySQLTime `db:"arrival_time" json:"-"`
+	ArrivalTimeStr string    `json:"arrival_time"`
+	State          string    `json:"state"`
+	TripId         string    `db:"trip_id" json:"trip_id"`
+	ShapeId        string    `db:"shape_id" json:"shape_id"`
+	RouteId        string    `db:"route_id" json:"route_id"`
+	OfficialLine   string    `json:"official_line"`
+	Vehicle        *string   `db:"vehicle" json:"vehicle"`
+	NextStop       *StopWDel `json:"next_stop"`
 }

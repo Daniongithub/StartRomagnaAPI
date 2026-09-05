@@ -2,6 +2,7 @@ package static
 
 import (
 	"fmt"
+	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
 	"time"
@@ -39,13 +40,39 @@ func GetTerminusName(tripId string) string {
 		WHERE st.basin = s.basin AND st.trip_id = ? AND st.stop_sequence = (
 			SELECT MAX(stop_sequence) FROM stop_times
 			WHERE trip_id = ?
-		);
+		)
 	`, tripId, tripId)
 	if err != nil {
 		fmt.Println("GetLastStop error:", err)
 	}
 
 	return results[0]
+}
+
+func GetArrivals(stopCode string) []model.Arrival {
+	var results []model.Arrival
+	now := time.Now()
+	startTime := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second(), 0, time.UTC)
+	cdDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	endTime := startTime.Add(time.Duration(config.ARRIVALS_LOAD_INTERVAL) * time.Minute)
+	err := repository.DB_STATIC.Select(&results, `
+		SELECT st.basin, st.arrival_time, st.trip_id, t.route_id, t.shape_id, tu.vehicle FROM stop_times AS st
+		INNER JOIN stops AS s
+		ON st.stop_id = s.stop_id AND st.basin = s.basin
+		INNER JOIN trips AS t
+		ON st.trip_id = t.trip_id AND st.basin = t.basin
+		INNER JOIN calendar_dates AS cd
+		ON t.service_id = cd.service_id AND t.basin = cd.basin
+		LEFT JOIN start_gtfs_rt.trip_updates AS tu
+		ON st.trip_id = tu.trip_id AND st.basin = tu.basin
+		WHERE s.stop_code = ? AND cd.date = ? AND st.arrival_time >= ? AND st.arrival_time <= ?
+		ORDER BY st.arrival_time;
+	`, stopCode, cdDate, startTime, endTime)
+	if err != nil {
+		fmt.Println("GetLastStop error:", err)
+	}
+
+	return results
 }
 
 func SaveStopTimes(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {

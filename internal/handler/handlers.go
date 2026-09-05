@@ -15,7 +15,7 @@ import (
 
 const feedURL = "https://www.startromagna.it/infobus/feed/"
 
-// GET /
+// GET /health
 func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	AddCORS(w, r)
 
@@ -68,9 +68,11 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(response)
 }
 
-// GET /activevehicles
-func ActivevehiclesHandler(w http.ResponseWriter, r *http.Request) {
-	results := realtime.GetVehicles()
+// GET /arrivals/{stopcode}
+func ArrivalsHandler(w http.ResponseWriter, r *http.Request) {
+	code := r.PathValue("stopcode")
+
+	results := service.ProcessArrivals(code)
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -80,6 +82,15 @@ func ActivevehiclesHandler(w http.ResponseWriter, r *http.Request) {
 // GET /busesinservice
 func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
 	results := service.ProcessBusesInService()
+
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /activevehicles
+func ActivevehiclesHandler(w http.ResponseWriter, r *http.Request) {
+	results := realtime.GetVehicles()
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -113,7 +124,7 @@ func NextstopsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-//GET /vehiclepositions
+// GET /vehiclepositions
 func VehiclepositionsHandler(w http.ResponseWriter, r *http.Request) {
 	results := service.ProcessVehiclePositions()
 
@@ -122,7 +133,7 @@ func VehiclepositionsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-//GET /vehiclepositions/{basin}
+// GET /vehiclepositions/{basin}
 func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
 	basin := r.PathValue("basin")
 
@@ -132,6 +143,17 @@ func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	results := service.ProcessVehiclePositionsBasin(basin)
+
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /shape/{shapeId}
+func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
+	shape_id := r.PathValue("shapeId")
+
+	results := static.GetShapePoints(shape_id)
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -210,17 +232,6 @@ func ShapesBasinHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	results := static.GetShapesBasin(basin)
-
-	AddCORS(w, r)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
-}
-
-// GET /static/shapes/{shapeId}
-func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
-	shape_id := r.PathValue("shapeId")
-
-	results := static.GetShapePoints(shape_id)
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")

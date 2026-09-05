@@ -92,8 +92,8 @@ func ToDomainShapes(basin, id string, lat, lon float32, seq int) ShapesResult {
 type StopTimesResult struct {
 	Basin          string    `db:"basin" json:"basin"`
 	Trip_id        string    `db:"trip_id" json:"trip_id"`
-	Arrival_time   time.Time `db:"arrival_time" json:"arrival_time"`
-	Departure_time time.Time `db:"departure_time" json:"departure_time"`
+	Arrival_time   MySQLTime `db:"arrival_time" json:"arrival_time"`
+	Departure_time MySQLTime `db:"departure_time" json:"departure_time"`
 	Stop_id        string    `db:"stop_id" json:"stop_id"`
 	Stop_sequence  int       `db:"stop_sequence" json:"stop_sequence"`
 }
@@ -102,8 +102,8 @@ func ToDomainStopTimes(basin, id string, arr, dep time.Time, sid string, seq int
 	return StopTimesResult{
 		Basin:          basin,
 		Trip_id:        id,
-		Arrival_time:   arr,
-		Departure_time: dep,
+		Arrival_time:   MySQLTime{arr},
+		Departure_time: MySQLTime{arr},
 		Stop_id:        sid,
 		Stop_sequence:  seq,
 	}

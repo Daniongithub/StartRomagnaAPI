@@ -39,29 +39,6 @@ func GetDistinctSAByBasin(basin string) []model.ServiceAlertsResult {
 	return results
 }
 
-/*
-func GetLastStop(tripId string) model.CorseSoppStop {
-	var results []model.CorseSoppStop
-	err := repository.DB_RT.Select(&results, `
-		SELECT DISTINCT n.stop_code, n.stop_name FROM service_alerts AS s
-		INNER JOIN start_gtfs_static.stop_times AS t
-		ON s.trip_id = t.trip_id
-		INNER JOIN start_gtfs_static.stops AS n
-		ON t.stop_id = n.stop_id
-		WHERE t.basin = n.basin AND s.trip_id = ? AND t.stop_sequence = (
-			SELECT MAX(t.stop_sequence) FROM service_alerts AS s
-			INNER JOIN start_gtfs_static.stop_times AS t
-			ON s.trip_id = t.trip_id
-			WHERE s.trip_id = ?
-		);
-	`, tripId, tripId)
-	if err != nil {
-		fmt.Println("GetLastStop error:", err)
-	}
-
-	return results[0]
-}*/
-
 func SaveAlerts(feeds map[string]*gtfs.FeedMessage, dbContent map[string]map[string]bool) {
 	rows := make([][]any, 0)
 

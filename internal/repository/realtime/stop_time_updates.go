@@ -47,7 +47,7 @@ func GetNextStops(tripId string) model.NextStops {
 	return out
 }
 
-func GetFirstStop(tripId string) model.StopWDel {
+func GetFirstStop(tripId string) *model.StopWDel {
 	var results []model.StopWDel
 	err := repository.DB_RT.Select(&results, `
 		SELECT stu.delay, st.basin, st.arrival_time, st.departure_time, st.stop_id, st.stop_id, s.stop_code, s.stop_name, s.stop_lat, s.stop_lon FROM stop_time_updates AS stu
@@ -64,17 +64,11 @@ func GetFirstStop(tripId string) model.StopWDel {
 		fmt.Println("GetFirstStop error:", err)
 	}
 	if len(results) == 0 {
-		results = append(results,
-			model.StopWDel{
-				Error: "Trip not available",
-			},
-		)
-
-		return results[0]
+		return nil
 	}
 	utils.FixStopWDel(results)
 
-	return results[0]
+	return &results[0]
 }
 
 func SaveStopTimeUpd(feeds map[string]*gtfs.FeedMessage) {
