@@ -56,7 +56,7 @@ func GetArrivals(stopCode string) []model.Arrival {
 	cdDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	endTime := startTime.Add(time.Duration(config.ARRIVALS_LOAD_INTERVAL) * time.Minute)
 	err := repository.DB_STATIC.Select(&results, `
-		SELECT st.basin, st.arrival_time, st.trip_id, t.route_id, t.shape_id, tu.vehicle FROM stop_times AS st
+		SELECT st.basin, st.arrival_time, st.trip_id, t.route_id, t.shape_id, tu.vehicle, tu.schedule_relationship FROM stop_times AS st
 		INNER JOIN stops AS s
 		ON st.stop_id = s.stop_id AND st.basin = s.basin
 		INNER JOIN trips AS t

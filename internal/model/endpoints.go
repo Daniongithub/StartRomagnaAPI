@@ -56,16 +56,17 @@ type VehiclePosition struct {
 }
 
 type Arrival struct {
-	Basin          string    `db:"basin" json:"basin"`
-	Line           string    `db:"disp_linea" json:"line"`
-	Destination    string    `db:"disp_dest" json:"destination"`
-	ArrivalTime    MySQLTime `db:"arrival_time" json:"-"`
-	ArrivalTimeStr string    `json:"arrival_time"`
-	State          string    `json:"state"`
-	TripId         string    `db:"trip_id" json:"trip_id"`
-	ShapeId        string    `db:"shape_id" json:"shape_id"`
-	RouteId        string    `db:"route_id" json:"route_id"`
-	OfficialLine   string    `json:"official_line"`
-	Vehicle        *string   `db:"vehicle" json:"vehicle"`
-	NextStop       *StopWDel `json:"next_stop"`
+	Basin                string    `db:"basin" json:"basin"`
+	Line                 string    `db:"disp_linea" json:"line"`
+	Destination          string    `db:"disp_dest" json:"destination"`
+	ArrivalTime          MySQLTime `db:"arrival_time" json:"-"`
+	ArrivalTimeStr       string    `json:"arrival_time"`
+	ScheduleRelationship *string   `db:"schedule_relationship" json:"-"`
+	State                string    `json:"state"`
+	TripId               string    `db:"trip_id" json:"trip_id"`
+	ShapeId              string    `db:"shape_id" json:"shape_id"`
+	RouteId              string    `db:"route_id" json:"route_id"`
+	OfficialLine         string    `json:"official_line"`
+	Vehicle              *string   `db:"vehicle" json:"vehicle"`
+	NextStop             *StopWDel `json:"next_stop"`
 }

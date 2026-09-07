@@ -35,8 +35,14 @@ func ProcessArrivals(stopCode string) []model.Arrival {
 			val.State = "realtime"
 			//Adds delay to arrival time
 			val.ArrivalTime.Time = val.ArrivalTime.Add(time.Duration(val.NextStop.DelayMin) * time.Minute)
-		} else {
+		} else  {
 			val.State = "planned"
+		}
+		//Show canceled status
+		if val.ScheduleRelationship != nil && *val.ScheduleRelationship == "CANCELED" {
+			val.State = "canceled"
+			val.Vehicle = nil
+			val.NextStop = nil
 		}
 		val.ArrivalTimeStr = val.ArrivalTime.Format("15:04")
 	}
