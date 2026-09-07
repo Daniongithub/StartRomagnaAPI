@@ -6,14 +6,14 @@ import (
 )
 
 func ConvertDelay(delay int) int {
-    mins := delay / 60
-    rest := delay % 60
-    if rest >= 30 {
-        mins++
-    } else if rest <= -30 {
-        mins--
-    }
-    return mins
+	mins := delay / 60
+	rest := delay % 60
+	if rest >= 30 {
+		mins++
+	} else if rest <= -30 {
+		mins--
+	}
+	return mins
 }
 
 func FixStopWDel(stops []model.StopWDel) {

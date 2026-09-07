@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"startromagnaapi/config"
 	"net/http"
+	"startromagnaapi/config"
 	"strings"
 )
 

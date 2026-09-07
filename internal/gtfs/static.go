@@ -37,7 +37,7 @@ func UpdateStatic() {
 	static.SaveShapes(feedRA, feedFC, feedRN)
 	static.SaveStopTimes(feedRA, feedFC, feedRN)
 	static.SaveStops(feedRA, feedFC, feedRN)
-	registerShapeIDs()	
+	registerShapeIDs()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Updated static GTFS. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)

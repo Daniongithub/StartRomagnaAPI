@@ -58,7 +58,13 @@ func GetFirstStop(tripId string) *model.StopWDel {
 		WHERE st.basin = s.basin AND stu.trip_id = ? AND st.stop_sequence = (
 			SELECT MIN(stu.stop_sequence) FROM stop_time_updates AS stu
 			WHERE stu.trip_id = ?
-		);
+		)
+		AND LOCATE('semaforo', stop_name) = 0
+	  	AND LOCATE('fi1', stop_name) = 0
+		AND LOCATE('FITTIZIO', stop_name) = 0
+		AND LOCATE('Fittizio', stop_name) = 0
+		AND LOCATE('FITTIZIA', stop_name) = 0
+		AND LOCATE('Fittizia', stop_name) = 0;
 	`, tripId, tripId)
 	if err != nil {
 		fmt.Println("GetFirstStop error:", err)

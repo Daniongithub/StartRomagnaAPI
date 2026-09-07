@@ -22,7 +22,7 @@ var (
 
 	PORT string
 
-	IS_PRIMARY bool
+	IS_PRIMARY      bool
 	ALLOWED_ORIGINS []string
 
 	ARRIVALS_LOAD_INTERVAL int
