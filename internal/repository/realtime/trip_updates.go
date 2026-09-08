@@ -56,12 +56,10 @@ func GetVehicles() []string {
 func GetBuses() []model.BusInService {
 	var results []model.BusInService
 	err := repository.DB_RT.Select(&results, `
-		SELECT tu.basin, tu.trip_id, tu.vehicle, tu.timestamp, tu.route_id, t.shape_id, vp.lat, vp.long FROM trip_updates AS tu
-		INNER JOIN vehicle_positions AS vp
-		ON tu.trip_id = vp.trip_id
+		SELECT vp.basin, vp.trip_id, vp.vehicle, vp.timestamp, t.route_id, t.shape_id, vp.lat, vp.long FROM vehicle_positions AS vp
 		INNER JOIN start_gtfs_static.trips AS t
-		ON tu.trip_id = t.trip_id
-		ORDER BY tu.basin, tu.route_id
+		ON vp.trip_id = t.trip_id
+		ORDER BY vp.basin, t.route_id
 	`)
 	if err != nil {
 		fmt.Println("GetVehicles error:", err)

@@ -50,21 +50,30 @@ func GetNextStops(tripId string) model.NextStops {
 func GetFirstStop(tripId string) *model.StopWDel {
 	var results []model.StopWDel
 	err := repository.DB_RT.Select(&results, `
-		SELECT stu.delay, st.basin, st.arrival_time, st.departure_time, st.stop_id, st.stop_id, s.stop_code, s.stop_name, s.stop_lat, s.stop_lon FROM stop_time_updates AS stu
+		SELECT stu.delay, st.basin, st.arrival_time, st.departure_time, st.stop_id,
+			s.stop_code, s.stop_name, s.stop_lat, s.stop_lon
+		FROM stop_time_updates AS stu
 		INNER JOIN start_gtfs_static.stop_times AS st
-		ON stu.trip_id = st.trip_id
+			ON stu.trip_id = st.trip_id AND stu.stop_sequence = st.stop_sequence
 		INNER JOIN start_gtfs_static.stops AS s
-		ON st.stop_id = s.stop_id
-		WHERE st.basin = s.basin AND stu.trip_id = ? AND st.stop_sequence = (
-			SELECT MIN(stu.stop_sequence) FROM stop_time_updates AS stu
-			WHERE stu.trip_id = ?
+			ON st.stop_id = s.stop_id
+		WHERE st.basin = s.basin
+		AND stu.trip_id = ?
+		AND st.stop_sequence = (
+			SELECT MIN(st2.stop_sequence)
+			FROM stop_time_updates AS stu2
+			INNER JOIN start_gtfs_static.stop_times AS st2
+				ON stu2.trip_id = st2.trip_id AND stu2.stop_sequence = st2.stop_sequence
+			INNER JOIN start_gtfs_static.stops AS s2
+				ON st2.stop_id = s2.stop_id
+			WHERE stu2.trip_id = ?
+			AND LOCATE('semaforo', s2.stop_name) = 0
+			AND LOCATE('fi1', s2.stop_name) = 0
+			AND LOCATE('FITTIZIO', s2.stop_name) = 0
+			AND LOCATE('Fittizio', s2.stop_name) = 0
+			AND LOCATE('FITTIZIA', s2.stop_name) = 0
+			AND LOCATE('Fittizia', s2.stop_name) = 0
 		)
-		AND LOCATE('semaforo', stop_name) = 0
-	  	AND LOCATE('fi1', stop_name) = 0
-		AND LOCATE('FITTIZIO', stop_name) = 0
-		AND LOCATE('Fittizio', stop_name) = 0
-		AND LOCATE('FITTIZIA', stop_name) = 0
-		AND LOCATE('Fittizia', stop_name) = 0;
 	`, tripId, tripId)
 	if err != nil {
 		fmt.Println("GetFirstStop error:", err)
