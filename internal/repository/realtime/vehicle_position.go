@@ -21,6 +21,16 @@ func GetVehiclePositions() []model.VehiclePosition {
 		fmt.Println("GetVehicles error:", err)
 	}
 
+	loc, err := time.LoadLocation("Europe/Rome")
+	if err != nil {
+		fmt.Println("LoadLocation error:", err)
+		return results
+	}
+
+	for i := range results {
+		results[i].LastUpdate = results[i].LastUpdate.In(loc)
+	}
+
 	return results
 }
 
@@ -35,6 +45,16 @@ func GetVehiclePositionsBasin(basin string) []model.VehiclePosition {
 	`, basin)
 	if err != nil {
 		fmt.Println("GetVehiclePositionsBasin error:", err)
+	}
+
+	loc, err := time.LoadLocation("Europe/Rome")
+	if err != nil {
+		fmt.Println("LoadLocation error:", err)
+		return results
+	}
+
+	for i := range results {
+		results[i].LastUpdate = results[i].LastUpdate.In(loc)
 	}
 
 	return results
