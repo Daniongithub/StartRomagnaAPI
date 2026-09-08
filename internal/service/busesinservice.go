@@ -31,8 +31,17 @@ func ProcessBusesInService() []model.BusInService {
 				val.Destination = strings.ToUpper(static.GetTerminusName(val.TripId))
 			}
 		}
+		//Model and stuff
 		if mezzi.GetVehicleInServiceByID(val.Vehicle) != nil {
 			val.VehicleInfo = *mezzi.GetVehicleInServiceByID(val.Vehicle)
+		} else {
+			val.VehicleInfo = model.VehicleInService{
+				Number: val.Vehicle,
+			}
+		}
+		//METE model and stuff
+		if mezzi.GetMeteInServiceByID(val.Vehicle) != nil {
+			val.VehicleInfo = *mezzi.GetMeteInServiceByID(val.Vehicle)
 		} else {
 			val.VehicleInfo = model.VehicleInService{
 				Number: val.Vehicle,
@@ -78,7 +87,7 @@ func groupAndSort(items []model.BusInService) []model.BusInService {
 		}
 		basinGroups[it.Basin] = append(basinGroups[it.Basin], it)
 	}
-
+	
 	result := make([]model.BusInService, 0, len(items))
 
 	for _, basin := range basinOrder {
@@ -98,10 +107,10 @@ func groupAndSort(items []model.BusInService) []model.BusInService {
 
 		// Città senza suffisso ("") prima, poi le altre in ordine alfabetico
 		sort.SliceStable(cityOrder, func(i, j int) bool {
-			if cityOrder[i] == "" {
+			if cityOrder[i] != "" {
 				return true
 			}
-			if cityOrder[j] == "" {
+			if cityOrder[j] != "" {
 				return false
 			}
 			return cityOrder[i] < cityOrder[j]

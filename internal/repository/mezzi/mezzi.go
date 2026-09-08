@@ -18,3 +18,16 @@ func GetVehicleInServiceByID(id string) *model.VehicleInService {
 
 	return &results[0]
 }
+
+func GetMeteInServiceByID(id string) *model.VehicleInService {
+	var results []model.VehicleInService
+	err := repository.DB_MEZZI.Select(&results, "SELECT matricola, targa, modello, photo_path FROM mezzi_mete WHERE matricola = ?", id)
+	if err != nil {
+		fmt.Println("GetVehicleInServiceByID errore db:", err)
+	}
+	if len(results) == 0 {
+		return nil
+	}
+
+	return &results[0]
+}
