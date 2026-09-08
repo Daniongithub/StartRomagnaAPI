@@ -116,6 +116,7 @@ type StopsResult struct {
 	Stop_name string  `db:"stop_name" json:"stop_name"`
 	Stop_lat  float32 `db:"stop_lat" json:"stop_lat"`
 	Stop_lon  float32 `db:"stop_lon" json:"stop_lon"`
+	Is_dummy  bool    `db:"is_dummy" json:"is_dummy"`
 }
 
 func ToDomainStops(r *gtfs.Stop) StopsResult {

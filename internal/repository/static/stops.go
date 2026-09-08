@@ -125,4 +125,19 @@ func SaveStops(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtf
 			fmt.Println("SaveStops db error:", err)
 		}
 	}
+
+	//Sets fake stops
+	_, err = repository.DB_STATIC.Exec(`
+		UPDATE start_gtfs_static.stops
+		SET is_dummy = 1
+		WHERE LOCATE('semaforo', stop_name) > 0
+		OR LOCATE('fi1', stop_name) > 0
+		OR LOCATE('FITTIZIO', stop_name) > 0
+		OR LOCATE('Fittizio', stop_name) > 0
+		OR LOCATE('FITTIZIA', stop_name) > 0
+		OR LOCATE('Fittizia', stop_name) > 0
+	`)
+	if err != nil {
+		fmt.Println("SaveStops db error:", err)
+	}
 }
