@@ -34,19 +34,15 @@ func ProcessBusesInService() []model.BusInService {
 		//Model and stuff
 		if mezzi.GetVehicleInServiceByID(val.Vehicle) != nil {
 			val.VehicleInfo = *mezzi.GetVehicleInServiceByID(val.Vehicle)
-		} else {
-			val.VehicleInfo = model.VehicleInService{
-				Number: val.Vehicle,
-			}
-		}
-		//METE model and stuff
-		if mezzi.GetMeteInServiceByID(val.Vehicle) != nil {
+		} else if mezzi.GetMeteInServiceByID(val.Vehicle) != nil {
+			//METE model and stuff
 			val.VehicleInfo = *mezzi.GetMeteInServiceByID(val.Vehicle)
 		} else {
 			val.VehicleInfo = model.VehicleInService{
 				Number: val.Vehicle,
 			}
 		}
+
 	}
 	buses = groupAndSort(buses)
 
@@ -87,7 +83,7 @@ func groupAndSort(items []model.BusInService) []model.BusInService {
 		}
 		basinGroups[it.Basin] = append(basinGroups[it.Basin], it)
 	}
-	
+
 	result := make([]model.BusInService, 0, len(items))
 
 	for _, basin := range basinOrder {
