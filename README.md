@@ -24,6 +24,8 @@ ALLOWED_ORIGINS="https://example.com,https://example.com"
 
 # Interval (in minutes) where future arrivals get displayed in /arrivals endpoint
 ARRIVALS_LOAD_INTERVAL=90
+# Max visualized delay before trip gets deleted from /arrivals endpoint
+ARRIVALS_DELAY_BUFFER=90
 ```
 
 ## Features roadmap

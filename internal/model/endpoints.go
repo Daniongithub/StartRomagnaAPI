@@ -68,5 +68,6 @@ type Arrival struct {
 	RouteId              string    `db:"route_id" json:"route_id"`
 	OfficialLine         string    `json:"official_line"`
 	Vehicle              *string   `db:"vehicle" json:"vehicle"`
+	VehicleConfirmed     bool      `db:"vehicle_confirmed" json:"-"`
 	NextStop             *StopWDel `json:"next_stop"`
 }

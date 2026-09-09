@@ -55,19 +55,34 @@ func GetArrivals(stopCode string) []model.Arrival {
 	startTime := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second(), 0, time.UTC)
 	cdDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	endTime := startTime.Add(time.Duration(config.ARRIVALS_LOAD_INTERVAL) * time.Minute)
+
+	// Buffer per includere bus schedulati nel passato ma potenzialmente in ritardo
+	queryStartTime := startTime.Add(-time.Duration(config.ARRIVALS_DELAY_BUFFER) * time.Minute)
+
 	err := repository.DB_STATIC.Select(&results, `
-		SELECT st.basin, st.arrival_time, st.trip_id, t.route_id, t.shape_id, tu.vehicle, tu.schedule_relationship FROM stop_times AS st
-		INNER JOIN stops AS s
-		ON st.stop_id = s.stop_id AND st.basin = s.basin
-		INNER JOIN trips AS t
-		ON st.trip_id = t.trip_id AND st.basin = t.basin
-		INNER JOIN calendar_dates AS cd
-		ON t.service_id = cd.service_id AND t.basin = cd.basin
-		LEFT JOIN start_gtfs_rt.trip_updates AS tu
-		ON st.trip_id = tu.trip_id AND st.basin = tu.basin
-		WHERE s.stop_code = ? AND cd.date = ? AND st.arrival_time >= ? AND st.arrival_time <= ?
-		ORDER BY st.arrival_time;
-	`, stopCode, cdDate, startTime, endTime)
+        SELECT 
+            st.basin, st.arrival_time, t.trip_id, t.route_id, t.shape_id, COALESCE(tu.vehicle, vp2.vehicle) AS vehicle, tu.schedule_relationship,
+            CASE 
+                WHEN vp.trip_id IS NULL THEN TRUE
+                WHEN vp.trip_id = tu.trip_id THEN TRUE
+                ELSE FALSE
+            END AS vehicle_confirmed
+        FROM stop_times AS st
+        INNER JOIN stops AS s
+            ON st.stop_id = s.stop_id AND st.basin = s.basin
+        INNER JOIN trips AS t
+            ON st.trip_id = t.trip_id AND st.basin = t.basin
+        INNER JOIN calendar_dates AS cd
+            ON t.service_id = cd.service_id AND t.basin = cd.basin
+        LEFT JOIN start_gtfs_rt.trip_updates AS tu
+            ON st.trip_id = tu.trip_id AND st.basin = tu.basin
+		LEFT JOIN start_gtfs_rt.vehicle_positions AS vp
+			ON tu.vehicle = vp.vehicle AND st.basin = vp.basin
+		LEFT JOIN start_gtfs_rt.vehicle_positions AS vp2
+			ON st.trip_id = vp2.trip_id AND st.basin = vp2.basin
+        WHERE s.stop_code = ? AND cd.date = ? AND st.arrival_time >= ? AND st.arrival_time <= ?
+        ORDER BY st.arrival_time;
+    `, stopCode, cdDate, queryStartTime, endTime)
 	if err != nil {
 		fmt.Println("GetLastStop error:", err)
 	}

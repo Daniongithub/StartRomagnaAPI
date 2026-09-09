@@ -26,6 +26,7 @@ var (
 	ALLOWED_ORIGINS []string
 
 	ARRIVALS_LOAD_INTERVAL int
+	ARRIVALS_DELAY_BUFFER int
 )
 
 func LoadConf() {
@@ -48,4 +49,5 @@ func LoadConf() {
 	ALLOWED_ORIGINS = strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
 
 	ARRIVALS_LOAD_INTERVAL, _ = strconv.Atoi(os.Getenv("ARRIVALS_LOAD_INTERVAL"))
+	ARRIVALS_DELAY_BUFFER, _ = strconv.Atoi(os.Getenv("ARRIVALS_DELAY_BUFFER"))
 }
