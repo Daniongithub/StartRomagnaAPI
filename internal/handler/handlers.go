@@ -160,6 +160,17 @@ func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
+// GET /vehicle/{vehicle}
+func VehicleHandler(w http.ResponseWriter, r *http.Request) {
+	vehicleId := r.PathValue("vehicle")
+
+	results := service.ProcessVehicleInfo(vehicleId)
+
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
 // ------------------------
 // - RAW GTFS ENDPOINTS
 // ------------------------
