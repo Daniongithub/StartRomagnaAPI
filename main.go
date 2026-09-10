@@ -45,6 +45,7 @@ func main() {
 	mux.HandleFunc("GET /nextstops/{tripid}", handler.NextstopsHandler)
 	mux.HandleFunc("GET /vehiclepositions", handler.VehiclepositionsHandler)
 	mux.HandleFunc("GET /vehiclepositions/{basin}", handler.VehiclepositionsBasinHandler)
+	mux.HandleFunc("GET /vehicleposition/{vehicleId}", handler.VehiclepositionIDHandler)
 	mux.HandleFunc("GET /shape/{shapeId}", handler.ShapePointsHandler)
 	mux.HandleFunc("GET /vehicle/{vehicle}", handler.VehicleHandler)
 

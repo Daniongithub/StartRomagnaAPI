@@ -133,7 +133,7 @@ func VehiclepositionsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// GET /vehiclepositions/{basin}
+// GET /vehiclepos/{basin}
 func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
 	basin := r.PathValue("basin")
 
@@ -143,6 +143,17 @@ func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	results := service.ProcessVehiclePositionsBasin(basin)
+
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /vehicleposition/{vehicleId}
+func VehiclepositionIDHandler(w http.ResponseWriter, r *http.Request) {
+	vehicleId := r.PathValue("vehicleId")
+
+	results := service.ProcessVehiclePositionID(vehicleId)
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")

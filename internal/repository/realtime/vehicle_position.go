@@ -60,6 +60,32 @@ func GetVehiclePositionsBasin(basin string) []model.VehiclePosition {
 	return results
 }
 
+func GetVehicleLocationID(id string) *model.VehiclePosition {
+	var results []model.VehiclePosition
+	err := repository.DB_RT.Select(&results, `
+		SELECT vp.basin, vp.trip_id, vp.vehicle, vp.timestamp, t.route_id, t.shape_id, vp.lat, vp.long FROM vehicle_positions AS vp
+		INNER JOIN start_gtfs_static.trips AS t
+		ON vp.trip_id = t.trip_id
+		WHERE vp.vehicle = ?
+	`, id)
+	if err != nil {
+		fmt.Println("GetVehiclePositionsBasin error:", err)
+	}
+
+	if len(results) == 0 {
+		return nil
+	}
+
+	loc, err := time.LoadLocation("Europe/Rome")
+	if err != nil {
+		fmt.Println("LoadLocation error:", err)
+	}
+
+	results[0].LastUpdate = results[0].LastUpdate.In(loc)
+
+	return &results[0]
+}
+
 func SaveVehiclePositions(feeds map[string]*gtfs.FeedMessage) {
 	values := make([][]any, 0)
 

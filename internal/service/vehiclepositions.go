@@ -69,3 +69,35 @@ func ProcessVehiclePositionsBasin(basin string) []model.VehiclePosition {
 
 	return positions
 }
+
+func ProcessVehiclePositionID(id string) *model.VehiclePosition {
+	position := realtime.GetVehicleLocationID(id)
+
+	if position == nil {
+		return nil
+	}
+
+	position.OfficialLine = static.GetRouteNamefromID(position.Basin, position.RouteId)
+	headsign := static.GetHeadsignsByID(position.ShapeId)
+	if headsign != nil {
+		if headsign.DispLine != nil {
+			position.Line = *headsign.DispLine
+		} else {
+			position.Line = position.OfficialLine
+		}
+		if headsign.DispDest != nil {
+			position.Destination = *headsign.DispDest
+		} else {
+			position.Destination = strings.ToUpper(static.GetTerminusName(position.TripId))
+		}
+	}
+	if mezzi.GetVehicleInServiceByID(position.Vehicle) != nil {
+		position.VehicleInfo = *mezzi.GetVehicleInServiceByID(position.Vehicle)
+	} else {
+		position.VehicleInfo = model.VehicleInService{
+			Number: position.Vehicle,
+		}
+	}
+
+	return position
+}
