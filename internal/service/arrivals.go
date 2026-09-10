@@ -50,7 +50,7 @@ func ProcessArrivals(stopCode string) []model.Arrival {
 			val.NextStop = nil
 		}
 
-		// Ricostruisce la data corretta partendo dall'orario (ignorando l'anno fittizio 0000-01-01)
+		//Puts correct date in ArrivalTime
 		val.ArrivalTime.Time = time.Date(
 			today.Year(), today.Month(), today.Day(),
 			val.ArrivalTime.Hour(), val.ArrivalTime.Minute(), val.ArrivalTime.Second(), 0,
