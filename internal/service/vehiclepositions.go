@@ -8,12 +8,13 @@ import (
 	"strings"
 )
 
-func ProcessVehiclePositions() []model.VehiclePosition {
+func ProcessVehiclePositions() []model.BusInService {
 	positions := realtime.GetVehiclePositions()
 
 	for idx := range positions {
 		val := &positions[idx]
 		val.OfficialLine = static.GetRouteNamefromID(val.Basin, val.RouteId)
+		val.NextStop = realtime.GetFirstStop(val.TripId)
 		headsign := static.GetHeadsignsByID(val.ShapeId)
 		if headsign != nil {
 			if headsign.DispLine != nil {
@@ -39,12 +40,13 @@ func ProcessVehiclePositions() []model.VehiclePosition {
 	return positions
 }
 
-func ProcessVehiclePositionsBasin(basin string) []model.VehiclePosition {
+func ProcessVehiclePositionsBasin(basin string) []model.BusInService {
 	positions := realtime.GetVehiclePositionsBasin(basin)
 
 	for idx := range positions {
 		val := &positions[idx]
 		val.OfficialLine = static.GetRouteNamefromID(val.Basin, val.RouteId)
+		val.NextStop = realtime.GetFirstStop(val.TripId)
 		headsign := static.GetHeadsignsByID(val.ShapeId)
 		if headsign != nil {
 			if headsign.DispLine != nil {
@@ -70,7 +72,7 @@ func ProcessVehiclePositionsBasin(basin string) []model.VehiclePosition {
 	return positions
 }
 
-func ProcessVehiclePositionID(id string) *model.VehiclePosition {
+func ProcessVehiclePositionID(id string) *model.BusInService {
 	position := realtime.GetVehicleLocationID(id)
 
 	if position == nil {
@@ -78,6 +80,7 @@ func ProcessVehiclePositionID(id string) *model.VehiclePosition {
 	}
 
 	position.OfficialLine = static.GetRouteNamefromID(position.Basin, position.RouteId)
+	position.NextStop = realtime.GetFirstStop(position.TripId)
 	headsign := static.GetHeadsignsByID(position.ShapeId)
 	if headsign != nil {
 		if headsign.DispLine != nil {

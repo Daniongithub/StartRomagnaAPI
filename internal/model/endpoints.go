@@ -40,21 +40,6 @@ type BusInService struct {
 	NextStop     *StopWDel        `json:"next_stop"`
 }
 
-type VehiclePosition struct {
-	Basin        string           `db:"basin" json:"basin"`
-	Line         string           `db:"disp_linea" json:"line"`
-	Destination  string           `db:"disp_dest" json:"destination"`
-	TripId       string           `db:"trip_id" json:"trip_id"`
-	ShapeId      string           `db:"shape_id" json:"shape_id"`
-	RouteId      string           `db:"route_id" json:"route_id"`
-	OfficialLine string           `json:"official_line"`
-	Vehicle      string           `db:"vehicle" json:"-"`
-	VehicleInfo  VehicleInService `json:"vehicle_info"`
-	Lat          float32          `db:"lat" json:"lat"`
-	Long         float32          `db:"long" json:"long"`
-	LastUpdate   time.Time        `db:"timestamp" json:"last_update"`
-}
-
 type Arrival struct {
 	Basin                string    `db:"basin" json:"basin"`
 	Line                 string    `db:"disp_linea" json:"line"`

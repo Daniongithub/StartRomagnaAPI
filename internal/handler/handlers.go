@@ -149,9 +149,9 @@ func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// GET /vehicleposition/{vehicleId}
+// GET /vehicleposition/{vehicleid}
 func VehiclepositionIDHandler(w http.ResponseWriter, r *http.Request) {
-	vehicleId := r.PathValue("vehicleId")
+	vehicleId := r.PathValue("vehicleid")
 
 	results := service.ProcessVehiclePositionID(vehicleId)
 
