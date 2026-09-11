@@ -171,8 +171,8 @@ func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// GET /vehicle/{vehicle}
-func VehicleHandler(w http.ResponseWriter, r *http.Request) {
+// GET /vehicleinfo/{vehicle}
+func VehicleinfoHandler(w http.ResponseWriter, r *http.Request) {
 	vehicleId := r.PathValue("vehicle")
 
 	results := service.ProcessVehicleInfo(vehicleId)

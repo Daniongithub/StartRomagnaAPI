@@ -59,10 +59,14 @@ func GetFirstStop(tripId string) *model.StopWDel {
 		WHERE st.basin = s.basin
 		AND stu.trip_id = ?
 		AND st.stop_sequence = (
-			SELECT MIN(st.stop_sequence)
-			FROM stop_time_updates AS stu
-			WHERE stu.trip_id = ?
-			AND s.is_dummy = 0
+			SELECT MIN(st2.stop_sequence)
+			FROM stop_time_updates AS stu2
+			INNER JOIN start_gtfs_static.stop_times AS st2
+			ON stu2.trip_id = st2.trip_id AND stu2.stop_sequence = st2.stop_sequence
+			INNER JOIN start_gtfs_static.stops AS s2
+			ON st2.stop_id = s2.stop_id
+			WHERE stu2.trip_id = ?
+			AND s2.is_dummy = 0
 		)
 	`, tripId, tripId)
 	if err != nil {
