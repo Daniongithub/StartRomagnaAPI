@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository/realtime"
 	"startromagnaapi/internal/repository/static"
@@ -8,8 +9,13 @@ import (
 	"time"
 )
 
-func ProcessArrivals(stopCode string) []model.Arrival {
+var NoArrivals = errors.New("no arrivals")
+
+func ProcessArrivals(stopCode string) ([]model.Arrival, error) {
 	arrivals := static.GetArrivals(stopCode)
+	if len(arrivals) == 0 {
+		return nil, NoArrivals
+	}
 	now := time.Now().Add(1 * time.Minute)
 	today := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second(), 0, time.UTC)
 	var results []model.Arrival
@@ -66,5 +72,5 @@ func ProcessArrivals(stopCode string) []model.Arrival {
 		results = append(results, *val)
 	}
 
-	return results
+	return results, nil
 }

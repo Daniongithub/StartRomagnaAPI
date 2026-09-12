@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository/mezzi"
 	"startromagnaapi/internal/repository/realtime"
@@ -8,8 +9,14 @@ import (
 	"strings"
 )
 
-func ProcessVehicleInfo(id string) model.BusInService {
+var ErrVehicleNotFound = errors.New("vehicle not found")
+
+func ProcessVehicleInfo(id string) (model.BusInService, error) {
 	bus := realtime.GetBus(id)
+
+	if len(bus) == 0 {
+		return model.BusInService{}, ErrVehicleNotFound
+	}
 
 	val := &bus[0]
 	val.NextStop = realtime.GetFirstStop(val.TripId)
@@ -39,5 +46,5 @@ func ProcessVehicleInfo(id string) model.BusInService {
 		}
 	}
 
-	return bus[0]
+	return bus[0], nil
 }

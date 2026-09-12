@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"startromagnaapi/config"
@@ -109,7 +110,16 @@ func SSEHandler(w http.ResponseWriter, r *http.Request) {
 func ArrivalsHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("stopcode")
 
-	results := service.ProcessArrivals(code)
+	results, err := service.ProcessArrivals(code)
+	if err != nil {
+		if errors.Is(err, service.NoArrivals) {
+			http.Error(w, "no arrivals", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -118,7 +128,16 @@ func ArrivalsHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /busesinservice
 func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
-	results := service.ProcessBusesInService()
+	results, err := service.ProcessBusesInService()
+	if err != nil {
+		if errors.Is(err, service.NoBusesInService) {
+			http.Error(w, "no buses in service at the moment", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -212,7 +231,16 @@ func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
 func VehicleinfoHandler(w http.ResponseWriter, r *http.Request) {
 	vehicleId := r.PathValue("vehicle")
 
-	results := service.ProcessVehicleInfo(vehicleId)
+	results, err := service.ProcessVehicleInfo(vehicleId)
+	if err != nil {
+		if errors.Is(err, service.ErrVehicleNotFound) {
+			http.Error(w, "vehicle not found", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
 
 	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")

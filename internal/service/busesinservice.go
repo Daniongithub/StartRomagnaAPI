@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"regexp"
 	"sort"
 	"startromagnaapi/internal/model"
@@ -11,8 +12,14 @@ import (
 	"strings"
 )
 
-func ProcessBusesInService() []model.BusInService {
+var NoBusesInService = errors.New("no buses in service")
+
+func ProcessBusesInService() ([]model.BusInService, error) {
 	buses := realtime.GetBuses()
+
+	if len(buses) == 0 {
+		return nil, NoBusesInService
+	}
 
 	for idx := range buses {
 		val := &buses[idx]
@@ -46,7 +53,7 @@ func ProcessBusesInService() []model.BusInService {
 	}
 	buses = groupAndSort(buses)
 
-	return buses
+	return buses, nil
 }
 
 // SORT AND GROUP BY LINE
