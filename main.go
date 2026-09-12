@@ -38,6 +38,8 @@ func main() {
 
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
 
+	mux.HandleFunc("/events", handler.SSEHandler)
+
 	mux.HandleFunc("GET /arrivals/{stopcode}", handler.ArrivalsHandler)
 	mux.HandleFunc("GET /busesinservice", handler.BusesinserviceHandler)
 	mux.HandleFunc("GET /activevehicles", handler.ActivevehiclesHandler)

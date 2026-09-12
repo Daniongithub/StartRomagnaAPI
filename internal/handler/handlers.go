@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
@@ -66,6 +67,42 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
 	encoder.Encode(response)
+}
+
+// SSE
+func SSEHandler(w http.ResponseWriter, r *http.Request) {
+	// Set http headers required for SSE
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	// You may need this locally for CORS requests
+	AddCORS(w, r)
+
+	// Create a channel for client disconnection
+	clientGone := r.Context().Done()
+
+	rc := http.NewResponseController(w)
+	t := time.NewTicker(time.Second)
+	defer t.Stop()
+	for {
+		select {
+		case <-clientGone:
+			//fmt.Println("Client disconnected")
+			return
+		case <-t.C:
+			// Send an event to the client
+			// Here we send only the "data" field, but there are few others
+			_, err := fmt.Fprintf(w, "data: Minchione! The time is %s\n\n", time.Now().Format(time.UnixDate))
+			if err != nil {
+				return
+			}
+			err = rc.Flush()
+			if err != nil {
+				return
+			}
+		}
+	}
 }
 
 // GET /arrivals/{stopcode}
@@ -291,80 +328,3 @@ func StopsBasinHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
-
-/*
-func RTHandler(w http.ResponseWriter, r *http.Request) {
-	url := config.START_GTFS_RT_ROOT + "/start-gtfs-rt-trip-updates-ra.pb"
-
-	req, err := auth.BasicAuth("GET", url, nil)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		http.Error(w, "GTFS-RT server returned "+resp.Status, http.StatusBadGateway)
-		return
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
-		return
-	}
-
-	var feed gtfs.FeedMessage
-
-	if err := proto.Unmarshal(body, &feed); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	type Trip struct {
-		ID                   string `json:"id"`
-		VehicleID            string `json:"vehicle_id"`
-		VehicleLabel         string `json:"vehicle_label"`
-		TripID               string `json:"trip_id"`
-		RouteID              string `json:"route_id"`
-		StartTime            string `json:"start_time"`
-		StartDate            string `json:"start_date"`
-		ScheduleRelationship string `json:"schedule_relationship"`
-	}
-
-	trips := make([]Trip, 0)
-
-	for _, entity := range feed.Entity {
-		tu := entity.GetTripUpdate()
-		if tu == nil {
-			continue
-		}
-
-		trip := tu.GetTrip()
-		vehicle := tu.GetVehicle()
-
-		trips = append(trips, Trip{
-			ID:                   entity.GetId(),
-			VehicleID:            vehicle.GetId(),
-			VehicleLabel:         vehicle.GetLabel(),
-			TripID:               trip.GetTripId(),
-			RouteID:              trip.GetRouteId(),
-			StartTime:            trip.GetStartTime(),
-			StartDate:            trip.GetStartDate(),
-			ScheduleRelationship: trip.GetScheduleRelationship().String(),
-		})
-	}
-
-	sort.Slice(trips, func(i, j int) bool {
-		return trips[i].VehicleLabel < trips[j].VehicleLabel
-	})
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(trips)
-}*/
