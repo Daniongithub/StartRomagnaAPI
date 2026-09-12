@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"startromagnaapi/internal/gtfs"
 	"startromagnaapi/internal/repository/realtime"
+	"startromagnaapi/internal/sse"
 
 	"github.com/go-co-op/gocron/v2"
 )
 
-func InitScheduler() (gocron.Scheduler, error) {
+func InitScheduler(hub *sse.Hub) (gocron.Scheduler, error) {
 	s, err := gocron.NewScheduler()
 	if err != nil {
 		return nil, err
@@ -18,11 +19,11 @@ func InitScheduler() (gocron.Scheduler, error) {
 
 	_, err = s.NewJob(gocron.CronJob("0 0 * * *", false), gocron.NewTask(deleteServiceAlerts))
 
-	_, err = s.NewJob(gocron.CronJob("* * * * *", false), gocron.NewTask(updateServiceAlerts))
+	_, err = s.NewJob(gocron.CronJob("* * * * *", false), gocron.NewTask(updateServiceAlerts, hub))
 
-	_, err = s.NewJob(gocron.CronJob("*/30 * * * * *", true), gocron.NewTask(updateTripUpdates), gocron.WithSingletonMode(gocron.LimitModeReschedule))
+	_, err = s.NewJob(gocron.CronJob("*/30 * * * * *", true), gocron.NewTask(updateTripUpdates, hub), gocron.WithSingletonMode(gocron.LimitModeReschedule))
 
-	_, err = s.NewJob(gocron.CronJob("*/30 * * * * *", true), gocron.NewTask(updateVehiclePositions), gocron.WithSingletonMode(gocron.LimitModeReschedule))
+	_, err = s.NewJob(gocron.CronJob("*/30 * * * * *", true), gocron.NewTask(updateVehiclePositions, hub), gocron.WithSingletonMode(gocron.LimitModeReschedule))
 
 	if err != nil {
 		return nil, err
@@ -38,9 +39,10 @@ func updateStaticTask() {
 	fmt.Println("Task OK.")
 }
 
-func updateServiceAlerts() {
+func updateServiceAlerts(hub *sse.Hub) {
 	fmt.Println("Task update Service Alerts")
 	gtfs.UpdateAlerts()
+	hub.Broadcast(sse.Event{Type: "service_alerts"})
 	fmt.Println("Task OK.")
 }
 
@@ -50,14 +52,16 @@ func deleteServiceAlerts() {
 	fmt.Println("Task OK.")
 }
 
-func updateTripUpdates() {
+func updateTripUpdates(hub *sse.Hub) {
 	fmt.Println("Task update Trip Updates")
 	gtfs.UpdateTripUpdates()
+	hub.Broadcast(sse.Event{Type: "trip_updates"})
 	fmt.Println("Task OK.")
 }
 
-func updateVehiclePositions() {
+func updateVehiclePositions(hub *sse.Hub) {
 	fmt.Println("Task update Vehicle Positions")
 	gtfs.UpdateVehiclePositions()
+	hub.Broadcast(sse.Event{Type: "vehicle_positions"})
 	fmt.Println("Task OK.")
 }

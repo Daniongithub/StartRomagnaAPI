@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
@@ -68,42 +67,6 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
 	encoder.Encode(response)
-}
-
-// SSE
-func SSEHandler(w http.ResponseWriter, r *http.Request) {
-	// Set http headers required for SSE
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-
-	// You may need this locally for CORS requests
-	AddCORS(w, r)
-
-	// Create a channel for client disconnection
-	clientGone := r.Context().Done()
-
-	rc := http.NewResponseController(w)
-	t := time.NewTicker(time.Second)
-	defer t.Stop()
-	for {
-		select {
-		case <-clientGone:
-			//fmt.Println("Client disconnected")
-			return
-		case <-t.C:
-			// Send an event to the client
-			// Here we send only the "data" field, but there are few others
-			_, err := fmt.Fprintf(w, "data: Minchione! The time is %s\n\n", time.Now().Format(time.UnixDate))
-			if err != nil {
-				return
-			}
-			err = rc.Flush()
-			if err != nil {
-				return
-			}
-		}
-	}
 }
 
 // GET /arrivals/{stopcode}

@@ -9,6 +9,7 @@ import (
 	"startromagnaapi/internal/handler"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/scheduler"
+	"startromagnaapi/internal/sse"
 )
 
 func main() {
@@ -16,14 +17,14 @@ func main() {
 	repository.InitStatic()
 	repository.InitRT()
 	repository.InitMezzi()
-
+	hub := sse.NewHub()
 	if config.IS_PRIMARY {
 		//Operazioni per DB in modalità "primary" (non read only):
 
 		//Viene eseguito comunque al primo avvio del programma
 		go gtfs.UpdateStatic()
 
-		s, err := scheduler.InitScheduler()
+		s, err := scheduler.InitScheduler(hub)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -38,7 +39,7 @@ func main() {
 
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
 
-	mux.HandleFunc("/events", handler.SSEHandler)
+	mux.HandleFunc("/events", hub.SSEHandler)
 
 	mux.HandleFunc("GET /arrivals/{stopcode}", handler.ArrivalsHandler)
 	mux.HandleFunc("GET /busesinservice", handler.BusesinserviceHandler)
