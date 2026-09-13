@@ -26,7 +26,7 @@ var (
 	ALLOWED_ORIGINS []string
 
 	ARRIVALS_LOAD_INTERVAL int
-	ARRIVALS_DELAY_BUFFER int
+	ARRIVALS_DELAY_BUFFER  int
 )
 
 func LoadConf() {
@@ -34,20 +34,39 @@ func LoadConf() {
 		log.Fatalln("Errore: nessun file .env trovato. Il programma non può continuare.", err)
 	}
 
-	START_GTFS_ROOT = os.Getenv("START_GTFS_ROOT")
-	START_GTFS_RT_ROOT = os.Getenv("START_GTFS_RT_ROOT")
-	WEB_AUTH_USER = os.Getenv("WEB_AUTH_USER")
-	WEB_AUTH_PASSWORD = os.Getenv("WEB_AUTH_PASSWORD")
+	getRequired := func(key string) string {
+		value, exists := os.LookupEnv(key)
+		if !exists || strings.TrimSpace(value) == "" {
+			log.Fatalf("Parametro obbligatorio mancante nel file .env: %s", key)
+		}
+		return value
+	}
 
-	DB_HOST = os.Getenv("DB_HOST")
-	DB_PORT, _ = strconv.Atoi(os.Getenv("DB_PORT"))
-	DB_USERNAME = os.Getenv("DB_USERNAME")
-	DB_PASSWORD = os.Getenv("DB_PASSWORD")
+	getRequiredInt := func(key string) int {
+		value := getRequired(key)
 
-	PORT = os.Getenv("PORT")
+		result, err := strconv.Atoi(value)
+		if err != nil {
+			log.Fatalf("Parametro %s non è un numero valido: %q", key, value)
+		}
 
-	ALLOWED_ORIGINS = strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
+		return result
+	}
 
-	ARRIVALS_LOAD_INTERVAL, _ = strconv.Atoi(os.Getenv("ARRIVALS_LOAD_INTERVAL"))
-	ARRIVALS_DELAY_BUFFER, _ = strconv.Atoi(os.Getenv("ARRIVALS_DELAY_BUFFER"))
+	START_GTFS_ROOT = getRequired("START_GTFS_ROOT")
+	START_GTFS_RT_ROOT = getRequired("START_GTFS_RT_ROOT")
+	WEB_AUTH_USER = getRequired("WEB_AUTH_USER")
+	WEB_AUTH_PASSWORD = getRequired("WEB_AUTH_PASSWORD")
+
+	DB_HOST = getRequired("DB_HOST")
+	DB_PORT = getRequiredInt("DB_PORT")
+	DB_USERNAME = getRequired("DB_USERNAME")
+	DB_PASSWORD = getRequired("DB_PASSWORD")
+
+	PORT = getRequired("PORT")
+
+	ALLOWED_ORIGINS = strings.Split(getRequired("ALLOWED_ORIGINS"), ",")
+
+	ARRIVALS_LOAD_INTERVAL = getRequiredInt("ARRIVALS_LOAD_INTERVAL")
+	ARRIVALS_DELAY_BUFFER = getRequiredInt("ARRIVALS_DELAY_BUFFER")
 }

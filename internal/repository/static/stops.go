@@ -20,12 +20,7 @@ func GetStops() []model.StopsResult {
 
 func GetStopsFiltered() []model.StopsResult {
 	var results []model.StopsResult
-	err := repository.DB_STATIC.Select(&results, `SELECT * FROM stops WHERE LOCATE('semaforo', stop_name) = 0
-      AND LOCATE('fi1', stop_name) = 0
-	  AND LOCATE('FITTIZIO', stop_name) = 0
-      AND LOCATE('Fittizio', stop_name) = 0
-      AND LOCATE('FITTIZIA', stop_name) = 0
-      AND LOCATE('Fittizia', stop_name) = 0`)
+	err := repository.DB_STATIC.Select(&results, `SELECT * FROM stops WHERE is_dummy = 0`)
 	if err != nil {
 		fmt.Println("GetStopsFiltered errore db:", err)
 	}
@@ -35,13 +30,7 @@ func GetStopsFiltered() []model.StopsResult {
 
 func GetStopsBasin(basin string) []model.StopsResult {
 	var results []model.StopsResult
-	err := repository.DB_STATIC.Select(&results, `SELECT * FROM stops WHERE basin = ? AND LOCATE('semaforo', stop_name) = 0
-	  AND LOCATE('fi1', stop_name) = 0
-      AND LOCATE('FITTIZIO', stop_name) = 0
-      AND LOCATE('Fittizio', stop_name) = 0
-      AND LOCATE('FITTIZIA', stop_name) = 0
-      AND LOCATE('Fittizia', stop_name) = 0
-	  ORDER BY stop_code`, basin)
+	err := repository.DB_STATIC.Select(&results, `SELECT * FROM stops WHERE basin = ? WHERE is_dummy = 0 ORDER BY stop_code`, basin)
 	if err != nil {
 		fmt.Println("GetStopsBasin errore db:", err)
 	}
