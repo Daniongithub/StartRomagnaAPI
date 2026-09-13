@@ -51,6 +51,7 @@ func main() {
 	mux.HandleFunc("GET /vehicleposition/{vehicleid}", handler.VehiclepositionIDHandler)
 	mux.HandleFunc("GET /shape/{shapeId}", handler.ShapePointsHandler)
 	mux.HandleFunc("GET /vehicleinfo/{vehicle}", handler.VehicleinfoHandler)
+	mux.HandleFunc("GET /stopsinfo", handler.StopsinfoHandler)
 
 	//mux.HandleFunc("GET /timetable/{routeid}", handler.TimetableHandler)
 

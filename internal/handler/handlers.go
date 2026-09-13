@@ -210,9 +210,18 @@ func VehicleinfoHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// ------------------------
-// - RAW GTFS ENDPOINTS
-// ------------------------
+// GET /stopsinfo
+func StopsinfoHandler(w http.ResponseWriter, r *http.Request) {
+	results := service.ProcessStopsInfo()
+
+	AddCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// =======================
+// = RAW GTFS ENDPOINTS  =
+// =======================
 
 // GET /static/info
 func StaticInfoHandler(w http.ResponseWriter, r *http.Request) {
