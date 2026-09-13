@@ -27,6 +27,7 @@ func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /rss/feed
 func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	parser := gofeed.NewParser()
 	feed, err := parser.ParseURL(feedURL)
 	if err != nil {
@@ -60,7 +61,6 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-cache")
 
@@ -71,6 +71,7 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /arrivals/{stopcode}
 func ArrivalsHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	code := r.PathValue("stopcode")
 
 	results, err := service.ProcessArrivals(code)
@@ -84,13 +85,13 @@ func ArrivalsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /busesinservice
 func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	results, err := service.ProcessBusesInService()
 	if err != nil {
 		if errors.Is(err, service.NoBusesInService) {
@@ -102,22 +103,22 @@ func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /activevehicles
 func ActivevehiclesHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	results := realtime.GetVehicles()
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /linelist/{basin}
 func LinelistHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -127,33 +128,33 @@ func LinelistHandler(w http.ResponseWriter, r *http.Request) {
 
 	results := static.GetRouteName(basin)
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /nextstops/{tripid}
 func NextstopsHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	tripid := r.PathValue("tripid")
 
 	results := service.ProcessNextstops(tripid)
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /vehiclepositions
 func VehiclepositionsHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	results := service.ProcessVehiclePositions()
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /vehiclepos/{basin}
 func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -163,35 +164,35 @@ func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 	results := service.ProcessVehiclePositionsBasin(basin)
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /vehicleposition/{vehicleid}
 func VehiclepositionIDHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	vehicleId := r.PathValue("vehicleid")
 
 	results := service.ProcessVehiclePositionID(vehicleId)
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /shape/{shapeId}
 func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	shape_id := r.PathValue("shapeId")
 
 	results := static.GetShapePoints(shape_id)
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /vehicleinfo/{vehicle}
 func VehicleinfoHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	vehicleId := r.PathValue("vehicle")
 
 	results, err := service.ProcessVehicleInfo(vehicleId)
@@ -205,16 +206,15 @@ func VehicleinfoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /stopsinfo
 func StopsinfoHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	results := service.ProcessStopsInfo()
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
@@ -236,6 +236,7 @@ func StaticInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /static/trips/{basin}
 func TripsBasinHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -245,28 +246,13 @@ func TripsBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 	results := static.GetTripsBasin(basin)
 
-	AddCORS(w, r)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
-}
-
-// GET /static/calendar_dates/{basin}
-func CalDatesBasinHandler(w http.ResponseWriter, r *http.Request) {
-	basin := r.PathValue("basin")
-
-	if basin != "RA" && basin != "FC" && basin != "RN" {
-		http.Error(w, "Invalid basin", http.StatusBadRequest)
-		return
-	}
-
-	results := static.GetCalDatesBasin(basin)
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /static/routes/{basin}
 func RoutesBasinHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -276,13 +262,13 @@ func RoutesBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 	results := static.GetRoutesBasin(basin)
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /static/shapes/{basin}
 func ShapesBasinHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -292,29 +278,13 @@ func ShapesBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 	results := static.GetShapesBasin(basin)
 
-	AddCORS(w, r)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
-}
-
-// GET /static/stop_times/{basin}
-func StopTimesBasinHandler(w http.ResponseWriter, r *http.Request) {
-	basin := r.PathValue("basin")
-
-	if basin != "RA" && basin != "FC" && basin != "RN" {
-		http.Error(w, "Invalid basin", http.StatusBadRequest)
-		return
-	}
-
-	results := static.GetStopTimesBasin(basin)
-
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
 
 // GET /static/stops/{basin}
 func StopsBasinHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -324,7 +294,6 @@ func StopsBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 	results := static.GetStopsBasin(basin)
 
-	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }

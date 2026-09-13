@@ -57,13 +57,9 @@ func main() {
 
 	mux.HandleFunc("GET /static/info", handler.StaticInfoHandler)
 	mux.HandleFunc("GET /static/trips/{basin}", handler.TripsBasinHandler)
-	mux.HandleFunc("GET /static/calendar_dates/{basin}", handler.CalDatesBasinHandler)
 	mux.HandleFunc("GET /static/routes/{basin}", handler.RoutesBasinHandler)
 	mux.HandleFunc("GET /static/shapes/{basin}", handler.ShapesBasinHandler)
-	mux.HandleFunc("GET /static/stop_times/{basin}", handler.StopTimesBasinHandler)
 	mux.HandleFunc("GET /static/stops/{basin}", handler.StopsBasinHandler)
-
-	//mux.HandleFunc("GET /realtime", handler.RTHandler)
 
 	//Listen on port and start API
 	fmt.Println("Server started on port " + config.PORT)
