@@ -30,7 +30,41 @@ func GetStopsFiltered() []model.StopsResult {
 
 func GetStopsBasin(basin string) []model.StopsResult {
 	var results []model.StopsResult
-	err := repository.DB_STATIC.Select(&results, `SELECT * FROM stops WHERE basin = ? WHERE is_dummy = 0 ORDER BY stop_code`, basin)
+	err := repository.DB_STATIC.Select(&results, `SELECT * FROM stops WHERE basin = ? AND is_dummy = 0 ORDER BY stop_code`, basin)
+	if err != nil {
+		fmt.Println("GetStopsBasin errore db:", err)
+	}
+
+	return results
+}
+
+func GetPassingShapeIDsFromStop(stopcode, basin string) []string {
+	var results []string
+	err := repository.DB_STATIC.Select(&results, `
+		SELECT t.shape_id FROM stops AS s 
+		INNER JOIN stop_times AS st
+		ON st.stop_id = s.stop_id AND st.basin = s.basin
+		INNER JOIN trips AS t
+		ON t.trip_id = st.trip_id AND t.basin = st.basin
+		WHERE s.stop_code = ? AND s.basin = ?
+	`, stopcode, basin)
+	if err != nil {
+		fmt.Println("GetStopsBasin errore db:", err)
+	}
+
+	return results
+}
+
+func GetPassingRouteIDsFromStop(stopcode, basin string) []string {
+	var results []string
+	err := repository.DB_STATIC.Select(&results, `
+		SELECT t.route_id FROM stops AS s 
+		INNER JOIN stop_times AS st
+		ON st.stop_id = s.stop_id AND st.basin = s.basin
+		INNER JOIN trips AS t
+		ON t.trip_id = st.trip_id AND t.basin = st.basin
+		WHERE s.stop_code = ? AND s.basin = ?
+	`, stopcode, basin)
 	if err != nil {
 		fmt.Println("GetStopsBasin errore db:", err)
 	}
