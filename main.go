@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"startromagnaapi/config"
-	"startromagnaapi/internal/gtfs"
 	"startromagnaapi/internal/handler"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/scheduler"
@@ -20,9 +19,6 @@ func main() {
 	hub := sse.NewHub()
 	if config.IS_PRIMARY {
 		//Operazioni per DB in modalità "primary" (non read only):
-
-		//Viene eseguito comunque al primo avvio del programma
-		go gtfs.UpdateStatic()
 
 		s, err := scheduler.InitScheduler(hub)
 		if err != nil {
@@ -51,7 +47,7 @@ func main() {
 	mux.HandleFunc("GET /vehicleposition/{vehicleid}", handler.VehiclepositionIDHandler)
 	mux.HandleFunc("GET /shape/{shapeId}", handler.ShapePointsHandler)
 	mux.HandleFunc("GET /vehicleinfo/{vehicle}", handler.VehicleinfoHandler)
-	mux.HandleFunc("GET /stopsinfo", handler.StopsinfoHandler)
+	mux.HandleFunc("GET /stopsinfo/{stopcode}/{basin}", handler.StopsinfoHandler)
 
 	//mux.HandleFunc("GET /timetable/{routeid}", handler.TimetableHandler)
 
