@@ -210,7 +210,7 @@ func VehicleinfoHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// GET GET /stopsinfo/{basin}/{stopcode}
+// GET /stopsinfo/{basin}/{stopcode}
 func StopsinfoHandler(w http.ResponseWriter, r *http.Request) {
 	basin := r.PathValue("basin")
 	stopCode := r.PathValue("stopcode")

@@ -47,8 +47,6 @@ func parseLine(line string) (number int, suffix string, hasNumber bool) {
     return n, matches[2], true
 }
 
-// rankRune assegna un peso al carattere: le lettere vengono prima dei simboli.
-// Tra le lettere, ordine alfabetico; tra i simboli, ordine per valore unicode.
 func rankRune(r rune) (group int, value rune) {
     if unicode.IsLetter(r) {
         return 0, unicode.ToLower(r)
@@ -56,8 +54,6 @@ func rankRune(r rune) (group int, value rune) {
     return 1, r
 }
 
-// compareSuffix confronta due suffissi carattere per carattere,
-// mettendo le lettere prima dei simboli (es. "/" va in fondo).
 func compareSuffix(a, b string) bool {
     ra, rb := []rune(a), []rune(b)
     for i := 0; i < len(ra) && i < len(rb); i++ {
@@ -70,10 +66,10 @@ func compareSuffix(a, b string) bool {
             return vA < vB
         }
     }
-    // Se un suffisso è prefisso dell'altro, il più corto viene prima
     return len(ra) < len(rb)
 }
 
+//Sorts given lines by numerical part
 func SortLines(lines []model.Line) {
     sort.SliceStable(lines, func(i, j int) bool {
         numI, sufI, hasNumI := parseLine(lines[i].Line)
