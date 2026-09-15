@@ -210,10 +210,13 @@ func VehicleinfoHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// GET /stopsinfo
+// GET GET /stopsinfo/{basin}/{stopcode}
 func StopsinfoHandler(w http.ResponseWriter, r *http.Request) {
+	basin := r.PathValue("basin")
+	stopCode := r.PathValue("stopcode")
+
 	AddCORS(w, r)
-	results := service.ProcessStopsInfo()
+	results := service.ProcessStopsInfo(stopCode, basin)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)

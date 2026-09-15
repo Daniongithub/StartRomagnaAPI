@@ -56,3 +56,20 @@ type Arrival struct {
 	VehicleConfirmed     bool      `db:"vehicle_confirmed" json:"-"`
 	NextStop             *StopWDel `json:"next_stop"`
 }
+
+type StopInfo struct {
+    Lines []Line `json:"lines"`
+}
+
+type Line struct {
+	Line         string `json:"line"`
+	OfficialLine string `json:"official_line"`
+	RouteId      string `json:"-"`
+}
+
+type LineRow struct {
+    ShapeID      string  `db:"shape_id"`
+    RouteID      string  `db:"route_id"`
+    OfficialLine string  `db:"official_line"`
+    DispLine     *string `db:"disp_linea"`
+}

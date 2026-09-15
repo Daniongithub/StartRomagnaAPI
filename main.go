@@ -16,11 +16,12 @@ func main() {
 	repository.InitStatic()
 	repository.InitRT()
 	repository.InitMezzi()
-	hub := sse.NewHub()
+	//Initializes server send events for fontend sync
+	sse.InitHub()
 	if config.IS_PRIMARY {
 		//Operazioni per DB in modalità "primary" (non read only):
 
-		s, err := scheduler.InitScheduler(hub)
+		s, err := scheduler.InitScheduler()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -35,7 +36,7 @@ func main() {
 
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
 
-	mux.HandleFunc("/events", hub.SSEHandler)
+	mux.HandleFunc("/events", sse.SSE_HUB.SSEHandler)
 
 	mux.HandleFunc("GET /arrivals/{stopcode}", handler.ArrivalsHandler)
 	mux.HandleFunc("GET /busesinservice", handler.BusesinserviceHandler)
@@ -47,7 +48,7 @@ func main() {
 	mux.HandleFunc("GET /vehicleposition/{vehicleid}", handler.VehiclepositionIDHandler)
 	mux.HandleFunc("GET /shape/{shapeId}", handler.ShapePointsHandler)
 	mux.HandleFunc("GET /vehicleinfo/{vehicle}", handler.VehicleinfoHandler)
-	mux.HandleFunc("GET /stopsinfo/{stopcode}/{basin}", handler.StopsinfoHandler)
+	mux.HandleFunc("GET /stopsinfo/{basin}/{stopcode}", handler.StopsinfoHandler)
 
 	//mux.HandleFunc("GET /timetable/{routeid}", handler.TimetableHandler)
 

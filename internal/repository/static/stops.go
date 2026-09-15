@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
+	"time"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 )
@@ -38,38 +39,31 @@ func GetStopsBasin(basin string) []model.StopsResult {
 	return results
 }
 
-func GetPassingShapeIDsFromStop(stopcode, basin string) []string {
-	var results []string
-	err := repository.DB_STATIC.Select(&results, `
-		SELECT t.shape_id FROM stops AS s 
-		INNER JOIN stop_times AS st
-		ON st.stop_id = s.stop_id AND st.basin = s.basin
-		INNER JOIN trips AS t
-		ON t.trip_id = st.trip_id AND t.basin = st.basin
-		WHERE s.stop_code = ? AND s.basin = ?
-	`, stopcode, basin)
-	if err != nil {
-		fmt.Println("GetStopsBasin errore db:", err)
-	}
-
-	return results
-}
-
-func GetPassingRouteIDsFromStop(stopcode, basin string) []string {
-	var results []string
-	err := repository.DB_STATIC.Select(&results, `
-		SELECT t.route_id FROM stops AS s 
-		INNER JOIN stop_times AS st
-		ON st.stop_id = s.stop_id AND st.basin = s.basin
-		INNER JOIN trips AS t
-		ON t.trip_id = st.trip_id AND t.basin = st.basin
-		WHERE s.stop_code = ? AND s.basin = ?
-	`, stopcode, basin)
-	if err != nil {
-		fmt.Println("GetStopsBasin errore db:", err)
-	}
-
-	return results
+func GetLinesForStop(stopcode, basin string) []model.LineRow {
+    var results []model.LineRow
+	now := time.Now()
+	cdDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+    err := repository.DB_STATIC.Select(&results, `
+        SELECT DISTINCT
+            t.route_id,
+            CASE 
+                WHEN r.basin = 'RA' THEN r.route_short_name
+                WHEN r.route_long_name IS NOT NULL AND r.route_long_name <> '' THEN r.route_long_name
+                ELSE r.route_short_name 
+            END AS official_line,
+            h.disp_linea
+        FROM stops AS s
+        INNER JOIN stop_times AS st ON s.stop_id = st.stop_id AND s.basin = st.basin
+        INNER JOIN trips AS t ON st.trip_id = t.trip_id AND st.basin = t.basin
+        INNER JOIN routes AS r ON t.route_id = r.route_id AND t.basin = r.basin
+        INNER JOIN calendar_dates AS cd ON t.service_id = cd.service_id AND t.basin = cd.basin
+        LEFT JOIN headsigns AS h ON h.shape_id = t.shape_id
+        WHERE s.stop_code = ? AND s.basin = ? AND cd.date = ?
+    `, stopcode, basin, cdDate)
+    if err != nil {
+        fmt.Println("GetLinesForStop errore db:", err)
+    }
+    return results
 }
 
 func SaveStops(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {

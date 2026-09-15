@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+var SSE_HUB Hub
+
 type Event struct {
 	Type string // "vehicle_positions", "trip_updates", "service_alerts"
 	Data string // JSON payload, o "" se è solo un trigger
@@ -20,6 +22,10 @@ type Hub struct {
 
 func NewHub() *Hub {
 	return &Hub{clients: make(map[chan Event]struct{})}
+}
+
+func InitHub() {
+	SSE_HUB = *NewHub()
 }
 
 func (h *Hub) Subscribe() chan Event {

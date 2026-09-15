@@ -28,6 +28,19 @@ func GetTripsBasin(basin string) []model.TripsResult {
 	return results
 }
 
+func GetRouteIDFromShape(basin, shapeid string) string {
+	var results []string
+	err := repository.DB_STATIC.Select(&results, `
+		SELECT t.route_id FROM trips AS t
+		WHERE t.shape_id = ? AND t.basin = ?
+	`, shapeid, basin)
+	if err != nil {
+		fmt.Println("GetRouteIDsFromShape errore db:", err)
+	}
+
+	return results[0]
+}
+
 // Checks if trips already exist inside the respective basins, otherwise adds them
 func SaveTrips(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
 	trips := GetTrips()

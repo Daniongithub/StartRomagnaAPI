@@ -9,7 +9,7 @@ import (
 	"github.com/go-co-op/gocron/v2"
 )
 
-func InitScheduler(hub *sse.Hub) (gocron.Scheduler, error) {
+func InitScheduler() (gocron.Scheduler, error) {
 	s, err := gocron.NewScheduler()
 	if err != nil {
 		return nil, err
@@ -19,11 +19,11 @@ func InitScheduler(hub *sse.Hub) (gocron.Scheduler, error) {
 
 	_, err = s.NewJob(gocron.CronJob("0 0 * * *", false), gocron.NewTask(deleteServiceAlerts))
 
-	_, err = s.NewJob(gocron.CronJob("* * * * *", false), gocron.NewTask(updateServiceAlerts, hub))
+	_, err = s.NewJob(gocron.CronJob("* * * * *", false), gocron.NewTask(updateServiceAlerts, &sse.SSE_HUB))
 
-	_, err = s.NewJob(gocron.CronJob("*/30 * * * * *", true), gocron.NewTask(updateTripUpdates, hub), gocron.WithSingletonMode(gocron.LimitModeReschedule))
+	_, err = s.NewJob(gocron.CronJob("*/30 * * * * *", true), gocron.NewTask(updateTripUpdates, &sse.SSE_HUB), gocron.WithSingletonMode(gocron.LimitModeReschedule))
 
-	_, err = s.NewJob(gocron.CronJob("*/30 * * * * *", true), gocron.NewTask(updateVehiclePositions, hub), gocron.WithSingletonMode(gocron.LimitModeReschedule))
+	_, err = s.NewJob(gocron.CronJob("*/30 * * * * *", true), gocron.NewTask(updateVehiclePositions, &sse.SSE_HUB), gocron.WithSingletonMode(gocron.LimitModeReschedule))
 
 	if err != nil {
 		return nil, err
