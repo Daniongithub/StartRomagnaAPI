@@ -43,81 +43,63 @@ func GetRouteIDFromShape(basin, shapeid string) string {
 
 // Checks if trips already exist inside the respective basins, otherwise adds them
 func SaveTrips(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
-	trips := GetTrips()
+	values := make([][]any, 0, len(feedRA.Trips)+len(feedFC.Trips)+len(feedRN.Trips))
 
-	//Builds maps for better comparison
-	tripMap := make(map[string]bool)
-
-	for _, val := range trips {
-		tripMap[val.Trip_id] = true
-	}
-
-	var new []model.TripsResult
-	var old []model.TripsResult
-	feedKeys := make(map[string]bool)
 	for _, val := range feedRA.Trips {
-		_, ok := tripMap[val.Id]
-		feedKeys[val.Id] = true
-		if !ok {
-			var newTrip = model.ToDomainTrip(val)
-			newTrip.Basin = "RA"
-			new = append(new, newTrip)
-		}
-	}
-	for _, val := range feedFC.Trips {
-		_, ok := tripMap[val.Id]
-		feedKeys[val.Id] = true
-		if !ok {
-			var newTrip = model.ToDomainTrip(val)
-			newTrip.Basin = "FC"
-			new = append(new, newTrip)
-		}
-	}
-	for _, val := range feedRN.Trips {
-		_, ok := tripMap[val.Id]
-		feedKeys[val.Id] = true
-		if !ok {
-			var newTrip = model.ToDomainTrip(val)
-			newTrip.Basin = "RN"
-			new = append(new, newTrip)
-		}
-	}
+		trip := model.ToDomainTrip(val)
+		trip.Basin = "RA"
 
-	for _, val := range trips {
-		_, ok := feedKeys[val.Trip_id]
-		if !ok {
-			var oldTrip model.TripsResult
-			oldTrip.Basin = val.Basin
-			oldTrip.Trip_id = val.Trip_id
-			old = append(old, oldTrip)
-		}
-	}
-
-	//Database insert
-	values := make([][]any, 0, len(new))
-
-	for _, val := range new {
 		values = append(values, []any{
-			val.Basin,
-			val.Route_id,
-			val.Service_id,
-			val.Trip_id,
-			val.Trip_headsign,
-			val.Direction_id,
-			val.Shape_id,
+			trip.Basin,
+			trip.Route_id,
+			trip.Service_id,
+			trip.Trip_id,
+			trip.Trip_headsign,
+			trip.Direction_id,
+			trip.Shape_id,
 		})
 	}
 
-	err := repository.BatchInsert(repository.DB_STATIC, "trips", []string{"basin", "route_id", "service_id", "trip_id", "trip_headsign", "direction_id", "shape_id"}, values)
-	if err != nil {
-		fmt.Println("SaveTrips db error:", err)
+	for _, val := range feedFC.Trips {
+		trip := model.ToDomainTrip(val)
+		trip.Basin = "FC"
+
+		values = append(values, []any{
+			trip.Basin,
+			trip.Route_id,
+			trip.Service_id,
+			trip.Trip_id,
+			trip.Trip_headsign,
+			trip.Direction_id,
+			trip.Shape_id,
+		})
 	}
 
-	//Database delete
-	for _, val := range old {
-		_, err = repository.DB_STATIC.Exec("DELETE FROM trips WHERE trip_id = ?", val.Trip_id)
-		if err != nil {
-			fmt.Println("SaveTrips db error:", err)
-		}
+	for _, val := range feedRN.Trips {
+		trip := model.ToDomainTrip(val)
+		trip.Basin = "RN"
+
+		values = append(values, []any{
+			trip.Basin,
+			trip.Route_id,
+			trip.Service_id,
+			trip.Trip_id,
+			trip.Trip_headsign,
+			trip.Direction_id,
+			trip.Shape_id,
+		})
+	}
+
+	// Svuota la tabella
+	_, err := repository.DB_STATIC.Exec("DELETE FROM trips")
+	if err != nil {
+		fmt.Println("SaveTrips delete error:", err)
+		return
+	}
+
+	// Reinserisce tutti i trip
+	err = repository.BatchInsert(repository.DB_STATIC, "trips", []string{"basin", "route_id", "service_id", "trip_id", "trip_headsign", "direction_id", "shape_id"}, values)
+	if err != nil {
+		fmt.Println("SaveTrips db error:", err)
 	}
 }
