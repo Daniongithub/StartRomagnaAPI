@@ -179,12 +179,19 @@ func VehiclepositionIDHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// GET /shape/{shapeId}
+// GET /shape/{basin}/{shapeId}
 func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
 	AddCORS(w, r)
 	shape_id := r.PathValue("shapeId")
 
-	results := static.GetShapePoints(shape_id)
+	basin := r.PathValue("basin")
+
+	if basin != "RA" && basin != "FC" && basin != "RN" {
+		http.Error(w, "Invalid basin", http.StatusBadRequest)
+		return
+	}
+
+	results := static.GetShapePoints(basin, shape_id)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
