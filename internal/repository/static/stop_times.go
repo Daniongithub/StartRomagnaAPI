@@ -46,6 +46,10 @@ func GetTerminusName(tripId string) string {
 		fmt.Println("GetLastStop error:", err)
 	}
 
+	if len(results) == 0 {
+		return ""
+	}
+
 	return results[0]
 }
 

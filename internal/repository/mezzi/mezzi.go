@@ -8,7 +8,7 @@ import (
 
 func GetVehicleInServiceByID(id string) *model.VehicleInService {
 	var results []model.VehicleInService
-	err := repository.DB_MEZZI.Select(&results, "SELECT matricola, targa, modello, provincia, photo_path FROM mezzi_start WHERE matricola = ?", id)
+	err := repository.DB_MEZZI.Select(&results, "SELECT matricola, targa, modello, provincia, path_html, photo_path FROM mezzi_start WHERE matricola = ?", id)
 	if err != nil {
 		fmt.Println("GetVehicleInServiceByID errore db:", err)
 	}
@@ -21,7 +21,7 @@ func GetVehicleInServiceByID(id string) *model.VehicleInService {
 
 func GetMeteInServiceByID(id string) *model.VehicleInService {
 	var results []model.VehicleInService
-	err := repository.DB_MEZZI.Select(&results, "SELECT matricola, targa, modello, photo_path FROM mezzi_mete WHERE matricola = ?", id)
+	err := repository.DB_MEZZI.Select(&results, "SELECT matricola, targa, modello, path_html, photo_path FROM mezzi_mete WHERE matricola = ?", id)
 	if err != nil {
 		fmt.Println("GetVehicleInServiceByID errore db:", err)
 	}
