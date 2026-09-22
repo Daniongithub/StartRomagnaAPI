@@ -191,7 +191,7 @@ func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results := static.GetShapePoints(basin, shape_id)
+	results := service.ProcessShape(basin, shape_id)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)

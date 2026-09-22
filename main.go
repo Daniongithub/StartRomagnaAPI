@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"startromagnaapi/config"
-	"startromagnaapi/internal/gtfs"
 	"startromagnaapi/internal/handler"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/scheduler"
@@ -21,7 +20,6 @@ func main() {
 	sse.InitHub()
 	if config.IS_PRIMARY {
 		//Operazioni per DB in modalità "primary" (non read only):
-		go gtfs.UpdateStatic()
 
 		s, err := scheduler.InitScheduler()
 		if err != nil {

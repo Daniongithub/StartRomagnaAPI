@@ -58,7 +58,7 @@ type Arrival struct {
 }
 
 type StopInfo struct {
-    Lines []Line `json:"lines"`
+	Lines []Line `json:"lines"`
 }
 
 type Line struct {
@@ -68,8 +68,13 @@ type Line struct {
 }
 
 type LineRow struct {
-    ShapeID      string  `db:"shape_id"`
-    RouteID      string  `db:"route_id"`
-    OfficialLine string  `db:"official_line"`
-    DispLine     *string `db:"disp_linea"`
+	ShapeID      string  `db:"shape_id"`
+	RouteID      string  `db:"route_id"`
+	OfficialLine string  `db:"official_line"`
+	DispLine     *string `db:"disp_linea"`
+}
+
+type Shape struct {
+	Stops  []StopsResult  `json:"stops"`
+	Points []ShapesResult `json:"points"`
 }

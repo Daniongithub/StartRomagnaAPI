@@ -39,6 +39,21 @@ func GetStopsBasin(basin string) []model.StopsResult {
 	return results
 }
 
+func GetStopsFromTripID(basin, tripId string) []model.StopsResult {
+	var results []model.StopsResult
+	err := repository.DB_STATIC.Select(&results, `
+		SELECT s.basin, s.stop_name, s.stop_id, s.stop_code, s.stop_lat, s.stop_lon, s.is_dummy FROM stops AS s
+		INNER JOIN stop_times AS st
+		ON s.stop_id = st.stop_id AND s.basin = st.basin
+		WHERE s.basin = ? AND st.trip_id = ? AND s.is_dummy = 0 
+	`, basin, tripId)
+	if err != nil {
+		fmt.Println("GetStopsFromTripID errore db:", err)
+	}
+
+	return results
+}
+
 func GetLinesForStop(stopcode, basin string) []model.LineRow {
     var results []model.LineRow
 	now := time.Now()

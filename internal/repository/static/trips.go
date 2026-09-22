@@ -28,6 +28,16 @@ func GetTripsBasin(basin string) []model.TripsResult {
 	return results
 }
 
+func GetTripIDsFromShape(basin, shapeId string) []string {
+	var results []string
+	err := repository.DB_STATIC.Select(&results, "SELECT trip_id FROM trips WHERE basin = ? AND shape_id = ? ORDER BY route_id", basin, shapeId)
+	if err != nil {
+		fmt.Println("GetTripIDsFromShape error:", err)
+	}
+
+	return results
+}
+
 func GetRouteIDFromShape(basin, shapeid string) string {
 	var results []string
 	err := repository.DB_STATIC.Select(&results, `
