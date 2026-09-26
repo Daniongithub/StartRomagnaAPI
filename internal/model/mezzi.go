@@ -10,6 +10,6 @@ type VehicleInService struct {
 }
 
 type VehicleReport struct {
-	Number string  `db:"matricola" json:"number"`
-	Basin  *string `db:"provincia" json:"basin"`
+	Number string  `db:"vehicle" json:"number"`
+	Basin  *string `db:"basin" json:"basin"`
 }
