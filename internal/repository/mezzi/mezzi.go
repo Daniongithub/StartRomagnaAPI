@@ -36,8 +36,8 @@ func GetMeteInServiceByID(id string) *model.VehicleInService {
 func UpdateVehiclesStatus() {
 	var buses = realtime.GetVehicles()
 
-	for _, id := range buses {
-		_, err := repository.DB_MEZZI.Exec(`UPDATE mezzi_start SET stato = CASE WHEN stato = 'fermo' THEN '' ELSE stato END, last_seen = CURRENT_TIMESTAMP WHERE matricola = ?`, id)
+	for _, val := range buses {
+		_, err := repository.DB_MEZZI.Exec(`UPDATE mezzi_start SET stato = CASE WHEN stato = 'fermo' THEN '' ELSE stato END, last_seen = CURRENT_TIMESTAMP, basin = ? WHERE matricola = ?`, val.Basin, val.Number)
 		if err != nil {
 			// log errore
 			continue
