@@ -3,6 +3,7 @@ package scheduler
 import (
 	"fmt"
 	"startromagnaapi/internal/gtfs"
+	"startromagnaapi/internal/repository/mezzi"
 	"startromagnaapi/internal/repository/realtime"
 	"startromagnaapi/internal/sse"
 
@@ -20,6 +21,8 @@ func InitScheduler() (gocron.Scheduler, error) {
 	_, err = s.NewJob(gocron.CronJob("0 0 * * *", false), gocron.NewTask(deleteServiceAlerts))
 
 	_, err = s.NewJob(gocron.CronJob("* * * * *", false), gocron.NewTask(updateServiceAlerts, &sse.SSE_HUB))
+
+	_, err = s.NewJob(gocron.CronJob("* * * * *", false), gocron.NewTask(updateVehiclesStatus))
 
 	_, err = s.NewJob(gocron.CronJob("*/30 * * * * *", true), gocron.NewTask(updateTripUpdates, &sse.SSE_HUB), gocron.WithSingletonMode(gocron.LimitModeReschedule))
 
@@ -63,5 +66,11 @@ func updateVehiclePositions(hub *sse.Hub) {
 	fmt.Println("Task update Vehicle Positions")
 	gtfs.UpdateVehiclePositions()
 	hub.Broadcast(sse.Event{Type: "vehicle_positions"})
+	fmt.Println("Task OK.")
+}
+
+func updateVehiclesStatus() {
+	fmt.Println("Task update Vehicles Status")
+	mezzi.UpdateVehiclesStatus()
 	fmt.Println("Task OK.")
 }

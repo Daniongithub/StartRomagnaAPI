@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
-	"startromagnaapi/internal/repository/realtime"
 	"startromagnaapi/internal/repository/static"
 	"startromagnaapi/internal/service"
 	"time"
@@ -107,15 +106,6 @@ func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
-}
-
-// GET /activevehicles
-func ActivevehiclesHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
-	results := realtime.GetVehicles()
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
