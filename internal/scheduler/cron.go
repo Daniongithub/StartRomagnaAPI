@@ -22,7 +22,7 @@ func InitScheduler() (gocron.Scheduler, error) {
 
 	_, err = s.NewJob(gocron.CronJob("* * * * *", false), gocron.NewTask(updateServiceAlerts, &sse.SSE_HUB))
 
-	_, err = s.NewJob(gocron.CronJob("* * * * *", false), gocron.NewTask(updateVehiclesStatus))
+	_, err = s.NewJob(gocron.CronJob("*/20 * * * *", false), gocron.NewTask(updateVehiclesStatus))
 
 	_, err = s.NewJob(gocron.CronJob("*/30 * * * * *", true), gocron.NewTask(updateTripUpdates, &sse.SSE_HUB), gocron.WithSingletonMode(gocron.LimitModeReschedule))
 
