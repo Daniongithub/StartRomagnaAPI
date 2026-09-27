@@ -34,8 +34,7 @@ This project can't be reutilised, because the code is too specific, it'd be impo
 - `GET /rss/feed` -> Feed RSS di Infobus Start, in formato JSON. | Infobus Start RSS Feed, in JSON format.
 - `GET /arrivals/{stopcode}` -> Bus previsti in arrivo per la fermata specificata. | Returns the list of buses predicted to be arriving in the specified bus stop.
 - `GET /busesinservice` -> Tutti i bus in servizio di START, in tempo reale, con informazioni sui mezzi. | Returns all the buses currently in service, with some vehicle information.
-- `GET /activevehicles` -> Verrà deprecato. | To be deprecated.
-- `GET /linelist/{basin}` -> ???
+- `GET /linelist/{basin}` -> Verrà deprecato. | To be deprecated.
 - `GET /nextstops/{tripid}` -> Ritorna le prossime fermate di una corsa in svolgimento. | Returns the next stops of an ongoing trip.
 - `GET /vehiclepositions` -> Tutte le posizioni dei veicoli in tempo reale. | All vehicles' positions.
 - `GET /vehiclepositions/{basin}` -> `/vehiclepositions` di un solo bacino. | `/vehiclepositions` of a single basin.
