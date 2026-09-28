@@ -35,8 +35,8 @@ func UpdateStatic() {
 	static.SaveCalDates(feedRA, feedFC, feedRN)
 	static.SaveRoutes(feedRA, feedFC, feedRN)
 	static.SaveShapes(feedRA, feedFC, feedRN)
-	static.SaveStopTimes(feedRA, feedFC, feedRN)
 	static.SaveStops(feedRA, feedFC, feedRN)
+	static.SaveStopTimes(feedRA, feedFC, feedRN)
 	registerShapeIDs()
 
 	elapsed := time.Since(start)
