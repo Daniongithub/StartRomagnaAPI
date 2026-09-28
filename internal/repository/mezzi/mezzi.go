@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
+	"startromagnaapi/internal/repository/realtime"
 )
 
 func GetVehicleInServiceByID(id string) *model.VehicleInService {
@@ -30,4 +31,23 @@ func GetMeteInServiceByID(id string) *model.VehicleInService {
 	}
 
 	return &results[0]
+}
+
+func UpdateVehiclesStatus() {
+	var buses = realtime.GetVehicles()
+
+	for _, val := range buses {
+		_, err := repository.DB_MEZZI.Exec(`UPDATE mezzi_start SET stato = CASE WHEN stato IN ('fermo', 'sconosciuto') THEN '' ELSE stato END, last_seen = CURRENT_TIMESTAMP, provincia = ? WHERE matricola = ?`, val.Basin, val.Number)
+		if err != nil {
+			fmt.Println("UpdateVehiclesStatus errore db:", err)
+			continue
+		}
+	}
+
+	// Imposta "sconosciuto" ai mezzi non visti da almeno 5 giorni
+	_, err := repository.DB_MEZZI.Exec(`UPDATE mezzi_start SET stato = 'sconosciuto' WHERE last_seen IS NOT NULL AND last_seen < CURRENT_TIMESTAMP - INTERVAL 5 DAY`)
+
+	if err != nil {
+		fmt.Println("UpdateVehiclesStatus errore db:", err)
+	}
 }

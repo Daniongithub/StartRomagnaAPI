@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
-	"startromagnaapi/internal/repository/realtime"
+	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/static"
 	"startromagnaapi/internal/service"
 	"time"
@@ -20,9 +19,14 @@ const feedURL = "https://www.startromagna.it/infobus/feed/"
 func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	AddCORS(w, r)
 
-	message := "API is healthy and running on port " + config.PORT
+	results, err := repository.GetDBStatus(repository.DB_STATIC.DB)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	w.Write([]byte(message))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
 }
 
 // GET /rss/feed
@@ -102,15 +106,6 @@ func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
-}
-
-// GET /activevehicles
-func ActivevehiclesHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
-	results := realtime.GetVehicles()
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)

@@ -40,12 +40,9 @@ func GetVehicleByTripId(tripId string) *string {
 	return &results[0]
 }
 
-func GetVehicles() []string {
-	var results []string
-	err := repository.DB_RT.Select(&results, `
-		SELECT DISTINCT t.vehicle FROM trip_updates AS t
-		WHERE t.vehicle != 0 ORDER BY t.vehicle
-	`)
+func GetVehicles() []model.VehicleReport {
+	var results []model.VehicleReport
+	err := repository.DB_RT.Select(&results, `SELECT DISTINCT vehicle, basin FROM trip_updates WHERE vehicle != 0 ORDER BY vehicle`)
 	if err != nil {
 		fmt.Println("GetVehicles error:", err)
 	}

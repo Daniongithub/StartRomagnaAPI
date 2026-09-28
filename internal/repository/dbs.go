@@ -1,8 +1,11 @@
 package repository
 
 import (
+	"database/sql"
 	"fmt"
 	"startromagnaapi/config"
+	"startromagnaapi/internal/model"
+	"strconv"
 	"time"
 
 	"github.com/Masterminds/squirrel"
@@ -134,4 +137,83 @@ func BatchInsertTX(db *sqlx.Tx, table string, columns []string, new [][]any) err
 	}
 
 	return nil
+}
+
+func GetDBStatus(db *sql.DB) (model.DBStatus, error) {
+	var readOnly string
+	if err := db.QueryRow("SHOW GLOBAL VARIABLES LIKE 'read_only'").Scan(new(string), &readOnly); err != nil {
+		return model.DBStatus{}, err
+	}
+
+	var gtidPos string
+	if err := db.QueryRow("SELECT @@GLOBAL.gtid_current_pos").Scan(&gtidPos); err != nil {
+		return model.DBStatus{}, err
+	}
+
+	rows, err := db.Query("SHOW SLAVE STATUS")
+	if err != nil {
+		return model.DBStatus{}, err
+	}
+	defer rows.Close()
+
+	cols, _ := rows.Columns()
+	hasSlaveRow := rows.Next()
+
+	status := model.DBStatus{
+		ReadOnly:     readOnly == "ON",
+		GtidPosition: gtidPos,
+	}
+
+	if !hasSlaveRow {
+		status.Role = "master"
+		return status, nil
+	}
+
+	// scan dinamico perché SHOW SLAVE STATUS ha decine di colonne
+	// e cambia leggermente tra versioni MariaDB
+	values := make([]sql.RawBytes, len(cols))
+	scanArgs := make([]any, len(cols))
+	for i := range values {
+		scanArgs[i] = &values[i]
+	}
+	if err := rows.Scan(scanArgs...); err != nil {
+		return model.DBStatus{}, err
+	}
+	col := func(name string) string {
+		for i, c := range cols {
+			if c == name {
+				return string(values[i])
+			}
+		}
+		return ""
+	}
+
+	ioRunning := col("Slave_IO_Running") == "Yes"
+	sqlRunning := col("Slave_SQL_Running") == "Yes"
+
+	var lag *int
+	if v := col("Seconds_Behind_Master"); v != "" {
+		n, _ := strconv.Atoi(v)
+		lag = &n
+	}
+
+	rep := &model.ReplicationStatus{
+		MasterHost: col("Master_Host"),
+		IORunning:  ioRunning,
+		SQLRunning: sqlRunning,
+		LagSeconds: lag,
+		CaughtUp:   lag != nil && *lag == 0,
+	}
+	status.Replication = rep
+
+	switch {
+	case !ioRunning || !sqlRunning:
+		status.Role = "broken"
+	case lag == nil || *lag > 0:
+		status.Role = "resyncing"
+	default:
+		status.Role = "replica"
+	}
+
+	return status, nil
 }
