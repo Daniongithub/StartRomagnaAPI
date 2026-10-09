@@ -5,6 +5,7 @@ import (
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/realtime"
+	"strings"
 )
 
 func GetVehicleInServiceByID(id string) *model.VehicleInService {
@@ -37,6 +38,10 @@ func UpdateVehiclesStatus() {
 	var buses = realtime.GetVehicles()
 
 	for _, val := range buses {
+		if strings.HasPrefix(val.Number, "19") || strings.HasPrefix(val.Number, "38") {
+			continue
+		}
+
 		_, err := repository.DB_MEZZI.Exec(`UPDATE mezzi_start SET stato = CASE WHEN stato IN ('fermo', 'sconosciuto') THEN '' ELSE stato END, last_seen = CURRENT_TIMESTAMP, provincia = ? WHERE matricola = ?`, val.Basin, val.Number)
 		if err != nil {
 			fmt.Println("UpdateVehiclesStatus errore db:", err)
