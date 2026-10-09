@@ -15,7 +15,7 @@ func ProcessVehiclePositions() []model.BusInService {
 		val := &positions[idx]
 		val.OfficialLine = static.GetRouteNamefromID(val.Basin, val.RouteId)
 		val.NextStop = realtime.GetFirstStop(val.TripId)
-		headsign := static.GetHeadsignsByID(val.ShapeId)
+		headsign := static.GetHeadsignsByID(val.Basin, val.ShapeId)
 		if headsign != nil {
 			if headsign.DispLine != nil {
 				val.Line = *headsign.DispLine
@@ -47,7 +47,7 @@ func ProcessVehiclePositionsBasin(basin string) []model.BusInService {
 		val := &positions[idx]
 		val.OfficialLine = static.GetRouteNamefromID(val.Basin, val.RouteId)
 		val.NextStop = realtime.GetFirstStop(val.TripId)
-		headsign := static.GetHeadsignsByID(val.ShapeId)
+		headsign := static.GetHeadsignsByID(val.Basin, val.ShapeId)
 		if headsign != nil {
 			if headsign.DispLine != nil {
 				val.Line = *headsign.DispLine
@@ -81,7 +81,7 @@ func ProcessVehiclePositionID(id string) *model.BusInService {
 
 	position.OfficialLine = static.GetRouteNamefromID(position.Basin, position.RouteId)
 	position.NextStop = realtime.GetFirstStop(position.TripId)
-	headsign := static.GetHeadsignsByID(position.ShapeId)
+	headsign := static.GetHeadsignsByID(position.Basin, position.ShapeId)
 	if headsign != nil {
 		if headsign.DispLine != nil {
 			position.Line = *headsign.DispLine

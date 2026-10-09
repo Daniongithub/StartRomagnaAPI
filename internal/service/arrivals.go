@@ -24,7 +24,7 @@ func ProcessArrivals(stopCode string) ([]model.Arrival, error) {
 	for idx := range arrivals {
 		val := &arrivals[idx]
 		val.OfficialLine = static.GetRouteNamefromID(val.Basin, val.RouteId)
-		headsign := static.GetHeadsignsByID(val.ShapeId)
+		headsign := static.GetHeadsignsByID(val.Basin, val.ShapeId)
 		if headsign != nil {
 			if headsign.DispLine != nil {
 				val.Line = *headsign.DispLine

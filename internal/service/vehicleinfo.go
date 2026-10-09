@@ -21,7 +21,7 @@ func ProcessVehicleInfo(id string) (model.BusInService, error) {
 	val := &bus[0]
 	val.NextStop = realtime.GetFirstStop(val.TripId)
 	val.OfficialLine = static.GetRouteNamefromID(val.Basin, val.RouteId)
-	headsign := static.GetHeadsignsByID(val.ShapeId)
+	headsign := static.GetHeadsignsByID(val.Basin, val.ShapeId)
 	if headsign != nil {
 		if headsign.DispLine != nil {
 			val.Line = *headsign.DispLine
