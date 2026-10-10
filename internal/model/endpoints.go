@@ -58,7 +58,11 @@ type Arrival struct {
 }
 
 type StopInfo struct {
-	Lines []Line `json:"lines"`
+	Urban    []Line `json:"urban,omitempty"`
+	Suburban []Line `json:"suburban,omitempty"`
+	Exurban  []Line `json:"exurban,omitempty"`
+	Shuttle  []Line `json:"shuttle,omitempty"`
+	School   []Line `json:"school,omitempty"`
 }
 
 type Line struct {

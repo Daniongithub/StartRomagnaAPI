@@ -96,41 +96,55 @@ func groupAndSort(items []model.BusInService) []model.BusInService {
 	for _, basin := range basinOrder {
 		basinItems := basinGroups[basin]
 
-		// --- Livello 2: raggruppa per "città" dentro il basin ---
-		cityOrder := []string{}
-		cityGroups := make(map[string][]model.BusInService)
+		if basin == "FC" {
+			// --- Livello 2: raggruppa per "città" dentro il basin ---
+			cityOrder := []string{}
+			cityGroups := make(map[string][]model.BusInService)
 
-		for _, it := range basinItems {
-			p := splitLine(it.Line)
-			if _, exists := cityGroups[p.city]; !exists {
-				cityOrder = append(cityOrder, p.city)
+			for _, it := range basinItems {
+				p := splitLine(it.Line)
+				if _, exists := cityGroups[p.city]; !exists {
+					cityOrder = append(cityOrder, p.city)
+				}
+				cityGroups[p.city] = append(cityGroups[p.city], it)
 			}
-			cityGroups[p.city] = append(cityGroups[p.city], it)
-		}
 
-		// Città senza suffisso ("") prima, poi le altre in ordine alfabetico
-		sort.SliceStable(cityOrder, func(i, j int) bool {
-			if cityOrder[i] != "" {
-				return true
-			}
-			if cityOrder[j] != "" {
-				return false
-			}
-			return cityOrder[i] < cityOrder[j]
-		})
+			// Città senza suffisso ("") prima, poi le altre in ordine alfabetico
+			sort.SliceStable(cityOrder, func(i, j int) bool {
+				if cityOrder[i] != "" {
+					return true
+				}
+				if cityOrder[j] != "" {
+					return false
+				}
+				return cityOrder[i] < cityOrder[j]
+			})
 
-		// --- Livello 3: ordina per numero, poi per variante (1, 1B, 2, 3, 4B...) ---
-		for _, city := range cityOrder {
-			g := cityGroups[city]
-			sort.SliceStable(g, func(i, j int) bool {
-				pi := splitLine(g[i].Line)
-				pj := splitLine(g[j].Line)
+			// --- Livello 3: ordina per numero, poi per variante (1, 1B, 2, 3, 4B...) ---
+			for _, city := range cityOrder {
+				g := cityGroups[city]
+				sort.SliceStable(g, func(i, j int) bool {
+					pi := splitLine(g[i].Line)
+					pj := splitLine(g[j].Line)
+					if pi.num != pj.num {
+						return pi.num < pj.num
+					}
+					return pi.variant < pj.variant
+				})
+				result = append(result, g...)
+			}
+		} else {
+			sort.SliceStable(basinItems, func(i, j int) bool {
+				pi := splitLine(basinItems[i].Line)
+				pj := splitLine(basinItems[j].Line)
+
 				if pi.num != pj.num {
 					return pi.num < pj.num
 				}
 				return pi.variant < pj.variant
 			})
-			result = append(result, g...)
+
+			result = append(result, basinItems...)
 		}
 	}
 
