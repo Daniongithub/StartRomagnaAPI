@@ -232,9 +232,13 @@ func StopsinfoHandler(w http.ResponseWriter, r *http.Request) {
 func StaticInfoHandler(w http.ResponseWriter, r *http.Request) {
 	AddCORS(w, r)
 
-	min_date, max_date := static.GetCalDatesRange()
+	min_dateRA, max_dateRA := static.GetCalDatesRange("RA")
+	min_dateFC, max_dateFC := static.GetCalDatesRange("FC")
+	min_dateRN, max_dateRN := static.GetCalDatesRange("RN")
 
-	message := "GTFS static data valid from " + min_date + " to " + max_date + "."
+	message := "GTFS static data of Ravenna valid from " + min_dateRA + " to " + max_dateRA + "." + "\n\n"
+	message += "GTFS static data of Forlì-Cesena valid from " + min_dateFC + " to " + max_dateFC + "." + "\n\n"
+	message += "GTFS static data of Rimini valid from " + min_dateRN + " to " + max_dateRN + "." + "\n\n"
 
 	w.Write([]byte(message))
 }

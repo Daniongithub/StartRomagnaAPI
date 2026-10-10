@@ -29,10 +29,10 @@ func GetCalDatesBasin(basin string) []model.CalendarDatesResult {
 	return results
 }
 
-func GetCalDatesRange() (string, string) {
+func GetCalDatesRange(basin string) (string, string) {
 	var min, max time.Time
 
-	err := repository.DB_STATIC.QueryRow("SELECT MIN(date), MAX(date) FROM calendar_dates").Scan(&min, &max)
+	err := repository.DB_STATIC.QueryRow("SELECT MIN(date), MAX(date) FROM calendar_dates WHERE basin = ?", basin).Scan(&min, &max)
 
 	if err != nil {
 		fmt.Println("GetCalDatesRange error:", err)
