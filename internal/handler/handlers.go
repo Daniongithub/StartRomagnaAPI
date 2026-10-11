@@ -111,22 +111,6 @@ func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-// GET /linelist/{basin}
-func LinelistHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
-	basin := r.PathValue("basin")
-
-	if basin != "RA" && basin != "FC" && basin != "RN" {
-		http.Error(w, "Invalid basin", http.StatusBadRequest)
-		return
-	}
-
-	results := static.GetRouteName(basin)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
-}
-
 // GET /nextstops/{tripid}
 func NextstopsHandler(w http.ResponseWriter, r *http.Request) {
 	AddCORS(w, r)
