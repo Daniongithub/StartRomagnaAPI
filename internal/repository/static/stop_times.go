@@ -70,7 +70,12 @@ func GetArrivals(stopCode string) []model.Arrival {
                 WHEN vp.trip_id IS NULL THEN TRUE
                 WHEN vp.trip_id = tu.trip_id THEN TRUE
                 ELSE FALSE
-            END AS vehicle_confirmed
+            END AS vehicle_confirmed,
+			CASE 
+                WHEN vp.lat IS NULL THEN FALSE
+                WHEN vp.long IS NULL THEN FALSE
+                ELSE TRUE
+            END AS is_GPS
         FROM stop_times AS st
         INNER JOIN stops AS s
             ON st.stop_id = s.stop_id AND st.basin = s.basin
