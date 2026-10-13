@@ -212,6 +212,7 @@ func StopsinfoHandler(w http.ResponseWriter, r *http.Request) {
 func AnnouncementsHandler(w http.ResponseWriter, r *http.Request) {
 	announcements := static.GetAnnouncements();
 
+	AddCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(announcements)
 }
