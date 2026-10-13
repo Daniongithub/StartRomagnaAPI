@@ -83,3 +83,8 @@ type Shape struct {
 	Stops  []StopsResult  `json:"stops"`
 	Points []ShapesResult `json:"points"`
 }
+
+type Announcement struct {
+	Id string `db:"id" json:"-"`
+	Message string `db:"message" json:"message"`
+}

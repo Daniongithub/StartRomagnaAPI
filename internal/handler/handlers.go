@@ -208,6 +208,14 @@ func StopsinfoHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
+// GET /announcements
+func AnnouncementsHandler(w http.ResponseWriter, r *http.Request) {
+	announcements := static.GetAnnouncements();
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(announcements)
+}
+
 // =======================
 // = RAW GTFS ENDPOINTS  =
 // =======================
