@@ -17,7 +17,7 @@ require (
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/mmcdole/goxpp/v2 v2.0.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.61.0 // indirect
 )
 
 require (
@@ -26,8 +26,8 @@ require (
 	github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs v1.0.0
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/go-co-op/gocron/v2 v2.22.0
-	github.com/klauspost/compress v1.20.0 // indirect
-	github.com/mmcdole/gofeed v1.4.2
+	github.com/klauspost/compress v1.20.1 // indirect
+	github.com/mmcdole/gofeed v1.5.0
 	github.com/valyala/fastjson v1.6.10 // indirect
-	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 )
