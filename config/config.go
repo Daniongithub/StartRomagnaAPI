@@ -22,11 +22,13 @@ var (
 	OIDC_ALLOWED_GROUPS []string
 	ENABLE_AUTH         bool
 
-	DB_HOST        string
-	DB_PORT        int
-	DB_USERNAME    string
-	DB_PASSWORD    string
-	ARBITER_SECRET string
+	DB_HOST          string
+	DB_PORT          int
+	DB_USERNAME      string
+	DB_PASSWORD      string
+	REPLICA_USERNAME string
+	REPLICA_PASSWORD string
+	ARBITER_SECRET   string
 
 	PORT string
 
@@ -35,7 +37,7 @@ var (
 
 	ARRIVALS_LOAD_INTERVAL int
 	ARRIVALS_DELAY_BUFFER  int
-	SCHEDULER gocron.Scheduler
+	SCHEDULER              gocron.Scheduler
 )
 
 func LoadConf() {

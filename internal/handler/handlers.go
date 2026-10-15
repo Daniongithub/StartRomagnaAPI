@@ -382,55 +382,35 @@ func HaltHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-
-	// primo passo sempre, a prescindere dal ruolo attuale:
-	// nessuna nuova scrittura va tentata da qui in poi
-	config.SCHEDULER.Shutdown()
-
-	db := repository.DB_STATIC
-
-	// secondo passo: blocco a livello DB, indipendente dal ruolo.
-	// se era master, questo da solo lo porta già a metà di "unconfigured"
-	if _, err := db.Exec("SET GLOBAL read_only = 1"); err != nil {
-		http.Error(w, fmt.Sprintf("set read_only failed: %v", err), http.StatusInternalServerError)
+	if err := repository.HaltLocal(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// controlliamo SE era configurato come slave, invece di lanciare
-	// STOP SLAVE/RESET SLAVE ALL alla cieca e sperare in un errore "innocuo":
-	// più esplicito, e funziona identico sia che fosse master sia che fosse replica
-	rows, err := db.Query("SHOW SLAVE STATUS")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("show slave status failed: %v", err), http.StatusInternalServerError)
-		return
-	}
-	wasSlave := rows.Next()
-	rows.Close()
-
-	if wasSlave {
-		if _, err := db.Exec("STOP SLAVE"); err != nil {
-			http.Error(w, fmt.Sprintf("stop slave failed: %v", err), http.StatusInternalServerError)
-			return
-		}
-		if _, err := db.Exec("RESET SLAVE ALL"); err != nil {
-			http.Error(w, fmt.Sprintf("reset slave failed: %v", err), http.StatusInternalServerError)
-			return
-		}
-	}
-
-	// IMPORTANTE, dettaglio che ho verificato apposta: RESET SLAVE ALL
-	// NON azzera gtid_slave_pos da solo (è un valore globale separato,
-	// documentato esplicitamente come eccezione). Se lo lasci sporco,
-	// un futuro /admin/resync che riparte da questo nodo rischia di far
-	// ripartire la replica dalla vecchia posizione invece che da quella
-	// corretta post-dump. Va svuotato esplicitamente qui:
-	if _, err := db.Exec("SET GLOBAL gtid_slave_pos = ''"); err != nil {
-		http.Error(w, fmt.Sprintf("reset gtid_slave_pos failed: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	config.IS_PRIMARY.Store(false)
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "unconfigured"})
+}
+
+type resyncRequest struct {
+	MasterHost string `json:"masterHost"`
+}
+
+// POST /admin/resync
+func ResyncHandler(w http.ResponseWriter, r *http.Request) {
+	if !arbiterAuthorized(r) {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req resyncRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.MasterHost == "" {
+		http.Error(w, "masterHost mancante o non valido", http.StatusBadRequest)
+		return
+	}
+
+	// risposta immediata: il dump può richiedere più di qualche secondo,
+	// il chiamante (l'arbitro) non deve restare bloccato ad aspettare
+	w.WriteHeader(http.StatusAccepted)
+	json.NewEncoder(w).Encode(map[string]string{"status": "resync avviato"})
+
+	go repository.RunResync(req.MasterHost)
 }

@@ -63,6 +63,7 @@ func main() {
 	mux.HandleFunc("POST /admin/promote", handler.PromoteHandler)
 	mux.HandleFunc("POST /admin/demote", handler.DemoteHandler)
 	mux.HandleFunc("POST /admin/halt", handler.HaltHandler)
+	mux.HandleFunc("POST /admin/resync", handler.ResyncHandler)
 
 	/*
 		if config.ENABLE_AUTH {

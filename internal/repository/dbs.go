@@ -3,6 +3,9 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"os"
+	"os/exec"
 	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
 	"strconv"
@@ -210,6 +213,10 @@ func GetDBStatus(db *sql.DB) (model.DBStatus, error) {
 	status.Replication = rep
 
 	switch {
+	case !hasSlaveRow && !status.ReadOnly:
+		status.Role = "master"
+	case !hasSlaveRow && status.ReadOnly:
+		status.Role = "unconfigured"
 	case !ioRunning || !sqlRunning:
 		status.Role = "broken"
 	case lag == nil || *lag > 0:
@@ -219,4 +226,97 @@ func GetDBStatus(db *sql.DB) (model.DBStatus, error) {
 	}
 
 	return status, nil
+}
+
+func HaltLocal() error {
+	config.SCHEDULER.Shutdown()
+
+	db := DB_STATIC
+	if _, err := db.Exec("SET GLOBAL read_only = 1"); err != nil {
+		return fmt.Errorf("set read_only: %w", err)
+	}
+
+	rows, err := db.Query("SHOW SLAVE STATUS")
+	if err != nil {
+		return fmt.Errorf("show slave status: %w", err)
+	}
+	wasSlave := rows.Next()
+	rows.Close()
+
+	if wasSlave {
+		if _, err := db.Exec("STOP SLAVE"); err != nil {
+			return fmt.Errorf("stop slave: %w", err)
+		}
+		if _, err := db.Exec("RESET SLAVE ALL"); err != nil {
+			return fmt.Errorf("reset slave: %w", err)
+		}
+	}
+	if _, err := db.Exec("SET GLOBAL gtid_slave_pos = ''"); err != nil {
+		return fmt.Errorf("reset gtid_slave_pos: %w", err)
+	}
+
+	config.IS_PRIMARY.Store(false)
+	return nil
+}
+
+func RunResync(masterHost string) {
+	if err := HaltLocal(); err != nil {
+		log.Printf("resync: halt locale fallito: %v", err)
+		return
+	}
+
+	log.Printf("resync: avvio dump da %s", masterHost)
+
+	dump := exec.Command("mariadb-dump",
+		"-h", masterHost,
+		"-u", config.DB_USERNAME,
+		"--single-transaction", // snapshot consistente InnoDB, nessun lock prolungato
+		"--master-data=1",      // include la posizione di partenza come SQL nel dump
+		"--gtid",               // ...in forma GTID (SET GLOBAL gtid_slave_pos), non file/offset
+		"--routines", "--triggers",
+		"--databases", "start_gtfs_static", "start_gtfs_rt", // <-- conferma i nomi veri
+	)
+	// password via env, non come argomento -p: altrimenti finisce in chiaro
+	// nella process list (`ps aux`) visibile a chiunque abbia accesso alla macchina
+	dump.Env = append(os.Environ(), "MYSQL_PWD="+config.DB_PASSWORD)
+
+	restore := exec.Command("mariadb", "-h", "127.0.0.1", "-u", config.DB_USERNAME)
+	restore.Env = append(os.Environ(), "MYSQL_PWD="+config.DB_PASSWORD)
+
+	pipe, err := dump.StdoutPipe()
+	if err != nil {
+		log.Printf("resync: errore creazione pipe: %v", err)
+		return
+	}
+	restore.Stdin = pipe
+
+	if err := restore.Start(); err != nil {
+		log.Printf("resync: impossibile avviare l'import: %v", err)
+		return
+	}
+	if err := dump.Run(); err != nil {
+		log.Printf("resync: dump fallito: %v", err)
+		return
+	}
+	if err := restore.Wait(); err != nil {
+		log.Printf("resync: import fallito: %v", err)
+		return
+	}
+
+	log.Println("resync: dump+import completati, configuro la replica")
+
+	db := DB_STATIC
+	if _, err := db.Exec(
+		"CHANGE MASTER TO MASTER_HOST=?, MASTER_PORT=3306, MASTER_USER=?, MASTER_PASSWORD=?, MASTER_USE_GTID=slave_pos",
+		masterHost, config.REPLICA_USERNAME, config.REPLICA_PASSWORD,
+	); err != nil {
+		log.Printf("resync: change master fallito: %v", err)
+		return
+	}
+	if _, err := db.Exec("START SLAVE"); err != nil {
+		log.Printf("resync: start slave fallito: %v", err)
+		return
+	}
+
+	log.Println("resync: completato, replica attiva da", masterHost)
 }
