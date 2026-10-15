@@ -51,7 +51,8 @@ func InitStatic() {
 		fmt.Println("InitStatic errore di connessione al database del GTFS statico:", err)
 	}
 
-	config.IS_PRIMARY, err = isPrimary(DB_STATIC)
+	primary, err := isPrimary(DB_STATIC)
+	config.IS_PRIMARY.Store(primary)
 	if err != nil {
 		fmt.Println("InitStatic errore determinazione DB principale:", err)
 	}
@@ -63,7 +64,8 @@ func InitRT() {
 		fmt.Println("InitRT errore di connessione al database del GTFS dinamico:", err)
 	}
 
-	config.IS_PRIMARY, err = isPrimary(DB_RT)
+	primary, err := isPrimary(DB_RT)
+	config.IS_PRIMARY.Store(primary)
 	if err != nil {
 		fmt.Println("InitRT errore determinazione DB principale:", err)
 	}
@@ -75,7 +77,8 @@ func InitMezzi() {
 		fmt.Println("InitMezzi errore di connessione al database del GTFS dinamico:", err)
 	}
 
-	config.IS_PRIMARY, err = isPrimary(DB_MEZZI)
+	primary, err := isPrimary(DB_MEZZI)
+	config.IS_PRIMARY.Store(primary)
 	if err != nil {
 		fmt.Println("InitMezzi errore determinazione DB principale:", err)
 	}

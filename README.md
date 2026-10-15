@@ -41,11 +41,14 @@ This project can't be reutilised, because the code is too specific, it'd be impo
 - `GET /shape/{basin}/{shapeId}` -> Shape del percorso, dato il bacino e l'id univoco. | Shape of the trip, given the basin and its unique id.
 - `GET /vehicleinfo/{vehicle}` -> Informazioni su un singolo veicolo. | Return information of a signle vehicle.
 - `GET /stopsinfo/{basin}/{stopcode}` -> Ritorna tutte le linee che passano in una fermata, dato il bacino ed il codice fermata. | Returns all the lines that stop in the specified bus stop, given the basin and its id.
+- `GET /announcements` -> Annunci | Announcements
 - `GET /static/info` -> Range di date in cui sono validi i dati del GTFS statico. | Date range where static GTFS data is valid.
 - `GET /static/trips/{basin}` -> Lista di tutti i trip di un bacino. | Returns the list of all the trips of a basin.
 - `GET /static/routes/{basin}` -> Lista di tutte le linee di un bacino. | Returns the list of all the routes of a basin.
 - `GET /static/shapes/{basin}` -> Lista di tutte le shape di un bacino. | Returns the list of all the shapes of a basin.
 - `GET /static/stops/{basin}` -> Lista di tutte le fermate di un bacino. | Returns the list of all the bus stops of a basin.
+- `/panel/announcements/` -> Pannello annunci protetto da OIDC; disponibile solo con `ENABLE_AUTH=true`.
+- `GET /api/announcements` -> Alias pubblico di `GET /announcements`.
 
 ### Da implementare - To be implemented
 
@@ -72,6 +75,11 @@ START_GTFS_RT_ROOT=
 WEB_AUTH_USER=
 WEB_AUTH_PASSWORD=
 
+OIDC_ISSUER_URL=
+OIDC_CLIENT_ID=
+OIDC_ALLOWED_GROUPS=
+ENABLE_AUTH=false
+
 DB_HOST=
 DB_PORT=
 DB_USERNAME=
@@ -87,6 +95,17 @@ ARRIVALS_LOAD_INTERVAL=90
 # Max visualized delay before trip gets deleted from /arrivals endpoint
 ARRIVALS_DELAY_BUFFER=90
 ```
+
+Con `ENABLE_AUTH=true`, il redirect URI del client OIDC deve essere
+`https://<host>/panel/announcements/auth/callback` (o `http` per ambienti
+senza TLS). `OIDC_ALLOWED_GROUPS` accetta gruppi separati da virgole. Con
+`ENABLE_AUTH=false` il pannello non viene registrato; gli altri endpoint API
+restano disponibili.
+
+La pagina iniziale e quella di login, insieme agli eventuali asset, sono in
+`internal/panels/announcements/static`. Per collegare handler Go al pannello,
+registrarli con `Panel.RegisterAPI` prima di montare `Panel.Mux()`; i relativi
+endpoint sono protetti dalla sessione OIDC.
 
 > [!WARNING]
 > Tutte queste env vars sono RICHIESTE. Se non fornite, il programma uscirà. | All of these env vars are MANDATORY. If those are without values, the program will exit.
