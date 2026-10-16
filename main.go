@@ -21,6 +21,7 @@ func main() {
 	repository.InitMezzi()
 	//Initializes server send events for fontend sync
 	sse.InitHub()
+
 	if config.IS_PRIMARY.Load() {
 		//Operazioni per DB in modalità "primary" (non read only):
 
@@ -39,6 +40,7 @@ func main() {
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
 
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
+	mux.HandleFunc("GET /routeproblems", handler.RouteProblemsHandler)
 
 	mux.HandleFunc("/events", sse.SSE_HUB.SSEHandler)
 

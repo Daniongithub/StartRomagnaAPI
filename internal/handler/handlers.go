@@ -6,16 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"startromagnaapi/config"
-	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/static"
 	"startromagnaapi/internal/service"
-	"time"
-
-	"github.com/mmcdole/gofeed"
 )
 
 const feedURL = "https://www.startromagna.it/infobus/feed/"
+const routeprbURL = "https://www.startromagna.it/orari-e-percorsi-vers-2-0/"
 
 // GET /health
 func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
@@ -34,45 +31,36 @@ func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 // GET /rss/feed
 func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 	AddCORS(w, r)
-	parser := gofeed.NewParser()
-	feed, err := parser.ParseURL(feedURL)
+	results, err := service.GetRSSFeed(feedURL)
+
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	response := model.FeedResponse{
-		Title:       feed.Title,
-		Description: feed.Description,
-		Link:        feed.Link,
-		Items:       make([]model.FeedItem, 0, len(feed.Items)),
-	}
-	for _, item := range feed.Items {
-		author := ""
-		if len(item.Authors) > 0 && item.Authors[0] != nil {
-			author = item.Authors[0].Name
+		if errors.Is(err, service.NoArrivals) {
+			http.Error(w, "rss feed error", http.StatusNotFound)
+			return
 		}
 
-		var published time.Time
-		if item.PublishedParsed != nil {
-			published = *item.PublishedParsed
-		}
-		response.Items = append(response.Items, model.FeedItem{
-			Title:           item.Title,
-			Description:     item.Description,
-			Content:         item.Content,
-			Link:            item.Link,
-			Author:          author,
-			Published:       item.Published,
-			PublishedParsed: published,
-		})
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-cache")
-
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
-	encoder.Encode(response)
+	encoder.Encode(results)
+}
+
+// GET /routeproblems TEMP
+func RouteProblemsHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
+	results, err := service.GetRouteProblemsConfig(routeprbURL)
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
 }
 
 // GET /arrivals/{stopcode}
