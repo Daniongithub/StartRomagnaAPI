@@ -6,10 +6,11 @@ import (
 	"io"
 	"net/http"
 	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/repository/static"
 	"strings"
 )
 
-func GetRouteProblemsConfig(url string) (*model.SroConfig, error) {
+func ScrapeRouteInfo(url string) (*model.RouteInfoRaw, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("GetRouteProblems: richiesta HTTP fallita: %w", err)
@@ -53,12 +54,76 @@ func GetRouteProblemsConfig(url string) (*model.SroConfig, error) {
 		jsonBytes = []byte(inner)
 	}
 
-	var config model.SroConfig
+	var config model.RouteInfoRaw
 	if err := json.Unmarshal(jsonBytes, &config); err != nil {
 		return nil, fmt.Errorf("GetRouteProblems: unmarshal config fallito: %w", err)
 	}
 
 	return &config, nil
+}
+
+func ProcessRouteInfo(infos model.RouteInfoRaw) []model.RouteInfo {
+	knownRoutes := static.GetRoutes()
+	routesMap := make(map[string]bool)
+	for _, val := range knownRoutes {
+		routesMap[val.Route_id] = true
+	}
+	var processed []model.RouteInfo
+	for _, slice := range infos.Areas {
+		for _, val := range slice {
+			var basin string
+			if strings.Contains(val.Pdf, "RA") {
+				basin = "RA"
+			}
+			if strings.Contains(val.Pdf, "FC") {
+				basin = "FC"
+			}
+			if strings.Contains(val.Pdf, "CE") {
+				basin = "FC"
+			}
+			if strings.Contains(val.Pdf, "CO") {
+				basin = "FC"
+			}
+			if strings.Contains(val.Pdf, "FO") {
+				basin = "FC"
+			}
+			if strings.Contains(val.Pdf, "RN") {
+				basin = "RN"
+			}
+			if strings.Contains(val.Pdf, "Linea-5") {
+				basin = "RN"
+			}
+			if strings.Contains(val.Pdf, "Linea-10") {
+				basin = "RN"
+			}
+			if val.Route == "1-2CO" {
+				val.Route = "1-2C"
+			}
+			if val.Route == "F126p" {
+				val.Route = "126p"
+			}
+			if val.Route == "F131p" {
+				val.Route = "131p"
+			}
+			if val.Route == "F132p" {
+				val.Route = "132p"
+			}
+			if val.Route == "Metromare" {
+				val.Route = "9311"
+			}
+			_, ok := routesMap[val.Route]
+			if ok {
+				processed = append(processed, model.RouteInfo{
+					Basin: basin,
+					RouteId:   val.Route,
+					InfobusId: val.InfoBusId,
+					PDFLink:   val.Pdf,
+				})
+			}
+		}
+	}
+
+	return processed
 }
 
 /*

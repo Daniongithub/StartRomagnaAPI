@@ -1,6 +1,6 @@
 package model
 
-type SroConfig struct {
+type RouteInfoRaw struct {
 	Version      string              `json:"version"`
 	Areas        map[string][]Linea  `json:"areas"`
 	Excluded     map[string][]string `json:"excluded"`
@@ -9,7 +9,7 @@ type SroConfig struct {
 	LastUpdated  string              `json:"lastUpdated"`
 	DataBase     string              `json:"dataBase"`
 	AssetVersion string              `json:"assetVersion"`
-	InfoBusAjax  string              `json:"infoBusAjax"`
+	InfoBusAjax  string              `json:"infobusAjax"`
 }
 
 type Linea struct {

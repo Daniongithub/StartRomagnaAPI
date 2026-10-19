@@ -40,7 +40,7 @@ func main() {
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
 
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
-	mux.HandleFunc("GET /routeproblems", handler.RouteProblemsHandler)
+	mux.HandleFunc("GET /routeinfo", handler.RouteinfoHandler)
 
 	mux.HandleFunc("/events", sse.SSE_HUB.SSEHandler)
 

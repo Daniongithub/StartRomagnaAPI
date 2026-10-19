@@ -85,6 +85,13 @@ type Shape struct {
 }
 
 type Announcement struct {
-	Id string `db:"id" json:"-"`
+	Id      string `db:"id" json:"-"`
 	Message string `db:"message" json:"message"`
+}
+
+type RouteInfo struct {
+	Basin     string `db:"basin" json:"basin"`
+	RouteId   string `db:"route_id" json:"route_id"`
+	InfobusId int    `db:"infobus_id" json:"infobus_id"`
+	PDFLink   string `db:"pdf_link" json:"pdf_link"`
 }

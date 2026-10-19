@@ -11,8 +11,10 @@ import (
 	"startromagnaapi/internal/service"
 )
 
-const feedURL = "https://www.startromagna.it/infobus/feed/"
-const routeprbURL = "https://www.startromagna.it/orari-e-percorsi-vers-2-0/"
+const( 
+	FEED_URL = "https://www.startromagna.it/infobus/feed/"
+	ROUTE_INFO_URL = "https://www.startromagna.it/orari-e-percorsi-vers-2-0/"
+)
 
 // GET /health
 func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +33,7 @@ func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 // GET /rss/feed
 func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 	AddCORS(w, r)
-	results, err := service.GetRSSFeed(feedURL)
+	results, err := service.GetRSSFeed(FEED_URL)
 
 	if err != nil {
 		if errors.Is(err, service.NoArrivals) {
@@ -50,14 +52,10 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(results)
 }
 
-// GET /routeproblems TEMP
-func RouteProblemsHandler(w http.ResponseWriter, r *http.Request) {
+// GET /routeinfo
+func RouteinfoHandler(w http.ResponseWriter, r *http.Request) {
 	AddCORS(w, r)
-	results, err := service.GetRouteProblemsConfig(routeprbURL)
-	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
+	results := static.GetRouteInfos()
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)

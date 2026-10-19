@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"startromagnaapi/config"
 	"startromagnaapi/internal/auth"
+	"startromagnaapi/internal/handler"
 	"startromagnaapi/internal/repository/static"
+	"startromagnaapi/internal/service"
 	"time"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
@@ -41,6 +43,19 @@ func UpdateStatic() {
 
 	elapsed := time.Since(start)
 	fmt.Printf("Updated static GTFS. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)
+}
+
+func UpdateRouteInfos() {
+	raw, err := service.ScrapeRouteInfo(handler.ROUTE_INFO_URL)
+	if err != nil {
+		fmt.Println("Error scraping routeinfo remote:", err)
+		return
+	}
+	
+	static.ClearRouteInfos()
+	infos := service.ProcessRouteInfo(*raw)
+
+	static.SaveRouteInfos(infos)
 }
 
 func registerShapeIDs() {
