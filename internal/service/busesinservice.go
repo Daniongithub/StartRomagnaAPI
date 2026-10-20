@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-var NoBusesInService = errors.New("no buses in service")
+var NoBusesInService = errors.New("No buses in service")
 
 func ProcessBusesInService() ([]model.BusInService, error) {
 	buses := realtime.GetBuses()
@@ -49,7 +49,6 @@ func ProcessBusesInService() ([]model.BusInService, error) {
 				Number: val.Vehicle,
 			}
 		}
-
 	}
 	buses = groupAndSort(buses)
 

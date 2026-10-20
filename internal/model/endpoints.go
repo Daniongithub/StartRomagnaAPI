@@ -35,7 +35,7 @@ type BusInService struct {
 	Vehicle      string           `db:"vehicle" json:"-"`
 	VehicleInfo  VehicleInService `json:"vehicle_info"`
 	Lat          *float32         `db:"lat" json:"vehicle_lat"`
-	Long         *float32         `db:"long" json:"vehicle_long"`
+	Long         *float32         `db:"longitude" json:"vehicle_long"`
 	LastUpdate   time.Time        `db:"timestamp" json:"last_update"`
 	NextStop     *StopWDel        `json:"next_stop"`
 }
