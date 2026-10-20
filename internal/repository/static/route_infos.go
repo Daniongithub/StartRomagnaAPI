@@ -28,7 +28,7 @@ func SaveRouteInfos(infos []model.RouteInfo) {
 		})
 	}
 
-	err := repository.BatchInsert(repository.DB_STATIC, "routes", []string{"basin", "route_id", "infobus_id", "pdf_link"}, values)
+	err := repository.BatchInsert(repository.DB_STATIC, "route_infos", []string{"basin", "route_id", "infobus_id", "pdf_link"}, values)
 	if err != nil {
 		fmt.Println("SaveRouteInfos db error:", err)
 	}
