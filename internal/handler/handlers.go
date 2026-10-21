@@ -332,7 +332,7 @@ func PromoteHandler(w http.ResponseWriter, r *http.Request) {
 		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO '%v'@'%';
 		GRANT UPDATE ON ertpl_mezzi.*                       TO '%v'@'%';
 		FLUSH PRIVILEGES;
-	`, config.DB_USERNAME)); err != nil {
+	`, config.DB_USERNAME, config.DB_USERNAME, config.DB_USERNAME)); err != nil {
 		http.Error(w, fmt.Sprintf("Grant privileges failed: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -370,7 +370,7 @@ func DemoteHandler(w http.ResponseWriter, r *http.Request) {
 		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_rt.*     FROM '%v'@'%';
 		REVOKE UPDATE ON ertpl_mezzi.*                       FROM '%v'@'%';
 		FLUSH PRIVILEGES;
-	`, config.DB_USERNAME)); err != nil {
+	`, config.DB_USERNAME, config.DB_USERNAME, config.DB_USERNAME)); err != nil {
 		http.Error(w, fmt.Sprintf("Revoke privileges failed: %v", err), http.StatusInternalServerError)
 		return
 	}
