@@ -9,6 +9,7 @@ import (
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/static"
 	"startromagnaapi/internal/service"
+	"strconv"
 )
 
 const( 
@@ -87,11 +88,11 @@ func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
 	results, err := service.ProcessBusesInService()
 	if err != nil {
 		if errors.Is(err, service.NoBusesInService) {
-			http.Error(w, "no buses in service at the moment", http.StatusNotFound)
+			http.Error(w, "No buses in service at the moment", http.StatusNotFound)
 			return
 		}
 
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -105,6 +106,27 @@ func NextstopsHandler(w http.ResponseWriter, r *http.Request) {
 	tripid := r.PathValue("tripid")
 
 	results := service.ProcessNextstops(tripid)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+// GET /timetable/{basin}/{routeid}/{directionid}
+func TimetableHandler(w http.ResponseWriter, r *http.Request) {
+	AddCORS(w, r)
+	basin := r.PathValue("basin")
+	if basin != "RA" && basin != "FC" && basin != "RN" {
+		http.Error(w, "Invalid basin", http.StatusBadRequest)
+		return
+	}
+	routeid := r.PathValue("routeid")
+	directionid := r.PathValue("directionid")
+	directionInt, err := strconv.Atoi(directionid)
+	if err != nil || directionInt < 0 || directionInt > 1 {
+		http.Error(w, "Bad request on direction parameter, can be only 0 or 1.", http.StatusBadRequest)
+		return
+	}
+	results := service.ProcessTimetable(basin, routeid, directionid)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)

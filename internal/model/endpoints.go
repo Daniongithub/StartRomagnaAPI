@@ -97,14 +97,27 @@ type RouteInfo struct {
 }
 
 type Trip struct {
-	TripInfo  TripInfo          `json:"trip_info"`
-	StopTimes []StopTimesResult `json:"stop_times"`
+	TripInfo  TripInfo        `json:"trip_info"`
+	StopTimes []StopTimeWName `json:"stop_times"`
+}
+
+type StopTimeWName struct {
+	Basin            string    `db:"basin" json:"basin"`
+	TripTd           string    `db:"trip_id" json:"trip_id"`
+	ArrivalTime      MySQLTime `db:"arrival_time" json:"-"`
+	ArrivalTimeStr   string    `json:"arrival_time"`
+	DepartureTime    MySQLTime `db:"departure_time" json:"-"`
+	DepartureTimeStr string    `json:"departure_time"`
+	StopName         string    `db:"stop_name" json:"stop_name"`
+	StopId           string    `db:"stop_id" json:"stop_id"`
+	StopSequence     int       `db:"stop_sequence" json:"-"`
 }
 
 type TripInfo struct {
-	Basin       string `db:"basin" json:"basin"`
-	Line        string `db:"disp_linea" json:"line"`
-	Destination string `db:"disp_dest" json:"destination"`
-	TripId      string `db:"trip_id" json:"trip_id"`
-	ShapeId     string `db:"shape_id" json:"shape_id"`
+	Basin        string `db:"basin" json:"basin"`
+	Line         string `db:"disp_linea" json:"line"`
+	Destination  string `db:"disp_dest" json:"destination"`
+	OfficialLine string `json:"official_line"`
+	TripId       string `db:"trip_id" json:"trip_id"`
+	ShapeId      string `db:"shape_id" json:"shape_id"`
 }

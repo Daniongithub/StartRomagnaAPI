@@ -47,6 +47,7 @@ func main() {
 	mux.HandleFunc("GET /arrivals/{stopcode}", handler.ArrivalsHandler)
 	mux.HandleFunc("GET /busesinservice", handler.BusesinserviceHandler)
 	mux.HandleFunc("GET /nextstops/{tripid}", handler.NextstopsHandler)
+	mux.HandleFunc("GET /timetable/{basin}/{routeid}/{directionid}", handler.TimetableHandler)
 	mux.HandleFunc("GET /vehiclepositions", handler.VehiclepositionsHandler)
 	mux.HandleFunc("GET /vehiclepositions/{basin}", handler.VehiclepositionsBasinHandler)
 	mux.HandleFunc("GET /vehicleposition/{vehicleid}", handler.VehiclepositionIDHandler)
@@ -54,8 +55,6 @@ func main() {
 	mux.HandleFunc("GET /vehicleinfo/{vehicle}", handler.VehicleinfoHandler)
 	mux.HandleFunc("GET /stopsinfo/{basin}/{stopcode}", handler.StopsinfoHandler)
 	mux.HandleFunc("GET /announcements", handler.AnnouncementsHandler)
-
-	//mux.HandleFunc("GET /timetable/{routeid}", handler.TimetableHandler)
 
 	mux.HandleFunc("GET /static/info", handler.StaticInfoHandler)
 	mux.HandleFunc("GET /static/trips/{basin}", handler.TripsBasinHandler)
