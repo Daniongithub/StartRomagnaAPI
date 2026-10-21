@@ -43,6 +43,17 @@ func newDB(host string, port int, user, password, dbname string) (*sqlx.DB, erro
 
 func IsPrimary(db *sqlx.DB) error {
 	tx, err := db.Begin()
+	var varName, uptimeStr string
+    if err := db.QueryRow("SHOW GLOBAL STATUS LIKE 'Uptime'").Scan(&varName, &uptimeStr); err != nil {
+        return fmt.Errorf("impossibile leggere uptime: %w", err)
+    }
+    uptime, _ := strconv.Atoi(uptimeStr)
+	if uptime < 60 {
+        // mariadbd si è appena avviato/riavviato: non ci si fida dei privilegi
+        // residui, si forza il fencing e si lascia decidere al prossimo tick dell'arbitro
+        return HaltLocal()
+    }
+
 	if err != nil {
 		return fmt.Errorf("Impossibile aprire transazione di probe: %w", err)
 	}
