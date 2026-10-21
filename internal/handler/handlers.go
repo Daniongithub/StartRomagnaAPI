@@ -22,6 +22,7 @@ const (
 func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	AddCORS(w, r)
 
+	repository.IsPrimary(repository.DB_STATIC)
 	results, err := repository.GetDBStatus(repository.DB_STATIC.DB)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
