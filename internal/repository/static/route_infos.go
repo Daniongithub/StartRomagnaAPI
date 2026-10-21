@@ -17,11 +17,20 @@ func GetRouteInfos() []model.RouteInfo {
 }
 
 func SaveRouteInfos(infos []model.RouteInfo) {
+	values := make([][]any, 0, len(infos))
+
 	for _, val := range infos {
-		_, err := repository.DB_STATIC.Exec("INSERT INTO route_infos VALUES(?, ?, ?, ?)", val.Basin, val.RouteId, val.InfobusId, val.PDFLink)
-		if err != nil {
-			fmt.Println("SaveRouteInfos error:", err, val.RouteId)
-		}
+		values = append(values, []any{
+			val.Basin,
+			val.RouteId,
+			val.InfobusId,
+			val.PDFLink,
+		})
+	}
+
+	err := repository.BatchInsert(repository.DB_STATIC, "route_infos", []string{"basin", "route_id", "infobus_id", "pdf_link"}, values)
+	if err != nil {
+		fmt.Println("SaveRouteInfos db error:", err)
 	}
 }
 
