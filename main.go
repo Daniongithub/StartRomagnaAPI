@@ -19,6 +19,7 @@ func main() {
 	repository.InitStatic()
 	repository.InitRT()
 	repository.InitMezzi()
+	repository.InitOrchestrator()
 	//Initializes server send events for fontend sync
 	sse.InitHub()
 

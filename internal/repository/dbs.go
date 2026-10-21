@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
@@ -20,6 +22,7 @@ var (
 	DB_STATIC *sqlx.DB
 	DB_RT     *sqlx.DB
 	DB_MEZZI  *sqlx.DB
+	DB_ORCH   *sqlx.DB
 	err       error
 )
 
@@ -38,14 +41,27 @@ func newDB(host string, port int, user, password, dbname string) (*sqlx.DB, erro
 	return db, nil
 }
 
-func isPrimary(db *sqlx.DB) (bool, error) {
-	var varName, value string
-	row := db.QueryRow("SHOW VARIABLES LIKE 'read_only'")
-	if err := row.Scan(&varName, &value); err != nil {
-		return false, fmt.Errorf("lettura read_only: %w", err)
+func IsPrimary(db *sqlx.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("Impossibile aprire transazione di probe: %w", err)
 	}
-	return value == "OFF" || value == "0", nil
+	defer tx.Rollback() // we don't need it to write anything
 
+	_, err = tx.Exec("UPDATE arbiter_probe SET touched_at = NOW() WHERE id = 1")
+
+	if err == nil {
+		config.IS_PRIMARY.Store(true)
+		return nil
+	}
+
+	var mysqlErr *mysql.MySQLError
+	if errors.As(err, &mysqlErr) && mysqlErr.Number == 1142 { // command denied
+		config.IS_PRIMARY.Store(false)
+		return nil
+	}
+
+	return fmt.Errorf("probe di scrittura fallito in modo inatteso: %w", err)
 }
 
 func InitStatic() {
@@ -54,8 +70,7 @@ func InitStatic() {
 		fmt.Println("InitStatic errore di connessione al database del GTFS statico:", err)
 	}
 
-	primary, err := isPrimary(DB_STATIC)
-	config.IS_PRIMARY.Store(primary)
+	IsPrimary(DB_STATIC)
 	if err != nil {
 		fmt.Println("InitStatic errore determinazione DB principale:", err)
 	}
@@ -66,12 +81,6 @@ func InitRT() {
 	if err != nil {
 		fmt.Println("InitRT errore di connessione al database del GTFS dinamico:", err)
 	}
-
-	primary, err := isPrimary(DB_RT)
-	config.IS_PRIMARY.Store(primary)
-	if err != nil {
-		fmt.Println("InitRT errore determinazione DB principale:", err)
-	}
 }
 
 func InitMezzi() {
@@ -79,11 +88,12 @@ func InitMezzi() {
 	if err != nil {
 		fmt.Println("InitMezzi errore di connessione al database del GTFS dinamico:", err)
 	}
+}
 
-	primary, err := isPrimary(DB_MEZZI)
-	config.IS_PRIMARY.Store(primary)
+func InitOrchestrator() {
+	DB_ORCH, err = newDB(config.DB_HOST, config.DB_PORT, config.DB_ORCH_USERNAME, config.DB_ORCH_PASSWORD, "start_gtfs_static")
 	if err != nil {
-		fmt.Println("InitMezzi errore determinazione DB principale:", err)
+		fmt.Println("InitOrchestrator errore di connessione al database del GTFS dinamico:", err)
 	}
 }
 
@@ -213,9 +223,9 @@ func GetDBStatus(db *sql.DB) (model.DBStatus, error) {
 	status.Replication = rep
 
 	switch {
-	case !hasSlaveRow && !status.ReadOnly:
+	case !hasSlaveRow && config.IS_PRIMARY.Load():
 		status.Role = "master"
-	case !hasSlaveRow && status.ReadOnly:
+	case !hasSlaveRow && !config.IS_PRIMARY.Load():
 		status.Role = "unconfigured"
 	case !ioRunning || !sqlRunning:
 		status.Role = "broken"

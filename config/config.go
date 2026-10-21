@@ -26,6 +26,8 @@ var (
 	DB_PORT          int
 	DB_USERNAME      string
 	DB_PASSWORD      string
+	DB_ORCH_USERNAME string
+	DB_ORCH_PASSWORD string
 	REPLICA_USERNAME string
 	REPLICA_PASSWORD string
 	ARBITER_SECRET   string
@@ -89,6 +91,8 @@ func LoadConf() {
 	DB_PORT = getRequiredInt("DB_PORT")
 	DB_USERNAME = getRequired("DB_USERNAME")
 	DB_PASSWORD = getRequired("DB_PASSWORD")
+	DB_ORCH_USERNAME = getRequired("DB_ORCH_USERNAME")
+	DB_ORCH_PASSWORD = getRequired("DB_ORCH_PASSWORD")
 
 	PORT = getRequired("PORT")
 

@@ -12,8 +12,8 @@ import (
 	"strconv"
 )
 
-const( 
-	FEED_URL = "https://www.startromagna.it/infobus/feed/"
+const (
+	FEED_URL       = "https://www.startromagna.it/infobus/feed/"
 	ROUTE_INFO_URL = "https://www.startromagna.it/orari-e-percorsi-vers-2-0/"
 )
 
@@ -317,18 +317,23 @@ func arbiterAuthorized(r *http.Request) bool {
 // POST /admin/promote
 func PromoteHandler(w http.ResponseWriter, r *http.Request) {
 	if !arbiterAuthorized(r) {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	db := repository.DB_STATIC // same db instance
+	db := repository.DB_ORCH // same db instance
 
-	if _, err := db.Exec("STOP SLAVE"); err != nil {
-		http.Error(w, fmt.Sprintf("stop slave failed: %v", err), http.StatusInternalServerError)
+	if _, err := db.Exec(`STOP SLAVE`); err != nil {
+		http.Error(w, fmt.Sprintf("Stop slave failed: %v", err), http.StatusInternalServerError)
 		return
 	}
-	if _, err := db.Exec("SET GLOBAL read_only = 0"); err != nil {
-		http.Error(w, fmt.Sprintf("set read_only failed: %v", err), http.StatusInternalServerError)
+	if _, err := db.Exec(`
+		GRANT INSERT, UPDATE, DELETE ON start_gtfs_static.* TO 'startapi'@'%';
+		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO 'startapi'@'%';
+		GRANT UPDATE ON ertpl_mezzi.*                       TO 'startapi'@'%';
+		FLUSH PRIVILEGES;
+	`); err != nil {
+		http.Error(w, fmt.Sprintf("Grant privileges failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -343,42 +348,48 @@ type demoteRequest struct {
 // POST /admin/demote
 func DemoteHandler(w http.ResponseWriter, r *http.Request) {
 	if !arbiterAuthorized(r) {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	var req demoteRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.NewMasterHost == "" {
-		http.Error(w, "newMasterHost mancante o non valido", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing newMasterHost", http.StatusBadRequest)
 		return
 	}
 
-	if config.DB_USERNAME == "" || config.DB_PASSWORD == "" {
-		http.Error(w, "credenziali di replica non configurate su questo nodo", http.StatusInternalServerError)
+	if config.REPLICA_USERNAME == "" || config.REPLICA_PASSWORD == "" {
+		http.Error(w, "Replica not configured", http.StatusInternalServerError)
 		return
 	}
 
-	db := repository.DB_STATIC
+	db := repository.DB_ORCH
 
-	if _, err := db.Exec("SET GLOBAL read_only = 1"); err != nil {
-		http.Error(w, fmt.Sprintf("set read_only failed: %v", err), http.StatusInternalServerError)
+	if _, err := db.Exec(`
+		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_static.* FROM 'startapi'@'%';
+		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_rt.*     FROM 'startapi'@'%';
+		REVOKE UPDATE ON ertpl_mezzi.*                       FROM 'startapi'@'%';
+		FLUSH PRIVILEGES;
+	`); err != nil {
+		http.Error(w, fmt.Sprintf("Revoke privileges failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 	if _, err := db.Exec("STOP SLAVE"); err != nil {
-		http.Error(w, fmt.Sprintf("stop slave failed: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Stop slave failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 	if _, err := db.Exec(
 		"CHANGE MASTER TO MASTER_HOST=?, MASTER_PORT=3306, MASTER_USER=?, MASTER_PASSWORD=?, MASTER_USE_GTID=slave_pos",
-		req.NewMasterHost, config.DB_USERNAME, config.DB_PASSWORD,
+		req.NewMasterHost, config.REPLICA_USERNAME, config.REPLICA_PASSWORD,
 	); err != nil {
-		http.Error(w, fmt.Sprintf("change master failed: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Change master failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 	if _, err := db.Exec("START SLAVE"); err != nil {
-		http.Error(w, fmt.Sprintf("start slave failed: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Ctart slave failed: %v", err), http.StatusInternalServerError)
 		return
 	}
+	repository.IsPrimary(repository.DB_STATIC)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "demoted", "newMaster": req.NewMasterHost})
@@ -387,13 +398,15 @@ func DemoteHandler(w http.ResponseWriter, r *http.Request) {
 // POST /admin/halt
 func HaltHandler(w http.ResponseWriter, r *http.Request) {
 	if !arbiterAuthorized(r) {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	if err := repository.HaltLocal(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	repository.IsPrimary(repository.DB_STATIC)
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "unconfigured"})
 }
@@ -405,13 +418,13 @@ type resyncRequest struct {
 // POST /admin/resync
 func ResyncHandler(w http.ResponseWriter, r *http.Request) {
 	if !arbiterAuthorized(r) {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	var req resyncRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.MasterHost == "" {
-		http.Error(w, "masterHost mancante o non valido", http.StatusBadRequest)
+		http.Error(w, "Invalid or missing masterHost", http.StatusBadRequest)
 		return
 	}
 
@@ -421,4 +434,5 @@ func ResyncHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "resync avviato"})
 
 	go repository.RunResync(req.MasterHost)
+	repository.IsPrimary(repository.DB_STATIC)
 }

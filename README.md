@@ -65,7 +65,7 @@ Chiedici gli schemas, se servono.
 
 Some tasks are executed every 20 seconds for the realtime, at 04:00 the static GTFS gets updated.
 
-We use a single MariaDB database, with 3 DB inside: `start_gtfs_static`, `start_gtfs_rt` and `ertpl_mezzi` (our vehicles' information DB).
+We use a single MariaDB database, with 3 DB inside: `start_gtfs_static`, `start_gtfs_rt` and `ertpl_mezzi` (our vehicles information DB).
 Ask us the schemas, if needed.
 
 ## ENV Config
@@ -86,6 +86,8 @@ DB_PORT=
 DB_USERNAME=
 DB_PASSWORD=
 # db orchestrating config
+DB_ORCH_USERNAME=
+DB_ORCH_PASSWORD=
 REPLICA_USERNAME=
 REPLICA_PASSWORD=
 
