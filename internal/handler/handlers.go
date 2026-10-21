@@ -10,6 +10,7 @@ import (
 	"startromagnaapi/internal/repository/static"
 	"startromagnaapi/internal/service"
 	"strconv"
+	"sync/atomic"
 )
 
 const (
@@ -428,11 +429,17 @@ func ResyncHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// risposta immediata: il dump può richiedere più di qualche secondo,
-	// il chiamante (l'arbitro) non deve restare bloccato ad aspettare
-	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode(map[string]string{"status": "resync avviato"})
-
-	go repository.RunResync(req.MasterHost)
-	repository.IsPrimary(repository.DB_STATIC)
+	var resyncInProgress atomic.Bool
+	
+    if !arbiterAuthorized(r) { /* ... */ }
+    if !resyncInProgress.CompareAndSwap(false, true) {
+        http.Error(w, "resync già in corso", http.StatusConflict)
+        return
+    }
+    w.WriteHeader(http.StatusAccepted)
+    json.NewEncoder(w).Encode(map[string]string{"status": "resync avviato"})
+    go func() {
+        defer resyncInProgress.Store(false)
+        repository.RunResync(req.MasterHost)
+    }()
 }
