@@ -93,6 +93,7 @@ func LoadConf() {
 	DB_PASSWORD = getRequired("DB_PASSWORD")
 	DB_ORCH_USERNAME = getRequired("DB_ORCH_USERNAME")
 	DB_ORCH_PASSWORD = getRequired("DB_ORCH_PASSWORD")
+	ARBITER_SECRET = getRequired("ARBITER_SECRET")
 
 	PORT = getRequired("PORT")
 
