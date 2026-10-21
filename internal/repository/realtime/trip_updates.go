@@ -60,7 +60,6 @@ func GetBuses() []model.BusInService {
 			FROM trip_updates AS tu
 			WHERE tu.start_time < NOW()
 			AND (tu.schedule_relationship <> 'CANCELED' OR tu.schedule_relationship IS NULL)
-			-- AND tu.basin = ?  -- se filtri per basin
 		),
 		tu_trip AS (
 			SELECT basin, vehicle, trip_id,
@@ -79,9 +78,8 @@ func GetBuses() []model.BusInService {
 			WHERE rn = 1
 		),
 		vp_trip AS (
-			SELECT vp.basin, vp.vehicle, vp.trip_id, vp.lat, vp.long AS longitude, vp.timestamp
+			SELECT vp.basin, vp.vehicle, vp.trip_id, vp.lat, vp.long, vp.timestamp
 			FROM vehicle_positions AS vp
-			-- WHERE vp.basin = ?  -- se filtri per basin
 		),
 		resolved_with_vp AS (
 			SELECT
@@ -98,17 +96,17 @@ func GetBuses() []model.BusInService {
 					ELSE NULL
 				END AS lat,
 				CASE
-					WHEN b.trip_id IS NULL OR b.trip_id = v.trip_id THEN v.longitude
-					WHEN vs.start_datetime IS NOT NULL AND vs.start_datetime >= b.start_datetime THEN v.longitude
+					WHEN b.trip_id IS NULL OR b.trip_id = v.trip_id THEN v.long
+					WHEN vs.start_datetime IS NOT NULL AND vs.start_datetime >= b.start_datetime THEN v.long
 					ELSE NULL
-				END AS longitude,
+				END AS "long",
 				v.timestamp
 			FROM vp_trip AS v
 			LEFT JOIN tu_best AS b ON b.vehicle = v.vehicle
 			LEFT JOIN tu_trip AS vs ON vs.vehicle = v.vehicle AND vs.trip_id = v.trip_id
 		),
 		resolved_tu_only AS (
-			SELECT b.basin, b.vehicle, b.trip_id, NULL AS lat, NULL AS longitude, b.timestamp
+			SELECT b.basin, b.vehicle, b.trip_id, NULL AS lat, NULL AS "long", b.timestamp
 			FROM tu_best AS b
 			WHERE NOT EXISTS (
 				SELECT 1 FROM vehicle_positions AS vp WHERE vp.vehicle = b.vehicle
@@ -122,7 +120,7 @@ func GetBuses() []model.BusInService {
 		SELECT
 			r.basin, r.trip_id, r.vehicle, r.timestamp,
 			t.route_id, t.shape_id,
-			r.lat, r.longitude
+			r.lat, r.long
 		FROM resolved AS r
 		INNER JOIN start_gtfs_static.trips AS t
 		ON r.trip_id = t.trip_id
@@ -154,7 +152,7 @@ func GetBus(id string) []model.BusInService {
 		WHERE vehicle = ?
 		UNION ALL
 
-		SELECT ranked.basin, ranked.trip_id, ranked.vehicle, ranked.timestamp, t.route_id, t.shape_id, NULL AS lat, NULL AS 'long'
+		SELECT ranked.basin, ranked.trip_id, ranked.vehicle, ranked.timestamp, t.route_id, t.shape_id, NULL AS lat, NULL AS "long"
 		FROM (
 			SELECT tu.basin, tu.trip_id, tu.vehicle, tu.timestamp, tu.start_time, tu.schedule_relationship,
 				ROW_NUMBER() OVER (
