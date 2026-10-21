@@ -35,7 +35,7 @@ type BusInService struct {
 	Vehicle      string           `db:"vehicle" json:"-"`
 	VehicleInfo  VehicleInService `json:"vehicle_info"`
 	Lat          *float32         `db:"lat" json:"vehicle_lat"`
-	Long         *float32         `db:"longitude" json:"vehicle_long"`
+	Long         *float32         `db:"long,longitude" json:"vehicle_long"`
 	LastUpdate   time.Time        `db:"timestamp" json:"last_update"`
 	NextStop     *StopWDel        `json:"next_stop"`
 }
@@ -94,4 +94,17 @@ type RouteInfo struct {
 	RouteId   string `db:"route_id" json:"route_id"`
 	InfobusId int    `db:"infobus_id" json:"infobus_id"`
 	PDFLink   string `db:"pdf_link" json:"pdf_link"`
+}
+
+type Trip struct {
+	TripInfo  TripInfo          `json:"trip_info"`
+	StopTimes []StopTimesResult `json:"stop_times"`
+}
+
+type TripInfo struct {
+	Basin       string `db:"basin" json:"basin"`
+	Line        string `db:"disp_linea" json:"line"`
+	Destination string `db:"disp_dest" json:"destination"`
+	TripId      string `db:"trip_id" json:"trip_id"`
+	ShapeId     string `db:"shape_id" json:"shape_id"`
 }
