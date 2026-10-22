@@ -1,4 +1,4 @@
-package handler
+package cors
 
 import (
 	"net/http"
@@ -6,10 +6,8 @@ import (
 	"strings"
 )
 
-func AddCORS(w http.ResponseWriter, r *http.Request) {
-
+func Add(w http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")
-
 	if origin != "" && isAllowedOrigin(origin) {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Vary", "Origin")
@@ -24,7 +22,5 @@ func isAllowedOrigin(origin string) bool {
 			return true
 		}
 	}
-
-	//Localhost with any port
 	return strings.HasPrefix(origin, "http://localhost:") || strings.HasPrefix(origin, "http://127.0.0.1:")
 }

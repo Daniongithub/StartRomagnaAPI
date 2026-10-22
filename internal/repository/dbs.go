@@ -250,7 +250,6 @@ func GetDBStatus(db *sql.DB) (model.DBStatus, error) {
 }
 
 func HaltLocal() error {
-	config.SCHEDULER.Shutdown()
 
 	db := DB_STATIC
 	if _, err := db.Exec("SET GLOBAL read_only = 1"); err != nil {

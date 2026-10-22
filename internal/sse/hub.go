@@ -3,7 +3,7 @@ package sse
 import (
 	"fmt"
 	"net/http"
-	"startromagnaapi/internal/handler"
+	"startromagnaapi/internal/cors"
 	"sync"
 	"time"
 )
@@ -61,7 +61,7 @@ func (h *Hub) SSEHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("X-Accel-Buffering", "no") // importante se avete nginx davanti, altrimenti bufferizza e SSE non arriva in tempo reale
 
-	handler.AddCORS(w, r)
+	cors.Add(w, r)
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {

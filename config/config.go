@@ -43,6 +43,11 @@ var (
 	SCHEDULER              gocron.Scheduler
 )
 
+const (
+	FEED_URL       = "https://www.startromagna.it/infobus/feed/"
+	ROUTE_INFO_URL = "https://www.startromagna.it/orari-e-percorsi-vers-2-0/"
+)
+
 func LoadConf() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalln("Errore: nessun file .env trovato. Il programma non può continuare.", err)

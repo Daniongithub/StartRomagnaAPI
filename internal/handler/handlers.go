@@ -6,21 +6,18 @@ import (
 	"fmt"
 	"net/http"
 	"startromagnaapi/config"
+	"startromagnaapi/internal/cors"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/static"
+	"startromagnaapi/internal/scheduler"
 	"startromagnaapi/internal/service"
 	"strconv"
 	"sync/atomic"
 )
 
-const (
-	FEED_URL       = "https://www.startromagna.it/infobus/feed/"
-	ROUTE_INFO_URL = "https://www.startromagna.it/orari-e-percorsi-vers-2-0/"
-)
-
 // GET /health
 func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 
 	repository.IsPrimary(repository.DB_STATIC)
 	results, err := repository.GetDBStatus(repository.DB_STATIC.DB)
@@ -35,8 +32,8 @@ func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /rss/feed
 func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
-	results, err := service.GetRSSFeed(FEED_URL)
+	cors.Add(w, r)
+	results, err := service.GetRSSFeed(config.FEED_URL)
 
 	if err != nil {
 		if errors.Is(err, service.NoArrivals) {
@@ -57,7 +54,7 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /routeinfo
 func RouteinfoHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	results := static.GetRouteInfos()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -66,7 +63,7 @@ func RouteinfoHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /arrivals/{stopcode}
 func ArrivalsHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	code := r.PathValue("stopcode")
 
 	results, err := service.ProcessArrivals(code)
@@ -86,7 +83,7 @@ func ArrivalsHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /busesinservice
 func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	results, err := service.ProcessBusesInService()
 	if err != nil {
 		if errors.Is(err, service.NoBusesInService) {
@@ -104,7 +101,7 @@ func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /nextstops/{tripid}
 func NextstopsHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	tripid := r.PathValue("tripid")
 
 	results := service.ProcessNextstops(tripid)
@@ -115,7 +112,7 @@ func NextstopsHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /timetable/{basin}/{routeid}/{directionid}
 func TimetableHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	basin := r.PathValue("basin")
 	if basin != "RA" && basin != "FC" && basin != "RN" {
 		http.Error(w, "Invalid basin", http.StatusBadRequest)
@@ -136,7 +133,7 @@ func TimetableHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /vehiclepositions
 func VehiclepositionsHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	results := service.ProcessVehiclePositions()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -145,7 +142,7 @@ func VehiclepositionsHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /vehiclepos/{basin}
 func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -161,7 +158,7 @@ func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /vehicleposition/{vehicleid}
 func VehiclepositionIDHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	vehicleId := r.PathValue("vehicleid")
 
 	results := service.ProcessVehiclePositionID(vehicleId)
@@ -172,7 +169,7 @@ func VehiclepositionIDHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /shape/{basin}/{shapeId}
 func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	shape_id := r.PathValue("shapeId")
 
 	basin := r.PathValue("basin")
@@ -190,7 +187,7 @@ func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /vehicleinfo/{vehicle}
 func VehicleinfoHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	vehicleId := r.PathValue("vehicle")
 
 	results, err := service.ProcessVehicleInfo(vehicleId)
@@ -213,7 +210,7 @@ func StopsinfoHandler(w http.ResponseWriter, r *http.Request) {
 	basin := r.PathValue("basin")
 	stopCode := r.PathValue("stopcode")
 
-	AddCORS(w, r)
+	cors.Add(w, r)
 	results := service.ProcessStopsInfo(stopCode, basin)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -224,7 +221,7 @@ func StopsinfoHandler(w http.ResponseWriter, r *http.Request) {
 func AnnouncementsHandler(w http.ResponseWriter, r *http.Request) {
 	announcements := static.GetAnnouncements()
 
-	AddCORS(w, r)
+	cors.Add(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(announcements)
 }
@@ -235,7 +232,7 @@ func AnnouncementsHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /static/info
 func StaticInfoHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 
 	min_dateRA, max_dateRA := static.GetCalDatesRange("RA")
 	min_dateFC, max_dateFC := static.GetCalDatesRange("FC")
@@ -250,7 +247,7 @@ func StaticInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /static/trips/{basin}
 func TripsBasinHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -266,7 +263,7 @@ func TripsBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /static/routes/{basin}
 func RoutesBasinHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -282,7 +279,7 @@ func RoutesBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /static/shapes/{basin}
 func ShapesBasinHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -298,7 +295,7 @@ func ShapesBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /static/stops/{basin}
 func StopsBasinHandler(w http.ResponseWriter, r *http.Request) {
-	AddCORS(w, r)
+	cors.Add(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -325,6 +322,11 @@ func PromoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	db := repository.DB_ORCH // same db instance
 
+	if _, err := db.Exec("SET SESSION sql_log_bin = 0"); err != nil {
+		http.Error(w, fmt.Sprintf("Stop binlog failed: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer db.Exec("SET SESSION sql_log_bin = 1")
 	if _, err := db.Exec(`STOP SLAVE`); err != nil {
 		http.Error(w, fmt.Sprintf("Stop slave failed: %v", err), http.StatusInternalServerError)
 		return
@@ -342,6 +344,8 @@ func PromoteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Grant privileges failed: %v", err), http.StatusInternalServerError)
 		return
 	}
+
+	scheduler.Start()
 
 	repository.IsPrimary(repository.DB_STATIC)
 	w.Header().Set("Content-Type", "application/json")
@@ -372,6 +376,11 @@ func DemoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	db := repository.DB_ORCH
 
+	if _, err := db.Exec("SET SESSION sql_log_bin = 0"); err != nil {
+		http.Error(w, fmt.Sprintf("Stop binlog failed: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer db.Exec("SET SESSION sql_log_bin = 1")
 	if _, err := db.Exec(`
 		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_static.* FROM '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
 		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_rt.*     FROM '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
@@ -381,6 +390,7 @@ func DemoteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Revoke privileges failed: %v", err), http.StatusInternalServerError)
 		return
 	}
+	scheduler.Stop()
 	if _, err := db.Exec("STOP SLAVE"); err != nil {
 		http.Error(w, fmt.Sprintf("Stop slave failed: %v", err), http.StatusInternalServerError)
 		return
@@ -408,6 +418,7 @@ func HaltHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	scheduler.Stop()
 	if err := repository.HaltLocal(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -443,6 +454,7 @@ func ResyncHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "resync già in corso", http.StatusConflict)
 		return
 	}
+	scheduler.Stop()
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(map[string]string{"status": "resync avviato"})
 	go func() {

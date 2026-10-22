@@ -10,6 +10,38 @@ import (
 	"github.com/go-co-op/gocron/v2"
 )
 
+// internal/scheduler/cron.go — aggiungi in cima al file
+import "sync"
+
+var (
+	mu      sync.Mutex
+	running gocron.Scheduler
+)
+
+func Start() error {
+	mu.Lock()
+	defer mu.Unlock()
+	if running != nil {
+		return nil
+	}
+	s, err := InitScheduler()
+	if err != nil {
+		return err
+	}
+	running = s
+	return nil
+}
+
+func Stop() {
+	mu.Lock()
+	defer mu.Unlock()
+	if running == nil {
+		return
+	}
+	running.Shutdown()
+	running = nil
+}
+
 func InitScheduler() (gocron.Scheduler, error) {
 	s, err := gocron.NewScheduler()
 	if err != nil {

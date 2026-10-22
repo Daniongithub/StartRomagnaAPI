@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"startromagnaapi/config"
 	"startromagnaapi/internal/auth"
-	"startromagnaapi/internal/handler"
 	"startromagnaapi/internal/repository/static"
 	"startromagnaapi/internal/service"
 	"time"
@@ -46,7 +45,7 @@ func UpdateStatic() {
 }
 
 func UpdateRouteInfos() {
-	raw, err := service.ScrapeRouteInfo(handler.ROUTE_INFO_URL)
+	raw, err := service.ScrapeRouteInfo(config.ROUTE_INFO_URL)
 	if err != nil {
 		fmt.Println("Error scraping routeinfo remote:", err)
 		return
