@@ -329,13 +329,19 @@ func PromoteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Stop slave failed: %v", err), http.StatusInternalServerError)
 		return
 	}
+	query := `
+		GRANT INSERT, UPDATE, DELETE ON start_gtfs_static.* TO '` + config.DB_USERNAME + `'@'%';
+		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO '` + config.DB_USERNAME + `'@'%';
+		GRANT UPDATE ON ertpl_mezzi.*                       TO '` + config.DB_USERNAME + `'@'%';
+		FLUSH PRIVILEGES;
+	`
 	if _, err := db.Exec(`
 		GRANT INSERT, UPDATE, DELETE ON start_gtfs_static.* TO '` + config.DB_USERNAME + `'@'%';
 		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO '` + config.DB_USERNAME + `'@'%';
 		GRANT UPDATE ON ertpl_mezzi.*                       TO '` + config.DB_USERNAME + `'@'%';
 		FLUSH PRIVILEGES;
 	`); err != nil {
-		http.Error(w, fmt.Sprintf("Grant privileges failed: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Grant privileges failed: %v", err, query), http.StatusInternalServerError)
 		return
 	}
 
