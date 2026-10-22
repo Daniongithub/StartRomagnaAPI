@@ -341,7 +341,7 @@ func PromoteHandler(w http.ResponseWriter, r *http.Request) {
 		GRANT UPDATE ON ertpl_mezzi.*                       TO '` + config.DB_USERNAME + `'@'%';
 		FLUSH PRIVILEGES;
 	`); err != nil {
-		http.Error(w, fmt.Sprintf("Grant privileges failed: %v", err, query), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Grant privileges failed: %v \n %v", err, query), http.StatusInternalServerError)
 		return
 	}
 
