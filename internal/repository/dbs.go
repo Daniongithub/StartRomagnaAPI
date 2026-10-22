@@ -27,7 +27,7 @@ var (
 )
 
 func newDB(host string, port int, user, password, dbname string) (*sqlx.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true", user, password, host, port, dbname)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&multiStatements=true", user, password, host, port, dbname)
 
 	db, err := sqlx.Connect("mysql", dsn)
 	if err != nil {
