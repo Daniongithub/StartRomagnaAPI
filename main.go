@@ -37,7 +37,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-
+	
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
 
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)

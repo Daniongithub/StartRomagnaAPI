@@ -329,12 +329,12 @@ func PromoteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Stop slave failed: %v", err), http.StatusInternalServerError)
 		return
 	}
-	if _, err := db.Exec(fmt.Sprintf(`
-		GRANT INSERT, UPDATE, DELETE ON start_gtfs_static.* TO '%v'@'%';
-		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO '%v'@'%';
-		GRANT UPDATE ON ertpl_mezzi.*                       TO '%v'@'%';
+	if _, err := db.Exec(`
+		GRANT INSERT, UPDATE, DELETE ON start_gtfs_static.* TO '` + config.DB_USERNAME + `'@'%';
+		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO '` + config.DB_USERNAME + `'@'%';
+		GRANT UPDATE ON ertpl_mezzi.*                       TO '` + config.DB_USERNAME + `'@'%';
 		FLUSH PRIVILEGES;
-	`, config.DB_USERNAME, config.DB_USERNAME, config.DB_USERNAME)); err != nil {
+	`); err != nil {
 		http.Error(w, fmt.Sprintf("Grant privileges failed: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -367,12 +367,12 @@ func DemoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	db := repository.DB_ORCH
 
-	if _, err := db.Exec(fmt.Sprintf(`
-		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_static.* FROM '%v'@'%';
-		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_rt.*     FROM '%v'@'%';
-		REVOKE UPDATE ON ertpl_mezzi.*                       FROM '%v'@'%';
+	if _, err := db.Exec(`
+		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_static.* FROM '` + config.DB_USERNAME + `'@'%';
+		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_rt.*     FROM '` + config.DB_USERNAME + `'@'%';
+		REVOKE UPDATE ON ertpl_mezzi.*                       FROM '` + config.DB_USERNAME + `'@'%';
 		FLUSH PRIVILEGES;
-	`, config.DB_USERNAME, config.DB_USERNAME, config.DB_USERNAME)); err != nil {
+	`); err != nil {
 		http.Error(w, fmt.Sprintf("Revoke privileges failed: %v", err), http.StatusInternalServerError)
 		return
 	}
