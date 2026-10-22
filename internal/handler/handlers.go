@@ -329,22 +329,21 @@ func PromoteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Stop slave failed: %v", err), http.StatusInternalServerError)
 		return
 	}
-	query := `
-		GRANT INSERT, UPDATE, DELETE ON start_gtfs_static.* TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
-		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
-		GRANT UPDATE ON ertpl_mezzi.*                       TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
-		FLUSH PRIVILEGES;
-	`
+	if _, err := db.Exec(`RESET SLAVE ALL`); err != nil {
+		http.Error(w, fmt.Sprintf("Reset slave failed: %v", err), http.StatusInternalServerError)
+		return
+	}
 	if _, err := db.Exec(`
 		GRANT INSERT, UPDATE, DELETE ON start_gtfs_static.* TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
 		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
 		GRANT UPDATE ON ertpl_mezzi.*                       TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
 		FLUSH PRIVILEGES;
 	`); err != nil {
-		http.Error(w, fmt.Sprintf("Grant privileges failed: %v \n %v", err, query), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Grant privileges failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 
+	repository.IsPrimary(repository.DB_STATIC)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "promoted"})
 }
@@ -437,16 +436,17 @@ func ResyncHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var resyncInProgress atomic.Bool
-	
-    if !arbiterAuthorized(r) { /* ... */ }
-    if !resyncInProgress.CompareAndSwap(false, true) {
-        http.Error(w, "resync già in corso", http.StatusConflict)
-        return
-    }
-    w.WriteHeader(http.StatusAccepted)
-    json.NewEncoder(w).Encode(map[string]string{"status": "resync avviato"})
-    go func() {
-        defer resyncInProgress.Store(false)
-        repository.RunResync(req.MasterHost)
-    }()
+
+	if !arbiterAuthorized(r) { /* ... */
+	}
+	if !resyncInProgress.CompareAndSwap(false, true) {
+		http.Error(w, "resync già in corso", http.StatusConflict)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+	json.NewEncoder(w).Encode(map[string]string{"status": "resync avviato"})
+	go func() {
+		defer resyncInProgress.Store(false)
+		repository.RunResync(req.MasterHost)
+	}()
 }
