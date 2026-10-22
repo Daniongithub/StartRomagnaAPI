@@ -330,15 +330,15 @@ func PromoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	query := `
-		GRANT INSERT, UPDATE, DELETE ON start_gtfs_static.* TO '` + config.DB_USERNAME + `'@'%';
-		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO '` + config.DB_USERNAME + `'@'%';
-		GRANT UPDATE ON ertpl_mezzi.*                       TO '` + config.DB_USERNAME + `'@'%';
+		GRANT INSERT, UPDATE, DELETE ON start_gtfs_static.* TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
+		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
+		GRANT UPDATE ON ertpl_mezzi.*                       TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
 		FLUSH PRIVILEGES;
 	`
 	if _, err := db.Exec(`
-		GRANT INSERT, UPDATE, DELETE ON start_gtfs_static.* TO '` + config.DB_USERNAME + `'@'%';
-		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO '` + config.DB_USERNAME + `'@'%';
-		GRANT UPDATE ON ertpl_mezzi.*                       TO '` + config.DB_USERNAME + `'@'%';
+		GRANT INSERT, UPDATE, DELETE ON start_gtfs_static.* TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
+		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
+		GRANT UPDATE ON ertpl_mezzi.*                       TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
 		FLUSH PRIVILEGES;
 	`); err != nil {
 		http.Error(w, fmt.Sprintf("Grant privileges failed: %v \n %v", err, query), http.StatusInternalServerError)
@@ -374,9 +374,9 @@ func DemoteHandler(w http.ResponseWriter, r *http.Request) {
 	db := repository.DB_ORCH
 
 	if _, err := db.Exec(`
-		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_static.* FROM '` + config.DB_USERNAME + `'@'%';
-		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_rt.*     FROM '` + config.DB_USERNAME + `'@'%';
-		REVOKE UPDATE ON ertpl_mezzi.*                       FROM '` + config.DB_USERNAME + `'@'%';
+		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_static.* FROM '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
+		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_rt.*     FROM '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
+		REVOKE UPDATE ON ertpl_mezzi.*                       FROM '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
 		FLUSH PRIVILEGES;
 	`); err != nil {
 		http.Error(w, fmt.Sprintf("Revoke privileges failed: %v", err), http.StatusInternalServerError)

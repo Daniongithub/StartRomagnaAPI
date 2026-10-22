@@ -25,6 +25,7 @@ var (
 	DB_HOST          string
 	DB_PORT          int
 	DB_USERNAME      string
+	DB_DOMAIN        string
 	DB_PASSWORD      string
 	DB_ORCH_USERNAME string
 	DB_ORCH_PASSWORD string
@@ -90,6 +91,7 @@ func LoadConf() {
 	DB_HOST = getRequired("DB_HOST")
 	DB_PORT = getRequiredInt("DB_PORT")
 	DB_USERNAME = getRequired("DB_USERNAME")
+	DB_DOMAIN = getRequired("DB_DOMAIN")
 	DB_PASSWORD = getRequired("DB_PASSWORD")
 	DB_ORCH_USERNAME = getRequired("DB_ORCH_USERNAME")
 	DB_ORCH_PASSWORD = getRequired("DB_ORCH_PASSWORD")
