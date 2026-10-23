@@ -16,6 +16,16 @@ func GetRouteInfos() []model.RouteInfo {
 	return results
 }
 
+func GetInfoBusId(routeId string) []string {
+	var results []string
+	err := repository.DB_STATIC.Select(&results, "SELECT infobus_id FROM route_infos WHERE route_id = ?", routeId)
+	if err != nil {
+		fmt.Println("GetInfoBusId error:", err)
+	}
+	
+	return results
+}
+
 func SaveRouteInfos(infos []model.RouteInfo) {
 	values := make([][]any, 0, len(infos))
 
