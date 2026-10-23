@@ -13,24 +13,24 @@ import (
 func ScrapeRouteInfo(url string) (*model.RouteInfoRaw, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("GetRouteProblems: richiesta HTTP fallita: %w", err)
+		return nil, fmt.Errorf("ScrapeRouteInfo: richiesta HTTP fallita: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("GetRouteProblems: status code inatteso: %d", resp.StatusCode)
+		return nil, fmt.Errorf("ScrapeRouteInfo: status code inatteso: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("GetRouteProblems: lettura body fallita: %w", err)
+		return nil, fmt.Errorf("ScrapeRouteInfo: lettura body fallita: %w", err)
 	}
 	html := string(body)
 
 	const marker = "var SRO_CONFIG ="
 	_, after, ok := strings.Cut(html, marker)
 	if !ok {
-		return nil, fmt.Errorf("GetRouteProblems: marker %q non trovato nella pagina", marker)
+		return nil, fmt.Errorf("ScrapeRouteInfo: marker %q non trovato nella pagina", marker)
 	}
 
 	// Primo livello: può essere un oggetto diretto {...} oppure una
@@ -39,7 +39,7 @@ func ScrapeRouteInfo(url string) (*model.RouteInfoRaw, error) {
 	var raw json.RawMessage
 	dec := json.NewDecoder(strings.NewReader(after))
 	if err := dec.Decode(&raw); err != nil {
-		return nil, fmt.Errorf("GetRouteProblems: decodifica primo livello fallita: %w", err)
+		return nil, fmt.Errorf("ScrapeRouteInfo: decodifica primo livello fallita: %w", err)
 	}
 
 	jsonBytes := []byte(raw)
@@ -49,14 +49,14 @@ func ScrapeRouteInfo(url string) (*model.RouteInfoRaw, error) {
 		// Caso stringa: è JSON-escaped, va "srotolato" un livello in più.
 		var inner string
 		if err := json.Unmarshal(jsonBytes, &inner); err != nil {
-			return nil, fmt.Errorf("GetRouteProblems: unescape stringa fallito: %w", err)
+			return nil, fmt.Errorf("ScrapeRouteInfo: unescape stringa fallito: %w", err)
 		}
 		jsonBytes = []byte(inner)
 	}
 
 	var config model.RouteInfoRaw
 	if err := json.Unmarshal(jsonBytes, &config); err != nil {
-		return nil, fmt.Errorf("GetRouteProblems: unmarshal config fallito: %w", err)
+		return nil, fmt.Errorf("ScrapeRouteInfo: unmarshal config fallito: %w", err)
 	}
 
 	return &config, nil
@@ -69,31 +69,25 @@ func ProcessRouteInfo(infos model.RouteInfoRaw) []model.RouteInfo {
 		routesMap[val.Route_id] = true
 	}
 	var processed []model.RouteInfo
-	for _, slice := range infos.Areas {
+	for area, slice := range infos.Areas {
 		for _, val := range slice {
 			var basin string
-			if strings.Contains(val.Pdf, "RA") {
+			if area == "ravenna" {
 				basin = "RA"
 			}
-			if strings.Contains(val.Pdf, "FC") {
+			if area == "cesenatico" {
 				basin = "FC"
 			}
-			if strings.Contains(val.Pdf, "CE") {
+			if area == "cesena" {
 				basin = "FC"
 			}
-			if strings.Contains(val.Pdf, "CO") {
+			if area == "forli" {
 				basin = "FC"
 			}
-			if strings.Contains(val.Pdf, "FO") {
+			if area == "extra" {
 				basin = "FC"
 			}
-			if strings.Contains(val.Pdf, "RN") {
-				basin = "RN"
-			}
-			if strings.Contains(val.Pdf, "Linea-5") {
-				basin = "RN"
-			}
-			if strings.Contains(val.Pdf, "Linea-10") {
+			if area == "rimini" {
 				basin = "RN"
 			}
 			if val.Route == "1-2CO" {
@@ -114,8 +108,9 @@ func ProcessRouteInfo(infos model.RouteInfoRaw) []model.RouteInfo {
 			_, ok := routesMap[val.Route]
 			if ok {
 				processed = append(processed, model.RouteInfo{
-					Basin: basin,
+					Basin:     basin,
 					RouteId:   val.Route,
+					StartText: val.Title,
 					InfobusId: val.InfoBusId,
 					PDFLink:   val.Pdf,
 				})

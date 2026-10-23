@@ -92,6 +92,7 @@ type Announcement struct {
 type RouteInfo struct {
 	Basin     string `db:"basin" json:"basin"`
 	RouteId   string `db:"route_id" json:"route_id"`
+	StartText string `db:"start_text" json:"start_text"`
 	InfobusId int    `db:"infobus_id" json:"infobus_id"`
 	PDFLink   string `db:"pdf_link" json:"pdf_link"`
 }
