@@ -2,6 +2,10 @@ package scheduler
 
 import (
 	"fmt"
+	"log"
+	"sync"
+	"time"
+
 	"startromagnaapi/internal/gtfs"
 	"startromagnaapi/internal/repository/mezzi"
 	"startromagnaapi/internal/repository/realtime"
@@ -9,9 +13,6 @@ import (
 
 	"github.com/go-co-op/gocron/v2"
 )
-
-// internal/scheduler/cron.go — aggiungi in cima al file
-import "sync"
 
 var (
 	mu      sync.Mutex
@@ -43,75 +44,46 @@ func Stop() {
 }
 
 func InitScheduler() (gocron.Scheduler, error) {
-	s, err := gocron.NewScheduler()
+	loc, err := time.LoadLocation("Europe/Rome")
 	if err != nil {
 		return nil, err
 	}
-
-	_, err = s.NewJob(gocron.CronJob("0 4 * * *", false), gocron.NewTask(updateStaticTask))
-
-	_, err = s.NewJob(gocron.CronJob("0 0 * * *", false), gocron.NewTask(deleteServiceAlerts))
-
-	_, err = s.NewJob(gocron.CronJob("* * * * *", false), gocron.NewTask(updateServiceAlerts, &sse.SSE_HUB))
-
-	_, err = s.NewJob(gocron.CronJob("*/5 * * * *", false), gocron.NewTask(updateVehiclesStatus))
-
-	_, err = s.NewJob(gocron.CronJob("*/15 * * * * *", true), gocron.NewTask(updateTripUpdates, &sse.SSE_HUB), gocron.WithSingletonMode(gocron.LimitModeReschedule))
-
-	_, err = s.NewJob(gocron.CronJob("*/15 * * * * *", true), gocron.NewTask(updateVehiclePositions, &sse.SSE_HUB), gocron.WithSingletonMode(gocron.LimitModeReschedule))
-	
-	//_, err = s.NewJob(gocron.CronJob("*/15 * * * * *", true), gocron.NewTask(updateRouteInfos), gocron.WithSingletonMode(gocron.LimitModeReschedule))
-	_, err = s.NewJob(gocron.CronJob("0 0 * * *", false), gocron.NewTask(updateRouteInfos), gocron.WithSingletonMode(gocron.LimitModeReschedule))
-
+	s, err := gocron.NewScheduler(gocron.WithLocation(loc))
 	if err != nil {
 		return nil, err
 	}
-
+	jobs := []struct {
+		cron    string
+		seconds bool
+		task    func()
+	}{
+		{"0 4 * * *", false, func() { run("static", gtfs.UpdateStatic, "") }},
+		{"0 0 * * *", false, realtime.DeleteAllServiceAlerts},
+		{"* * * * *", false, func() { run("service alerts", gtfs.UpdateAlerts, "service_alerts") }},
+		{"*/5 * * * *", false, mezzi.UpdateVehiclesStatus},
+		{"*/15 * * * * *", true, func() { run("trip updates", gtfs.UpdateTripUpdates, "trip_updates") }},
+		{"*/15 * * * * *", true, func() { run("vehicle positions", gtfs.UpdateVehiclePositions, "vehicle_positions") }},
+		{"0 0 * * *", false, func() { run("route infos", gtfs.UpdateRouteInfos, "") }},
+	}
+	for _, job := range jobs {
+		if _, err := s.NewJob(gocron.CronJob(job.cron, job.seconds), gocron.NewTask(job.task), gocron.WithSingletonMode(gocron.LimitModeReschedule)); err != nil {
+			s.Shutdown()
+			return nil, fmt.Errorf("Schedule %s: %w", job.cron, err)
+		}
+	}
 	s.Start()
 	return s, nil
 }
 
-func updateStaticTask() {
-	fmt.Println("Task delle 04:00, aggiorno dati GTFS statici...")
-	gtfs.UpdateStatic()
-	fmt.Println("Task OK.")
-}
-
-func updateServiceAlerts(hub *sse.Hub) {
-	fmt.Println("Task update Service Alerts")
-	gtfs.UpdateAlerts()
-	hub.Broadcast(sse.Event{Type: "service_alerts"})
-	fmt.Println("Task OK.")
-}
-
-func deleteServiceAlerts() {
-	fmt.Println("Task delete Service Alerts")
-	realtime.DeleteAllServiceAlerts()
-	fmt.Println("Task OK.")
-}
-
-func updateTripUpdates(hub *sse.Hub) {
-	fmt.Println("Task update Trip Updates")
-	gtfs.UpdateTripUpdates()
-	hub.Broadcast(sse.Event{Type: "trip_updates"})
-	fmt.Println("Task OK.")
-}
-
-func updateVehiclePositions(hub *sse.Hub) {
-	fmt.Println("Task update Vehicle Positions")
-	gtfs.UpdateVehiclePositions()
-	hub.Broadcast(sse.Event{Type: "vehicle_positions"})
-	fmt.Println("Task OK.")
-}
-
-func updateVehiclesStatus() {
-	fmt.Println("Task update Vehicles Status")
-	mezzi.UpdateVehiclesStatus()
-	fmt.Println("Task OK.")
-}
-
-func updateRouteInfos() {
-	fmt.Println("Task update Route Infos")
-	gtfs.UpdateRouteInfos()
-	fmt.Println("Task OK.")
+func run(name string, update func() error, event string) {
+	// start := time.Now()
+	if err := update(); err != nil {
+		log.Printf("Failed to update %s: %v", name, err)
+		return
+	}
+	if event != "" {
+		sse.SSE_HUB.Broadcast(sse.Event{Type: event})
+	}
+	log.Printf("Updated %s", name)
+	// log.Printf("Updated %s in %s", name, time.Since(start))
 }

@@ -3,44 +3,10 @@ package model
 import (
 	"database/sql/driver"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 )
-
-type ServiceAlertsResult struct {
-	Basin        string    `db:"basin" json:"basin"`
-	Id           string    `db:"id" json:"id"`
-	Start        MySQLTime `db:"start" json:"start"`
-	End          MySQLTime `db:"end" json:"end"`
-	Route_id     string    `db:"route_id" json:"route_id"`
-	Route_type   string    `db:"route_type" json:"route_type"`
-	Trip_id      string    `db:"trip_id" json:"trip_id"`
-	Direction_id int       `db:"direction_id" json:"direction_id"`
-	Start_time   MySQLTime `db:"start_time" json:"start_time"`
-	Start_date   time.Time `db:"start_date" json:"start_date"`
-	Stop_id      string    `db:"stop_id" json:"stop_id"`
-}
-
-type TripUpdatesResult struct {
-	Basin                 string    `db:"basin" json:"basin"`
-	Id                    string    `db:"id" json:"id"`
-	Trip_id               string    `db:"trip_id" json:"trip_id"`
-	Route_id              string    `db:"route_id" json:"route_id"`
-	Start                 MySQLTime `db:"start" json:"start"`
-	End                   MySQLTime `db:"end" json:"end"`
-	Direction_id          int       `db:"direction_id" json:"direction_id"`
-	Start_time            MySQLTime `db:"start_time" json:"start_time"`
-	Start_date            time.Time `db:"start_date" json:"start_date"`
-	Schedule_relationship *string   `db:"schedule_relationship" json:"schedule_relationship"`
-	Vehicle               int       `db:"vehicle" json:"vehicle"`
-	Timestamp             time.Time `db:"timestamp" json:"timestamp"`
-	Stop_time_updates     []StopTime
-}
-
-type StopTime struct {
-	Trip_id       string `db:"trip_id" json:"trip_id"`
-	Stop_sequence int    `db:"stop_sequence" json:"stop_sequence"`
-	Delay         int    `db:"delay" json:"delay"`
-}
 
 type MySQLTime struct {
 	time.Time
@@ -48,6 +14,7 @@ type MySQLTime struct {
 
 func (mt *MySQLTime) Scan(value interface{}) error {
 	if value == nil {
+		mt.Time = time.Time{}
 		return nil
 	}
 
@@ -57,27 +24,45 @@ func (mt *MySQLTime) Scan(value interface{}) error {
 		raw = v
 	case string:
 		raw = []byte(v)
+	case time.Time:
+		mt.Time = v
+		return nil
 	default:
 		return fmt.Errorf("Unsupported Scan type for MySQLTime: %T", value)
 	}
 
-	parsed, err := time.Parse("15:04:05", string(raw))
-	if err != nil {
-		// prova anche il formato con microsecondi
-		parsed, err = time.Parse("15:04:05.999999", string(raw))
-		if err != nil {
-			return fmt.Errorf("Cannot parse time %q: %w", raw, err)
-		}
+	parts := strings.SplitN(string(raw), ":", 2)
+	if len(parts) != 2 {
+		return fmt.Errorf("Invalid MySQL TIME %q", raw)
 	}
-
-	mt.Time = parsed
+	hours, err := strconv.Atoi(parts[0])
+	if err != nil || hours < 0 || hours > 838 {
+		return fmt.Errorf("Invalid GTFS hours %q", raw)
+	}
+	rest, err := time.Parse("04:05", parts[1])
+	if err != nil {
+		return fmt.Errorf("Invalid MySQL TIME %q: %w", raw, err)
+	}
+	mt.Time = time.Date(0, 1, 1, hours, rest.Minute(), rest.Second(), rest.Nanosecond(), time.UTC)
 	return nil
 }
 
 func (mt MySQLTime) Value() (driver.Value, error) {
-	return mt.Time.Format("15:04:05"), nil
+	return mt.SQLString(), nil
 }
 
-func (mt MySQLTime) String() (driver.Value, error) {
-	return mt.Time.Format("15:04:05"), nil
+// SQLString preserves GTFS service hours above 24:00:00.
+func (mt MySQLTime) SQLString() string {
+	hours := mt.Hour()
+	if mt.Year() == 0 {
+		hours += (mt.YearDay() - 1) * 24
+	}
+	return fmt.Sprintf("%02d:%02d:%02d", hours, mt.Minute(), mt.Second())
+}
+
+func (mt MySQLTime) ServiceDuration() time.Duration {
+	if mt.Year() == 0 {
+		return mt.Sub(time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC))
+	}
+	return time.Duration(mt.Hour())*time.Hour + time.Duration(mt.Minute())*time.Minute + time.Duration(mt.Second())*time.Second
 }

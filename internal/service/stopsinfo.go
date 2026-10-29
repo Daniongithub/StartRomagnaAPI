@@ -37,7 +37,7 @@ var (
 	}
 )
 
-// firstToken returns the first whitespace-separated word of a line name.
+// Return the first whitespace-separated word of a line name.
 func firstToken(line string) string {
 	fields := strings.Fields(line)
 	if len(fields) == 0 {

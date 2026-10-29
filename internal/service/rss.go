@@ -8,7 +8,7 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-var ErrFeed = errors.New("rss feed error")
+var ErrFeed = errors.New("Rss feed error")
 
 func GetRSSFeed(url string) (model.FeedResponse, error) {
 	parser := gofeed.NewParser()

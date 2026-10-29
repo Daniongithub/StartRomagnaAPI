@@ -3,64 +3,56 @@ package gtfs
 import (
 	"fmt"
 	"net/http"
+	// "log" // Uncomment with the duration metrics below.
+	// "time"
+
 	"startromagnaapi/config"
 	"startromagnaapi/internal/auth"
+	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/static"
 	"startromagnaapi/internal/service"
-	"time"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
+	"github.com/jmoiron/sqlx"
 )
 
-func UpdateStatic() {
-	fmt.Println("Updating static GTFS...")
-	start := time.Now()
-	urlRA := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Ravenna.zip"
-	urlFC := config.START_GTFS_ROOT + "/AVM/GTFSStatic_FOCE.zip"
-	urlRN := config.START_GTFS_ROOT + "/AVM/GTFSStatic_Rimini.zip"
-
-	feedRA, err := getStatic(urlRA, true)
-	if err != nil {
-		fmt.Println("UpdateStatic error reading feed:", err)
+func UpdateStatic() error {
+	// start := time.Now() // Uncomment to measure import duration.
+	feeds := make(map[string]*gtfsparserwr.Feed, 3)
+	for _, source := range []struct {
+		basin, file    string
+		skipValidation bool
+	}{
+		{"RA", "GTFSStatic_Ravenna.zip", true}, {"FC", "GTFSStatic_FOCE.zip", false}, {"RN", "GTFSStatic_Rimini.zip", false},
+	} {
+		feed, err := getStatic(config.START_GTFS_ROOT+"/AVM/"+source.file, source.skipValidation)
+		if err != nil {
+			return fmt.Errorf("Static %s: %w", source.basin, err)
+		}
+		feeds[source.basin] = feed
 	}
-	feedFC, err := getStatic(urlFC, false)
-	if err != nil {
-		fmt.Println("UpdateStatic error reading feed:", err)
+	if err := static.SaveSnapshot(feeds); err != nil {
+		return err
 	}
-	feedRN, err := getStatic(urlRN, false)
-	if err != nil {
-		fmt.Println("UpdateStatic error reading feed:", err)
-	}
-
-	static.SaveTrips(feedRA, feedFC, feedRN)
-	static.SaveCalDates(feedRA, feedFC, feedRN)
-	static.SaveRoutes(feedRA, feedFC, feedRN)
-	static.SaveShapes(feedRA, feedFC, feedRN)
-	static.SaveStops(feedRA, feedFC, feedRN)
-	static.SaveStopTimes(feedRA, feedFC, feedRN)
-	registerShapeIDs()
-
-	elapsed := time.Since(start)
-	fmt.Printf("Updated static GTFS. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)
+	// log.Printf("Static GTFS updated in %s", time.Since(start))
+	return nil
 }
 
-func UpdateRouteInfos() {
+func UpdateRouteInfos() error {
 	raw, err := service.ScrapeRouteInfo(config.ROUTE_INFO_URL)
 	if err != nil {
-		fmt.Println("Error scraping routeinfo remote:", err)
-		return
+		return err
 	}
-	
-	static.ClearRouteInfos()
 	infos := service.ProcessRouteInfo(*raw)
-
-	static.SaveRouteInfos(infos)
-}
-
-func registerShapeIDs() {
-	shapeIDs := static.GetShapeIDs()
-
-	static.SaveShapeIDs(shapeIDs)
+	if len(infos) == 0 {
+		return fmt.Errorf("Route info: no recognized routes, preserving existing data")
+	}
+	return repository.InTransaction(repository.DB_STATIC, func(tx *sqlx.Tx) error {
+		if _, err := tx.Exec("DELETE FROM route_infos"); err != nil {
+			return err
+		}
+		return static.SaveRouteInfos(tx, infos)
+	})
 }
 
 func getStatic(url string, skip_valid bool) (*gtfsparserwr.Feed, error) {
@@ -69,15 +61,19 @@ func getStatic(url string, skip_valid bool) (*gtfsparserwr.Feed, error) {
 		return nil, err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := auth.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Static feed: HTTP %s", resp.Status)
+	}
+
 	feed := gtfsparserwr.NewFeed()
-	//If there are known problems with stop times, this bypasses control
+	// Skip stop-time validation for feeds with known data issues.
 	if skip_valid {
 		feed.Opts.SkipStopTimeValidation = true
 	}

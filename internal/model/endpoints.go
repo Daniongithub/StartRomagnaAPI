@@ -56,6 +56,7 @@ type Arrival struct {
 	IsGPS                bool      `db:"is_GPS" json:"is_GPS"`
 	VehicleConfirmed     bool      `db:"vehicle_confirmed" json:"-"`
 	NextStop             *StopWDel `json:"next_stop"`
+	ServiceDate          time.Time `db:"service_date" json:"-"`
 }
 
 type StopInfo struct {

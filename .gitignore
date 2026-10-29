@@ -30,3 +30,21 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Local review notes and regression tests
+/AGENTS.md
+/REVIEW.md
+/internal/cors/cors_test.go
+/internal/gtfs/import_test.go
+/internal/handler/announcements_test.go
+/internal/model/time_test.go
+/internal/repository/transaction_test.go
+/internal/repository/dbs_test.go
+/internal/repository/realtime/import_test.go
+/internal/repository/static/route_infos_test.go
+/internal/repository/static/snapshot_test.go
+/internal/service/arrivals_test.go
+/internal/service/busesinservice_test.go
+/internal/service/integration_test.go
+/internal/sse/hub_test.go
+/internal/testutil/

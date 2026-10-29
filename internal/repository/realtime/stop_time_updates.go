@@ -2,27 +2,19 @@ package realtime
 
 import (
 	"fmt"
+
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/utils"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
+	"github.com/jmoiron/sqlx"
 )
-
-func GetStopTimeUpdByTripId(trip_id string) []model.StopTime {
-	var results []model.StopTime
-	err := repository.DB_RT.Select(&results, "SELECT * FROM stop_time_updates WHERE trip_id = ?", trip_id)
-	if err != nil {
-		fmt.Println("GetStopTimeUpdByTripId db error:", err)
-	}
-
-	return results
-}
 
 func GetNextStops(tripId string) model.NextStops {
 	var results []model.StopWDel
 	err := repository.DB_RT.Select(&results, `
-		SELECT stu.delay, st.basin, st.arrival_time, st.departure_time, st.stop_id, st.stop_id, s.stop_code, s.stop_name, s.stop_lat, s.stop_lon FROM stop_time_updates AS stu
+		SELECT stu.delay, st.basin, st.arrival_time, st.departure_time, st.stop_id, s.stop_code, s.stop_name, s.stop_lat, s.stop_lon FROM stop_time_updates AS stu
 		INNER JOIN start_gtfs_static.stop_times AS st
 		ON stu.trip_id = st.trip_id AND stu.stop_sequence = st.stop_sequence
 		INNER JOIN start_gtfs_static.stops AS s
@@ -67,46 +59,33 @@ func GetFirstStop(tripId string) *model.StopWDel {
 	return &results[0]
 }
 
-func SaveStopTimeUpd(feeds map[string]*gtfs.FeedMessage) {
-	//Database inserts
-	for _, val := range feeds {
-		for _, val2 := range val.Entity {
-			values := make([][]any, 0, len(val2.TripUpdate.StopTimeUpdate))
-			for _, val3 := range val2.TripUpdate.StopTimeUpdate {
-				if val3.Arrival != nil {
-					values = append(values, []any{
-						val2.TripUpdate.Trip.TripId,
-						val3.StopSequence,
-						val3.Arrival.Delay,
-					})
-				} else {
-					values = append(values, []any{
-						val2.TripUpdate.Trip.TripId,
-						val3.StopSequence,
-						val3.Departure.Delay,
-					})
-				}
+func SaveStopTimeUpd(tx *sqlx.Tx, feeds map[string]*gtfs.FeedMessage) error {
+	values := make([][]any, 0)
+	for _, feed := range feeds {
+		for _, entity := range feed.GetEntity() {
+			update := entity.GetTripUpdate()
+			if entity.GetIsDeleted() || update == nil {
+				continue
 			}
-
-			err := repository.BatchInsertTX(repository.TX_TU, "stop_time_updates", []string{"trip_id", "stop_sequence", "delay"}, values)
-			if err != nil {
-				fmt.Println("SaveStopTimeUpd db error:", err)
+			for _, stop := range update.GetStopTimeUpdate() {
+				// Stop ID only and absolute time only need resolution against the static feed.
+				// Do not invent a zero delay or dereference absent departure events.
+				if stop == nil || stop.StopSequence == nil {
+					continue
+				}
+				var delay *int32
+				if stop.GetArrival() != nil {
+					delay = stop.GetArrival().Delay
+				}
+				if delay == nil && stop.GetDeparture() != nil {
+					delay = stop.GetDeparture().Delay
+				}
+				if delay == nil {
+					continue
+				}
+				values = append(values, []any{update.GetTrip().GetTripId(), stop.GetStopSequence(), *delay})
 			}
 		}
 	}
-}
-
-func DeleteAllStopTimeUpd() {
-	_, err := repository.TX_TU.Exec("DELETE FROM stop_time_updates")
-	if err != nil {
-		fmt.Println("DeleteAllStopTimeUpd db error:", err)
-	}
-}
-
-func convertDelay(delay *int32) int32 {
-	if delay == nil {
-		return 0
-	}
-	out := delay
-	return *out
+	return repository.BatchInsert(tx, "stop_time_updates", []string{"trip_id", "stop_sequence", "delay"}, values)
 }

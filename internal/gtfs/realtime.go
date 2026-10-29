@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
+	"sync"
+
 	"startromagnaapi/config"
 	"startromagnaapi/internal/auth"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/realtime"
-	"strings"
-	"time"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
+	"github.com/jmoiron/sqlx"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -23,93 +25,66 @@ const (
 
 var basins []string = []string{"RA", "FC", "RN"}
 
-func UpdateAlerts() {
-	start := time.Now()
-	feeds := make(map[string]*gtfs.FeedMessage)
-	alertsMap := make(map[string]map[string]bool)
-	tmp := make(map[string]bool)
-
-	alertsRA := realtime.GetServiceAlertsBasin("RA")
-	for _, val := range alertsRA {
-		tmp[val.Id] = true
+// Fetch every basin before touching the DB: a failed download preserves the snapshot.
+func fetchRT(kind string) (map[string]*gtfs.FeedMessage, error) {
+	type result struct {
+		feed *gtfs.FeedMessage
+		err  error
 	}
-	alertsMap["RA"] = tmp
-	alertsFC := realtime.GetServiceAlertsBasin("FC")
-	for _, val := range alertsFC {
-		tmp[val.Id] = true
-
+	results := make([]result, len(basins))
+	var wg sync.WaitGroup
+	for i, basin := range basins {
+		wg.Go(func() { results[i].feed, results[i].err = getRT(rtURL(basin, kind)) })
 	}
-	alertsMap["FC"] = tmp
-	alertsRN := realtime.GetServiceAlertsBasin("RN")
-	for _, val := range alertsRN {
-		tmp[val.Id] = true
-	}
-	alertsMap["RN"] = tmp
-
-	for _, val := range basins {
-		url := rtURL(val, serviceAlerts)
-
-		rt, err := getRT(url)
-		if err != nil {
-			fmt.Println("UpdateAlerts error parsing feed")
+	wg.Wait()
+	feeds := make(map[string]*gtfs.FeedMessage, len(basins))
+	for i, basin := range basins {
+		if results[i].err != nil {
+			return nil, fmt.Errorf("Fetch %s feed for %s: %w", kind, basin, results[i].err)
 		}
-
-		feeds[val] = rt
+		feeds[basin] = results[i].feed
 	}
-
-	realtime.SaveAlerts(feeds, alertsMap)
-	elapsed := time.Since(start)
-	fmt.Printf("Updated ServiceAlerts. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)
+	return feeds, nil
 }
 
-func UpdateTripUpdates() {
-	start := time.Now()
-	feeds := make(map[string]*gtfs.FeedMessage)
-
-	for _, val := range basins {
-		url := rtURL(val, tripUpdates)
-
-		rt, err := getRT(url)
-		if err != nil {
-			fmt.Println("UpdateTripUpdates error parsing feed")
-		}
-
-		feeds[val] = rt
+func UpdateAlerts() error {
+	feeds, err := fetchRT(serviceAlerts)
+	if err != nil {
+		return err
 	}
-
-	repository.StartTransactionTU()
-	realtime.DeleteAllStopTimeUpd()
-	realtime.DeleteAllTripUpdates()
-	realtime.SaveTripUpdates(feeds)
-	realtime.SaveStopTimeUpd(feeds)
-	repository.CommitTransactionTU()
-
-	elapsed := time.Since(start)
-	fmt.Printf("Updated TripUpdates. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)
+	return realtime.SaveAlerts(feeds)
 }
 
-func UpdateVehiclePositions() {
-	start := time.Now()
-	feeds := make(map[string]*gtfs.FeedMessage)
-
-	for _, val := range basins {
-		url := rtURL(val, vehiclePositions)
-
-		rt, err := getRT(url)
-		if err != nil {
-			fmt.Println("UpdateVehiclePositions error parsing feed")
-		}
-
-		feeds[val] = rt
+func UpdateTripUpdates() error {
+	feeds, err := fetchRT(tripUpdates)
+	if err != nil {
+		return err
 	}
+	return repository.InTransaction(repository.DB_RT, func(tx *sqlx.Tx) error {
+		if _, err := tx.Exec("DELETE FROM stop_time_updates"); err != nil {
+			return err
+		}
+		if _, err := tx.Exec("DELETE FROM trip_updates"); err != nil {
+			return err
+		}
+		if err := realtime.SaveTripUpdates(tx, feeds); err != nil {
+			return err
+		}
+		return realtime.SaveStopTimeUpd(tx, feeds)
+	})
+}
 
-	repository.StartTransactionVP()
-	realtime.DeleteAllVehiclePositions()
-	realtime.SaveVehiclePositions(feeds)
-	repository.CommitTransactionVP()
-
-	elapsed := time.Since(start)
-	fmt.Printf("Updated UpdateVehiclePositions. Elapsed: %d min %d sec\n", int(elapsed.Minutes()), int(elapsed.Seconds())%60)
+func UpdateVehiclePositions() error {
+	feeds, err := fetchRT(vehiclePositions)
+	if err != nil {
+		return err
+	}
+	return repository.InTransaction(repository.DB_RT, func(tx *sqlx.Tx) error {
+		if _, err := tx.Exec("DELETE FROM vehicle_positions"); err != nil {
+			return err
+		}
+		return realtime.SaveVehiclePositions(tx, feeds)
+	})
 }
 
 func rtURL(basin, ft string) string {
@@ -119,18 +94,18 @@ func rtURL(basin, ft string) string {
 func getRT(url string) (*gtfs.FeedMessage, error) {
 	req, err := auth.BasicAuth(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+		return nil, fmt.Errorf("Create request: %w", err)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := auth.Client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("request %s: %w", url, err)
+		return nil, fmt.Errorf("Request %s: %w", url, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf(
-			"request %s: server returned %s",
+			"Request %s: server returned %s",
 			url,
 			resp.Status,
 		)
@@ -138,14 +113,20 @@ func getRT(url string) (*gtfs.FeedMessage, error) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("read %s: %w", url, err)
+		return nil, fmt.Errorf("Read %s: %w", url, err)
 	}
 
 	var feed gtfs.FeedMessage
 
 	if err := proto.Unmarshal(body, &feed); err != nil {
-		return nil, fmt.Errorf("unmarshal %s: %w", url, err)
+		return nil, fmt.Errorf("Unmarshal %s: %w", url, err)
 	}
 
+	if feed.Header == nil {
+		return nil, fmt.Errorf("Feed %s: missing header", url)
+	}
+	if feed.GetHeader().GetIncrementality() != gtfs.FeedHeader_FULL_DATASET {
+		return nil, fmt.Errorf("Feed %s: differential feeds are unsupported", url)
+	}
 	return &feed, nil
 }

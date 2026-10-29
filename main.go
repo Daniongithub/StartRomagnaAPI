@@ -1,16 +1,15 @@
 package main
 
 import (
-	//"context"
-	"fmt"
 	"log"
 	"net/http"
-	"startromagnaapi/config"
-	"startromagnaapi/internal/handler"
-	"startromagnaapi/internal/scheduler"
+	"time"
 
-	//"startromagnaapi/internal/panels/announcements"
+	"startromagnaapi/config"
+	"startromagnaapi/internal/cors"
+	"startromagnaapi/internal/handler"
 	"startromagnaapi/internal/repository"
+	"startromagnaapi/internal/scheduler"
 	"startromagnaapi/internal/sse"
 )
 
@@ -20,30 +19,28 @@ func main() {
 	repository.InitRT()
 	repository.InitMezzi()
 	repository.InitOrchestrator()
-	//Initializes server send events for fontend sync
+	// Initialize server-sent events for frontend synchronization.
 	sse.InitHub()
 
 	if config.IS_PRIMARY.Load() {
-		//Operazioni per DB in modalità "primary" (non read only):
+		// Start background updates only on the primary database.
 
-		var err error
-		config.SCHEDULER, err = scheduler.InitScheduler()
-		if err != nil {
-			log.Fatal(err)
+		if err := scheduler.Start(); err != nil {
+			log.Fatalf("Failed to start scheduler: %v", err)
 		}
-		defer config.SCHEDULER.Shutdown()
+		defer scheduler.Stop()
 	} else {
-		println("INFO: Scheduler non avviato: rilevato DB read-only")
+		log.Print("Scheduler not started: Primary database is unavailable or read-only")
 	}
 
 	mux := http.NewServeMux()
-	
+
 	mux.HandleFunc("GET /health", handler.HealthcheckHandler)
 
 	mux.HandleFunc("GET /rss/feed", handler.RSSFeedHandler)
 	mux.HandleFunc("GET /routeinfo", handler.RouteinfoHandler)
 
-	mux.HandleFunc("/events", sse.SSE_HUB.SSEHandler)
+	mux.HandleFunc("GET /events", sse.SSE_HUB.SSEHandler)
 
 	mux.HandleFunc("GET /arrivals/{stopcode}", handler.ArrivalsHandler)
 	mux.HandleFunc("GET /busesinservice", handler.BusesinserviceHandler)
@@ -69,17 +66,11 @@ func main() {
 
 	/*
 		if config.ENABLE_AUTH {
-			panel, err := announcements.New(context.Background())
-			if err != nil {
-				log.Fatalf("inizializzazione pannello annunci fallita: %v", err)
-			}
-			if err := panel.RegisterAPI("GET", "/api/announcements", http.HandlerFunc(handler.AnnouncementsHandler)); err != nil {
-				log.Fatalf("registrazione API pannello annunci fallita: %v", err)
-			}
-			panel.Mount(mux)
+
 		}*/
 
-	//Listen on port and start API
-	fmt.Println("Server started on port " + config.PORT)
-	log.Print(http.ListenAndServe(config.PORT, mux))
+	// Listen on the configured port and start the API.
+	log.Printf("Starting HTTP server on %s", config.PORT)
+	server := &http.Server{Addr: config.PORT, Handler: cors.Middleware(mux), ReadHeaderTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}
+	log.Printf("HTTP server stopped: %v", server.ListenAndServe())
 }

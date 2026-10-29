@@ -19,14 +19,17 @@ type TripsResult struct {
 }
 
 func ToDomainTrip(r *gtfs.Trip) TripsResult {
-	return TripsResult{
+	trip := TripsResult{
 		Route_id:      r.Route.Id,
 		Service_id:    r.Service.Id(),
 		Trip_id:       r.Id,
 		Trip_headsign: r.Headsign,
 		Direction_id:  int(r.Direction_id),
-		Shape_id:      r.Shape.Id,
 	}
+	if r.Shape != nil {
+		trip.Shape_id = r.Shape.Id
+	}
+	return trip
 }
 
 type CalendarDatesResult struct {
@@ -103,7 +106,7 @@ func ToDomainStopTimes(basin, id string, arr, dep time.Time, sid string, seq int
 		Basin:          basin,
 		Trip_id:        id,
 		Arrival_time:   MySQLTime{arr},
-		Departure_time: MySQLTime{arr},
+		Departure_time: MySQLTime{dep},
 		Stop_id:        sid,
 		Stop_sequence:  seq,
 	}
@@ -127,12 +130,6 @@ func ToDomainStops(r *gtfs.Stop) StopsResult {
 		Stop_lat:  r.Lat,
 		Stop_lon:  r.Lon,
 	}
-}
-
-type ShapeID struct {
-	Basin       string `db:"basin"`
-	ShapeID     string `db:"shape_id"`
-	StillExists bool   `db:"still_exists" json:"still_exists"`
 }
 
 type Headsign struct {

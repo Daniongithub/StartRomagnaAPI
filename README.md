@@ -30,7 +30,7 @@ This project can't be reutilised, because the code is too specific, it'd be impo
 
 ## Endpoints
 
-- `GET /health` -> Ritorna HTTP 200, utile per un healthcheck. | Returns HTTP 200, useful for an healthcheck.
+- `GET /health` -> Stato del database in JSON; HTTP 500 se la verifica fallisce. | Database status in JSON; HTTP 500 when the check fails.
 - `GET /rss/feed` -> Feed RSS di Infobus Start, in formato JSON. | Infobus Start RSS Feed, in JSON format.
 - `GET /arrivals/{stopcode}` -> Bus previsti in arrivo per la fermata specificata. | Returns the list of buses predicted to be arriving in the specified bus stop.
 - `GET /busesinservice` -> Tutti i bus in servizio di START, in tempo reale, con informazioni sui mezzi. | Returns all the buses currently in service, with some vehicle information.
@@ -43,6 +43,7 @@ This project can't be reutilised, because the code is too specific, it'd be impo
 - `GET /vehicleinfo/{vehicle}` -> Informazioni su un singolo veicolo. | Return information of a signle vehicle.
 - `GET /stopsinfo/{basin}/{stopcode}` -> Ritorna tutte le linee che passano in una fermata, dato il bacino ed il codice fermata. | Returns all the lines that stop in the specified bus stop, given the basin and its id.
 - `GET /announcements` -> Annunci | Announcements
+- `GET /events` -> Stream SSE delle importazioni realtime completate. | SSE stream of completed realtime imports.
 - `GET /static/info` -> Range di date in cui sono validi i dati del GTFS statico. | Date range where static GTFS data is valid.
 - `GET /static/trips/{basin}` -> Lista di tutti i trip di un bacino. | Returns the list of all the trips of a basin.
 - `GET /static/routes/{basin}` -> Lista di tutte le linee di un bacino. | Returns the list of all the routes of a basin.
@@ -51,22 +52,19 @@ This project can't be reutilised, because the code is too specific, it'd be impo
 - `/panel/announcements/` -> Pannello annunci protetto da OIDC; disponibile solo con `ENABLE_AUTH=true`.
 - `GET /api/announcements` -> Alias pubblico di `GET /announcements`.
 
-### Da implementare - To be implemented
-
-- `GET /timetable/{routeid}`
-- `/events`
-
 ## Note sul funzionamento - Notes on operation
 
-Vengono eseguite delle task ogni 20 secondi per il realtime, alle 04:00 si aggiorna il GTFS statico.
+Trip update e posizioni vengono aggiornati ogni 15 secondi; gli alert ogni minuto. Alle 04:00 si aggiorna il GTFS statico. Lo scheduler usa il fuso `Europe/Rome`.
 
 Usiamo un singolo database MariaDB, con 3 DB dentro: `start_gtfs_static`, `start_gtfs_rt` e `ertpl_mezzi` (il DB con tutte le informazioni sui veicoli).
 Chiedici gli schemas, se servono.
 
-Some tasks are executed every 20 seconds for the realtime, at 04:00 the static GTFS gets updated.
+Trip updates and vehicle positions refresh every 15 seconds; alerts refresh every minute. Static GTFS refreshes at 04:00. The scheduler uses the `Europe/Rome` timezone.
 
 We use a single MariaDB database, with 3 DB inside: `start_gtfs_static`, `start_gtfs_rt` and `ertpl_mezzi` (our vehicles information DB).
 Ask us the schemas, if needed.
+
+Gli import GTFS sono transazionali: un errore nel download, nella decodifica o nella scrittura conserva lo stato precedente. Le tabelle devono usare un motore transazionale, come InnoDB. Le notifiche SSE vengono emesse dopo il commit. L'RSS continua a essere scaricato direttamente dal sito.
 
 ## ENV Config
 
@@ -84,6 +82,7 @@ ENABLE_AUTH=false
 DB_HOST=
 DB_PORT=
 DB_USERNAME=
+DB_DOMAIN=
 DB_PASSWORD=
 # db orchestrating config
 DB_ORCH_USERNAME=

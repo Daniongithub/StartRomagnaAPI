@@ -2,22 +2,11 @@ package static
 
 import (
 	"fmt"
+
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
-	"time"
-
-	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
+	"startromagnaapi/internal/utils"
 )
-
-func GetTrips() []model.TripsResult {
-	var results []model.TripsResult
-	err := repository.DB_STATIC.Select(&results, "SELECT * FROM trips")
-	if err != nil {
-		fmt.Println("GetTrips error:", err)
-	}
-
-	return results
-}
 
 func GetTripsBasin(basin string) []model.TripsResult {
 	var results []model.TripsResult
@@ -29,40 +18,16 @@ func GetTripsBasin(basin string) []model.TripsResult {
 	return results
 }
 
-func GetTripIDsFromShape(basin, shapeId string) []string {
-	var results []string
-	err := repository.DB_STATIC.Select(&results, "SELECT trip_id FROM trips WHERE basin = ? AND shape_id = ? ORDER BY route_id", basin, shapeId)
-	if err != nil {
-		fmt.Println("GetTripIDsFromShape error:", err)
-	}
-
-	return results
-}
-
-func GetRouteIDFromShape(basin, shapeid string) string {
-	var results []string
-	err := repository.DB_STATIC.Select(&results, `
-		SELECT t.route_id FROM trips AS t
-		WHERE t.shape_id = ? AND t.basin = ?
-	`, shapeid, basin)
-	if err != nil {
-		fmt.Println("GetRouteIDFromShape error:", err)
-	}
-
-	return results[0]
-}
-
 func GetTodayTripInfoFromRouteID(basin, routeId, directionId string) []model.TripInfo {
 	var results []model.TripInfo
-	now := time.Now()
-	cdDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	cdDate := utils.RomeNow().Format("2006-01-02")
 	err := repository.DB_STATIC.Select(&results, `
 		SELECT t.basin, t.trip_id, t.shape_id FROM trips AS t
 		INNER JOIN calendar_dates AS cd
 		ON t.service_id = cd.service_id AND t.basin = cd.basin
 		LEFT JOIN stop_times AS st
 		ON t.trip_id = st.trip_id AND t.basin = st.basin
-		WHERE t.basin = ? AND t.route_id = ? AND cd.date = ? AND t.direction_id = ? AND st.stop_sequence = (
+		WHERE t.basin = ? AND t.route_id = ? AND cd.date = ? AND cd.exception_type = 1 AND t.direction_id = ? AND st.stop_sequence = (
       		SELECT MIN(st2.stop_sequence)
       		FROM stop_times AS st2
       		WHERE st2.trip_id = t.trip_id
@@ -75,67 +40,4 @@ func GetTodayTripInfoFromRouteID(basin, routeId, directionId string) []model.Tri
 	}
 
 	return results
-}
-
-// Checks if trips already exist inside the respective basins, otherwise adds them
-func SaveTrips(feedRA *gtfsparserwr.Feed, feedFC *gtfsparserwr.Feed, feedRN *gtfsparserwr.Feed) {
-	values := make([][]any, 0, len(feedRA.Trips)+len(feedFC.Trips)+len(feedRN.Trips))
-
-	for _, val := range feedRA.Trips {
-		trip := model.ToDomainTrip(val)
-		trip.Basin = "RA"
-
-		values = append(values, []any{
-			trip.Basin,
-			trip.Route_id,
-			trip.Service_id,
-			trip.Trip_id,
-			trip.Trip_headsign,
-			trip.Direction_id,
-			trip.Shape_id,
-		})
-	}
-
-	for _, val := range feedFC.Trips {
-		trip := model.ToDomainTrip(val)
-		trip.Basin = "FC"
-
-		values = append(values, []any{
-			trip.Basin,
-			trip.Route_id,
-			trip.Service_id,
-			trip.Trip_id,
-			trip.Trip_headsign,
-			trip.Direction_id,
-			trip.Shape_id,
-		})
-	}
-
-	for _, val := range feedRN.Trips {
-		trip := model.ToDomainTrip(val)
-		trip.Basin = "RN"
-
-		values = append(values, []any{
-			trip.Basin,
-			trip.Route_id,
-			trip.Service_id,
-			trip.Trip_id,
-			trip.Trip_headsign,
-			trip.Direction_id,
-			trip.Shape_id,
-		})
-	}
-
-	// Svuota la tabella
-	_, err := repository.DB_STATIC.Exec("DELETE FROM trips")
-	if err != nil {
-		fmt.Println("SaveTrips delete error:", err)
-		return
-	}
-
-	// Reinserisce tutti i trip
-	err = repository.BatchInsert(repository.DB_STATIC, "trips", []string{"basin", "route_id", "service_id", "trip_id", "trip_headsign", "direction_id", "shape_id"}, values)
-	if err != nil {
-		fmt.Println("SaveTrips db error:", err)
-	}
 }

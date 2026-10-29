@@ -2,8 +2,11 @@ package static
 
 import (
 	"fmt"
+
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
+
+	"github.com/jmoiron/sqlx"
 )
 
 func GetRouteInfos() []model.RouteInfo {
@@ -22,11 +25,11 @@ func GetInfoBusId(routeId string) []string {
 	if err != nil {
 		fmt.Println("GetInfoBusId error:", err)
 	}
-	
+
 	return results
 }
 
-func SaveRouteInfos(infos []model.RouteInfo) {
+func SaveRouteInfos(tx *sqlx.Tx, infos []model.RouteInfo) error {
 	values := make([][]any, 0, len(infos))
 
 	for _, val := range infos {
@@ -39,15 +42,5 @@ func SaveRouteInfos(infos []model.RouteInfo) {
 		})
 	}
 
-	err := repository.BatchInsert(repository.DB_STATIC, "route_infos", []string{"basin", "route_id","start_text", "infobus_id", "pdf_link"}, values)
-	if err != nil {
-		fmt.Println("SaveRouteInfos db error:", err)
-	}
-}
-
-func ClearRouteInfos() {
-	_, err := repository.DB_STATIC.Exec("DELETE FROM route_infos")
-	if err != nil {
-		fmt.Println("GetRouteInfos error:", err)
-	}
+	return repository.BatchInsert(tx, "route_infos", []string{"basin", "route_id", "start_text", "infobus_id", "pdf_link"}, values)
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"startromagnaapi/config"
-	"startromagnaapi/internal/cors"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/static"
 	"startromagnaapi/internal/scheduler"
@@ -17,7 +16,6 @@ import (
 
 // GET /health
 func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 
 	repository.IsPrimary(repository.DB_STATIC)
 	results, err := repository.GetDBStatus(repository.DB_STATIC.DB)
@@ -32,16 +30,15 @@ func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /rss/feed
 func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	results, err := service.GetRSSFeed(config.FEED_URL)
 
 	if err != nil {
-		if errors.Is(err, service.NoArrivals) {
-			http.Error(w, "rss feed error", http.StatusNotFound)
+		if errors.Is(err, service.ErrFeed) {
+			http.Error(w, "Rss feed error", http.StatusNotFound)
 			return
 		}
 
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -54,7 +51,6 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /routeinfo
 func RouteinfoHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	results := static.GetRouteInfos()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -63,17 +59,16 @@ func RouteinfoHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /arrivals/{stopcode}
 func ArrivalsHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	code := r.PathValue("stopcode")
 
 	results, err := service.ProcessArrivals(code)
 	if err != nil {
 		if errors.Is(err, service.NoArrivals) {
-			http.Error(w, "no arrivals", http.StatusNotFound)
+			http.Error(w, "No arrivals", http.StatusNotFound)
 			return
 		}
 
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -83,7 +78,6 @@ func ArrivalsHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /busesinservice
 func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	results, err := service.ProcessBusesInService()
 	if err != nil {
 		if errors.Is(err, service.NoBusesInService) {
@@ -101,7 +95,6 @@ func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /nextstops/{tripid}
 func NextstopsHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	tripid := r.PathValue("tripid")
 
 	results := service.ProcessNextstops(tripid)
@@ -112,7 +105,6 @@ func NextstopsHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /timetable/{basin}/{routeid}/{directionid}
 func TimetableHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	basin := r.PathValue("basin")
 	if basin != "RA" && basin != "FC" && basin != "RN" {
 		http.Error(w, "Invalid basin", http.StatusBadRequest)
@@ -133,7 +125,6 @@ func TimetableHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /vehiclepositions
 func VehiclepositionsHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	results := service.ProcessVehiclePositions()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -142,7 +133,6 @@ func VehiclepositionsHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /vehiclepos/{basin}
 func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -158,7 +148,6 @@ func VehiclepositionsBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /vehicleposition/{vehicleid}
 func VehiclepositionIDHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	vehicleId := r.PathValue("vehicleid")
 
 	results := service.ProcessVehiclePositionID(vehicleId)
@@ -169,7 +158,6 @@ func VehiclepositionIDHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /shape/{basin}/{shapeId}
 func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	shape_id := r.PathValue("shapeId")
 
 	basin := r.PathValue("basin")
@@ -187,17 +175,16 @@ func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /vehicleinfo/{vehicle}
 func VehicleinfoHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	vehicleId := r.PathValue("vehicle")
 
 	results, err := service.ProcessVehicleInfo(vehicleId)
 	if err != nil {
 		if errors.Is(err, service.ErrVehicleNotFound) {
-			http.Error(w, "vehicle not found", http.StatusNotFound)
+			http.Error(w, "Vehicle not found", http.StatusNotFound)
 			return
 		}
 
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -210,7 +197,10 @@ func StopsinfoHandler(w http.ResponseWriter, r *http.Request) {
 	basin := r.PathValue("basin")
 	stopCode := r.PathValue("stopcode")
 
-	cors.Add(w, r)
+	if basin != "RA" && basin != "FC" && basin != "RN" {
+		http.Error(w, "Invalid basin", http.StatusBadRequest)
+		return
+	}
 	results := service.ProcessStopsInfo(stopCode, basin)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -220,12 +210,10 @@ func StopsinfoHandler(w http.ResponseWriter, r *http.Request) {
 // GET /announcements
 func AnnouncementsHandler(w http.ResponseWriter, r *http.Request) {
 	announcements := static.GetAnnouncements()
-
 	if len(announcements) == 0 {
 		http.Error(w, "No announcements", http.StatusNotFound)
+		return
 	}
-
-	cors.Add(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(announcements)
 }
@@ -236,7 +224,6 @@ func AnnouncementsHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /static/info
 func StaticInfoHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 
 	min_dateRA, max_dateRA := static.GetCalDatesRange("RA")
 	min_dateFC, max_dateFC := static.GetCalDatesRange("FC")
@@ -251,7 +238,6 @@ func StaticInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /static/trips/{basin}
 func TripsBasinHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -267,7 +253,6 @@ func TripsBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /static/routes/{basin}
 func RoutesBasinHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -283,7 +268,6 @@ func RoutesBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /static/shapes/{basin}
 func ShapesBasinHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -299,7 +283,6 @@ func ShapesBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET /static/stops/{basin}
 func StopsBasinHandler(w http.ResponseWriter, r *http.Request) {
-	cors.Add(w, r)
 	basin := r.PathValue("basin")
 
 	if basin != "RA" && basin != "FC" && basin != "RN" {
@@ -324,7 +307,7 @@ func PromoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := repository.DB_ORCH // same db instance
+	db := repository.DB_ORCH // Use the orchestrator connection pool.
 
 	if _, err := db.Exec("SET SESSION sql_log_bin = 0"); err != nil {
 		http.Error(w, fmt.Sprintf("Stop binlog failed: %v", err), http.StatusInternalServerError)
@@ -455,12 +438,12 @@ func ResyncHandler(w http.ResponseWriter, r *http.Request) {
 	if !arbiterAuthorized(r) { /* ... */
 	}
 	if !resyncInProgress.CompareAndSwap(false, true) {
-		http.Error(w, "resync già in corso", http.StatusConflict)
+		http.Error(w, "Resync already in progress", http.StatusConflict)
 		return
 	}
 	scheduler.Stop()
 	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode(map[string]string{"status": "resync avviato"})
+	json.NewEncoder(w).Encode(map[string]string{"status": "Resync started"})
 	go func() {
 		defer resyncInProgress.Store(false)
 		repository.RunResync(req.MasterHost)

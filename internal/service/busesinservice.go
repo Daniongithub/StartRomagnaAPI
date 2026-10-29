@@ -4,12 +4,11 @@ import (
 	"errors"
 	"regexp"
 	"sort"
-	"startromagnaapi/internal/model"
-	"startromagnaapi/internal/repository/mezzi"
-	"startromagnaapi/internal/repository/realtime"
-	"startromagnaapi/internal/repository/static"
 	"strconv"
 	"strings"
+
+	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/repository/realtime"
 )
 
 var NoBusesInService = errors.New("No buses in service")
@@ -21,34 +20,9 @@ func ProcessBusesInService() ([]model.BusInService, error) {
 		return nil, NoBusesInService
 	}
 
-	for idx := range buses {
-		val := &buses[idx]
-		val.NextStop = realtime.GetFirstStop(val.TripId)
-		val.OfficialLine = static.GetRouteNamefromID(val.Basin, val.RouteId)
-		headsign := static.GetHeadsignsByID(val.Basin, val.ShapeId)
-		if headsign != nil {
-			if headsign.DispLine != nil {
-				val.Line = *headsign.DispLine
-			} else {
-				val.Line = val.OfficialLine
-			}
-			if headsign.DispDest != nil {
-				val.Destination = *headsign.DispDest
-			} else {
-				val.Destination = strings.ToUpper(static.GetTerminusName(val.TripId))
-			}
-		}
-		//Model and stuff
-		if mezzi.GetVehicleInServiceByID(val.Vehicle) != nil {
-			val.VehicleInfo = *mezzi.GetVehicleInServiceByID(val.Vehicle)
-		} else if mezzi.GetMeteInServiceByID(val.Vehicle) != nil {
-			//METE model and stuff
-			val.VehicleInfo = *mezzi.GetMeteInServiceByID(val.Vehicle)
-		} else {
-			val.VehicleInfo = model.VehicleInService{
-				Number: val.Vehicle,
-			}
-		}
+	enrich := newBusEnricher()
+	for i := range buses {
+		enrich.enrich(&buses[i])
 	}
 	buses = groupAndSort(buses)
 
@@ -79,7 +53,7 @@ func splitLine(line string) lineParts {
 }
 
 func groupAndSort(items []model.BusInService) []model.BusInService {
-	// --- Livello 1: raggruppa per Basin (ordine di apparizione) ---
+	// Group by basin in order of appearance.
 	basinOrder := []string{}
 	basinGroups := make(map[string][]model.BusInService)
 
@@ -96,7 +70,7 @@ func groupAndSort(items []model.BusInService) []model.BusInService {
 		basinItems := basinGroups[basin]
 
 		if basin == "FC" {
-			// --- Livello 2: raggruppa per "città" dentro il basin ---
+			// Group lines by city within the basin.
 			cityOrder := []string{}
 			cityGroups := make(map[string][]model.BusInService)
 
@@ -108,7 +82,7 @@ func groupAndSort(items []model.BusInService) []model.BusInService {
 				cityGroups[p.city] = append(cityGroups[p.city], it)
 			}
 
-			// Città senza suffisso ("") prima, poi le altre in ordine alfabetico
+			// Place lines without a city suffix first, then sort cities alphabetically.
 			sort.SliceStable(cityOrder, func(i, j int) bool {
 				if cityOrder[i] != "" {
 					return true
@@ -119,7 +93,7 @@ func groupAndSort(items []model.BusInService) []model.BusInService {
 				return cityOrder[i] < cityOrder[j]
 			})
 
-			// --- Livello 3: ordina per numero, poi per variante (1, 1B, 2, 3, 4B...) ---
+			// Sort by line number, then by variant (1, 1B, 2, 3, 4B...).
 			for _, city := range cityOrder {
 				g := cityGroups[city]
 				sort.SliceStable(g, func(i, j int) bool {

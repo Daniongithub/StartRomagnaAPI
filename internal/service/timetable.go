@@ -9,30 +9,20 @@ import (
 func ProcessTimetable(basin, routeId, directionId string) []model.Trip {
 	trips := static.GetTodayTripInfoFromRouteID(basin, routeId, directionId)
 	var timetable []model.Trip
+	enrich := newBusEnricher()
 	for _, val := range trips {
-		val.OfficialLine = static.GetRouteNamefromID(val.Basin, routeId)
-		headsign := static.GetHeadsignsByID(val.Basin, val.ShapeId)
-		if headsign != nil {
-			if headsign.DispLine != nil {
-				val.Line = *headsign.DispLine
-			} else {
-				val.Line = val.OfficialLine
-			}
-			if headsign.DispDest != nil {
-				val.Destination = *headsign.DispDest
-			} else {
-				val.Destination = strings.ToUpper(static.GetTerminusName(val.TripId))
-			}
-		}
-		//Formats arrival time
+		val.OfficialLine, val.Line, val.Destination = enrich.lineInfo(val.Basin, routeId, val.ShapeId, val.TripId)
+		// Format arrival and departure times.
 		formattedTimes := static.GetStopTimesDetailByTrip(basin, val.TripId)
 		for idx := range formattedTimes {
 			val := &formattedTimes[idx]
-			val.ArrivalTimeStr = val.ArrivalTime.Format("15:04")
-			val.DepartureTimeStr = val.DepartureTime.Format("15:04")
+			arrival := val.ArrivalTime.SQLString()
+			val.ArrivalTimeStr = arrival[:strings.LastIndex(arrival, ":")]
+			departure := val.DepartureTime.SQLString()
+			val.DepartureTimeStr = departure[:strings.LastIndex(departure, ":")]
 		}
 		timetable = append(timetable, model.Trip{
-			TripInfo: val,
+			TripInfo:  val,
 			StopTimes: formattedTimes,
 		})
 	}

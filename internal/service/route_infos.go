@@ -5,58 +5,59 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"startromagnaapi/internal/auth"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository/static"
 	"strings"
 )
 
 func ScrapeRouteInfo(url string) (*model.RouteInfoRaw, error) {
-	resp, err := http.Get(url)
+	resp, err := auth.Client.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("ScrapeRouteInfo: richiesta HTTP fallita: %w", err)
+		return nil, fmt.Errorf("ScrapeRouteInfo: HTTP request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("ScrapeRouteInfo: status code inatteso: %d", resp.StatusCode)
+		return nil, fmt.Errorf("ScrapeRouteInfo: Unexpected HTTP status code: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("ScrapeRouteInfo: lettura body fallita: %w", err)
+		return nil, fmt.Errorf("ScrapeRouteInfo: Failed to read the response body: %w", err)
 	}
 	html := string(body)
 
 	const marker = "var SRO_CONFIG ="
 	_, after, ok := strings.Cut(html, marker)
 	if !ok {
-		return nil, fmt.Errorf("ScrapeRouteInfo: marker %q non trovato nella pagina", marker)
+		return nil, fmt.Errorf("ScrapeRouteInfo: Marker %q was not found in the page", marker)
 	}
 
-	// Primo livello: può essere un oggetto diretto {...} oppure una
-	// stringa JSON "{...}". json.RawMessage cattura i byte così come sono,
-	// poi ispezioniamo il primo carattere non-whitespace per capire quale caso è.
+	// The outer value can be an object {...} or an escaped JSON string.
+	// json.RawMessage preserves the original bytes so the first
+	// non-whitespace character identifies which representation was used.
 	var raw json.RawMessage
 	dec := json.NewDecoder(strings.NewReader(after))
 	if err := dec.Decode(&raw); err != nil {
-		return nil, fmt.Errorf("ScrapeRouteInfo: decodifica primo livello fallita: %w", err)
+		return nil, fmt.Errorf("ScrapeRouteInfo: Failed to decode the outer JSON value: %w", err)
 	}
 
 	jsonBytes := []byte(raw)
 	trimmed := strings.TrimSpace(string(jsonBytes))
 
 	if strings.HasPrefix(trimmed, `"`) {
-		// Caso stringa: è JSON-escaped, va "srotolato" un livello in più.
+		// Decode one extra layer when the value is an escaped JSON string.
 		var inner string
 		if err := json.Unmarshal(jsonBytes, &inner); err != nil {
-			return nil, fmt.Errorf("ScrapeRouteInfo: unescape stringa fallito: %w", err)
+			return nil, fmt.Errorf("ScrapeRouteInfo: Failed to unescape the JSON string: %w", err)
 		}
 		jsonBytes = []byte(inner)
 	}
 
 	var config model.RouteInfoRaw
 	if err := json.Unmarshal(jsonBytes, &config); err != nil {
-		return nil, fmt.Errorf("ScrapeRouteInfo: unmarshal config fallito: %w", err)
+		return nil, fmt.Errorf("ScrapeRouteInfo: Failed to decode the route configuration: %w", err)
 	}
 
 	return &config, nil
@@ -64,9 +65,9 @@ func ScrapeRouteInfo(url string) (*model.RouteInfoRaw, error) {
 
 func ProcessRouteInfo(infos model.RouteInfoRaw) []model.RouteInfo {
 	knownRoutes := static.GetRoutes()
-	routesMap := make(map[string]bool)
+	routesMap := make(map[[2]string]bool)
 	for _, val := range knownRoutes {
-		routesMap[val.Route_id] = true
+		routesMap[[2]string{val.Basin, val.Route_id}] = true
 	}
 	var processed []model.RouteInfo
 	for area, slice := range infos.Areas {
@@ -105,7 +106,7 @@ func ProcessRouteInfo(infos model.RouteInfoRaw) []model.RouteInfo {
 			if val.Route == "Metromare" {
 				val.Route = "9311"
 			}
-			_, ok := routesMap[val.Route]
+			_, ok := routesMap[[2]string{basin, val.Route}]
 			if ok {
 				processed = append(processed, model.RouteInfo{
 					Basin:     basin,
@@ -120,17 +121,3 @@ func ProcessRouteInfo(infos model.RouteInfoRaw) []model.RouteInfo {
 
 	return processed
 }
-
-/*
-
-PROSSIMI STEP: INSERIRE DATI NEL DB OGNI MEZZANOTTE
-GESTIRE CONVERSIONE LINEA CHE MOSTRIAMO CON LINEA DEL JSON ("1 Cesena" -> CE01, oppure tenere nei JSON anche official_line), FARE JOIN
-LINEA 4 RAVENNA --> id 612 secondo il JSON
-
-Esempio:
-
-curl -X POST 'https://www.startromagna.it/wp-admin/admin-ajax.php' -H 'Content-Type: application/x-www-form-urlencoded;charset=UTF-8' --data-urlencode 'action=get_infobus_linea' --data-urlencode 'idPost=612'
-NON RICHIEDE COOKIE O AUTENTICAZIONE!
-
-SCRAPARE HTML PER FARE JSON (ci pensa il Dani)
-*/

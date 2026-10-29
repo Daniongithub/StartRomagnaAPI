@@ -2,96 +2,61 @@ package realtime
 
 import (
 	"fmt"
-	"startromagnaapi/internal/model"
-	"startromagnaapi/internal/repository"
 	"time"
 
+	"startromagnaapi/internal/repository"
+
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
+	"github.com/jmoiron/sqlx"
 )
 
-func GetServiceAlerts() []model.ServiceAlertsResult {
-	var results []model.ServiceAlertsResult
-	err := repository.DB_RT.Select(&results, "SELECT * FROM service_alerts")
-	if err != nil {
-		fmt.Println("GetServiceAlerts error:", err)
-	}
-
-	return results
-}
-
-func GetServiceAlertsBasin(basin string) []model.ServiceAlertsResult {
-	var results []model.ServiceAlertsResult
-	err := repository.DB_RT.Select(&results, "SELECT * FROM service_alerts WHERE basin = ?", basin)
-	if err != nil {
-		fmt.Println("GetServiceAlertsBasin error:", err)
-	}
-
-	return results
-}
-
-func GetDistinctSAByBasin(basin string) []model.ServiceAlertsResult {
-	var results []model.ServiceAlertsResult
-	err := repository.DB_RT.Select(&results, "SELECT DISTINCT basin, start, end, route_id, route_type, trip_id, direction_id, start_time, start_date FROM service_alerts WHERE basin = ?", basin)
-	if err != nil {
-		fmt.Println("GetDistinctSAByBasin error:", err)
-	}
-
-	return results
-}
-
-func SaveAlerts(feeds map[string]*gtfs.FeedMessage, dbContent map[string]map[string]bool) {
-	rows := make([][]any, 0)
-
-	for idx, val := range feeds {
-		for _, val2 := range val.Entity {
-			if _, ok := dbContent[idx][*val2.Id]; ok {
-				continue
+func SaveAlerts(feeds map[string]*gtfs.FeedMessage) error {
+	return repository.InTransaction(repository.DB_RT, func(tx *sqlx.Tx) error {
+		values := make([][]any, 0)
+		for basin, feed := range feeds {
+			var ids []string
+			if err := tx.Select(&ids, "SELECT id FROM service_alerts WHERE basin = ?", basin); err != nil {
+				return err
 			}
-
-			startS := val2.Alert.ActivePeriod[0].Start
-			endS := val2.Alert.ActivePeriod[0].End
-
-			start := secondsToTime(int(*startS))
-			end := secondsToTime(int(*endS))
-
-			rows = append(rows, []any{
-				idx,
-				val2.Id,
-				start,
-				end,
-				val2.Alert.InformedEntity[0].RouteId,
-				val2.Alert.InformedEntity[0].RouteType,
-				val2.Alert.InformedEntity[0].Trip.TripId,
-				val2.Alert.InformedEntity[0].Trip.DirectionId,
-				val2.Alert.InformedEntity[0].Trip.StartTime,
-				val2.Alert.InformedEntity[0].Trip.StartDate,
-				val2.Alert.InformedEntity[0].StopId,
-			})
+			known := make(map[string]bool, len(ids))
+			for _, id := range ids {
+				known[id] = true
+			}
+			for _, entity := range feed.GetEntity() {
+				alert := entity.GetAlert()
+				if entity.GetIsDeleted() || alert == nil || known[entity.GetId()] {
+					continue
+				}
+				var period *gtfs.TimeRange
+				if len(alert.GetActivePeriod()) > 0 {
+					period = alert.GetActivePeriod()[0]
+				}
+				var target *gtfs.EntitySelector
+				if len(alert.GetInformedEntity()) > 0 {
+					target = alert.GetInformedEntity()[0]
+				}
+				trip := target.GetTrip()
+				var start, end any
+				if period.GetStart() != 0 {
+					start = time.Unix(int64(period.GetStart()), 0).UTC()
+				}
+				if period.GetEnd() != 0 {
+					end = time.Unix(int64(period.GetEnd()), 0).UTC()
+				}
+				// The existing schema stores one selector/period for each alert ID.
+				var routeID, routeType, tripID, direction, startTime, startDate, stopID any
+				if target != nil {
+					routeID, routeType, stopID = target.RouteId, target.RouteType, target.StopId
+				}
+				if trip != nil {
+					tripID, direction, startTime, startDate = trip.TripId, trip.DirectionId, trip.StartTime, trip.StartDate
+				}
+				values = append(values, []any{basin, entity.GetId(), start, end, routeID, routeType, tripID, direction, startTime, startDate, stopID})
+				known[entity.GetId()] = true
+			}
 		}
-	}
-
-	if len(rows) == 0 {
-		return
-	}
-
-	columns := []string{
-		"basin",
-		"id",
-		"start",
-		"end",
-		"route_id",
-		"route_type",
-		"trip_id",
-		"direction_id",
-		"start_time",
-		"start_date",
-		"stop_id",
-	}
-
-	err := repository.BatchInsert(repository.DB_RT, "service_alerts", columns, rows)
-	if err != nil {
-		fmt.Println("SaveAlerts db error:", err)
-	}
+		return repository.BatchInsert(tx, "service_alerts", []string{"basin", "id", "start", "end", "route_id", "route_type", "trip_id", "direction_id", "start_time", "start_date", "stop_id"}, values)
+	})
 }
 
 func DeleteAllServiceAlerts() {
@@ -99,10 +64,4 @@ func DeleteAllServiceAlerts() {
 	if err != nil {
 		fmt.Println("DeleteAllServiceAlerts db error:", err)
 	}
-}
-
-func secondsToTime(seconds int) time.Time {
-	base := time.Now()
-	midnight := time.Date(base.Year(), base.Month(), base.Day(), 0, 0, 0, 0, time.UTC)
-	return midnight.Add(time.Duration(seconds) * time.Second)
 }

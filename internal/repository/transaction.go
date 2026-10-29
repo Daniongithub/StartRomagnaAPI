@@ -6,35 +6,21 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-var TX_TU *sqlx.Tx
-var TX_VP *sqlx.Tx
-
-func StartTransactionTU() {
-	var err error
-	TX_TU, err = DB_RT.Beginx()
-	if err != nil {
-		fmt.Println("StartTransaction db error:", err)
+// InTransaction publishes changes only after every operation succeeds.
+func InTransaction(db *sqlx.DB, update func(*sqlx.Tx) error) error {
+	if db == nil {
+		return fmt.Errorf("Database not initialized")
 	}
-}
-
-func CommitTransactionTU() {
-	err := TX_TU.Commit()
+	tx, err := db.Beginx()
 	if err != nil {
-		fmt.Println("CommitTransaction db error:", err)
+		return fmt.Errorf("Begin transaction: %w", err)
 	}
-}
-
-func StartTransactionVP() {
-	var err error
-	TX_VP, err = DB_RT.Beginx()
-	if err != nil {
-		fmt.Println("StartTransaction db error:", err)
+	defer tx.Rollback()
+	if err := update(tx); err != nil {
+		return err
 	}
-}
-
-func CommitTransactionVP() {
-	err := TX_VP.Commit()
-	if err != nil {
-		fmt.Println("CommitTransaction db error:", err)
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("Commit transaction: %w", err)
 	}
+	return nil
 }

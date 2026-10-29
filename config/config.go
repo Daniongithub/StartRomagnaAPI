@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/go-co-op/gocron/v2"
 	"github.com/joho/godotenv"
 )
 
@@ -40,7 +39,6 @@ var (
 
 	ARRIVALS_LOAD_INTERVAL int
 	ARRIVALS_DELAY_BUFFER  int
-	SCHEDULER              gocron.Scheduler
 )
 
 const (
@@ -50,25 +48,23 @@ const (
 
 func LoadConf() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalln("Errore: nessun file .env trovato. Il programma non può continuare.", err)
+		log.Fatalln("Missing .env file. The application cannot continue.", err)
 	}
 
 	getRequired := func(key string) string {
 		value, exists := os.LookupEnv(key)
 		if !exists || strings.TrimSpace(value) == "" {
-			log.Fatalf("Parametro obbligatorio mancante nel file .env: %s", key)
+			log.Fatalf("Missing required environment variable: %s", key)
 		}
 		return value
 	}
 
 	getRequiredBool := func(key string) bool {
-		value, exists := os.LookupEnv(key)
-		if !exists || strings.TrimSpace(value) == "" {
-			log.Fatalf("Parametro obbligatorio mancante nel file .env: %s", key)
-		} else if value == "true" {
-			return true
+		value, err := strconv.ParseBool(strings.TrimSpace(getRequired(key)))
+		if err != nil {
+			log.Fatalf("Invalid boolean value for %s", key)
 		}
-		return false
+		return value
 	}
 
 	getRequiredInt := func(key string) int {
@@ -76,7 +72,7 @@ func LoadConf() {
 
 		result, err := strconv.Atoi(value)
 		if err != nil {
-			log.Fatalf("Parametro %s non è un numero valido: %q", key, value)
+			log.Fatalf("Invalid integer value for %s: %q", key, value)
 		}
 
 		return result
@@ -87,7 +83,7 @@ func LoadConf() {
 	WEB_AUTH_USER = getRequired("WEB_AUTH_USER")
 	WEB_AUTH_PASSWORD = getRequired("WEB_AUTH_PASSWORD")
 
-	//OAuth config
+	// OAuth configuration.
 	OIDC_ISSUER_URL = getRequired("OIDC_ISSUER_URL")
 	OIDC_CLIENT_ID = getRequired("OIDC_CLIENT_ID")
 	OIDC_ALLOWED_GROUPS = strings.Split(getRequired("OIDC_ALLOWED_GROUPS"), ",")
@@ -108,4 +104,10 @@ func LoadConf() {
 
 	ARRIVALS_LOAD_INTERVAL = getRequiredInt("ARRIVALS_LOAD_INTERVAL")
 	ARRIVALS_DELAY_BUFFER = getRequiredInt("ARRIVALS_DELAY_BUFFER")
+	if DB_PORT < 1 || DB_PORT > 65535 {
+		log.Fatal("DB_PORT must be between 1 and 65535")
+	}
+	if ARRIVALS_LOAD_INTERVAL <= 0 || ARRIVALS_DELAY_BUFFER < 0 {
+		log.Fatal("Invalid arrival intervals")
+	}
 }
