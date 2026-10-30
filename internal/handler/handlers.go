@@ -473,7 +473,7 @@ func UpdateAnnouncementHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	//Deletes old announcement
-	err := static.InsertAnnouncement(req.Message)
+	err := static.EmptyAnnouncements()
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -511,7 +511,7 @@ func EmptyAnnouncementsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	err := static.InsertAnnouncement(req.Message)
+	err := static.EmptyAnnouncements()
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -25,3 +25,13 @@ func InsertAnnouncement(mess string) error {
 
 	return nil
 }
+
+func EmptyAnnouncements() error {
+	_, err := repository.DB_STATIC.Exec("DELETE FROM announcements")
+	if err != nil {
+		fmt.Println("EmptyAnnouncements error:", err)
+		return err
+	}
+
+	return nil
+}
