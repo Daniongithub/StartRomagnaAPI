@@ -34,8 +34,7 @@ var (
 
 	PORT string
 
-	IS_PRIMARY      atomic.Bool
-	ALLOWED_ORIGINS []string
+	IS_PRIMARY atomic.Bool
 
 	ARRIVALS_LOAD_INTERVAL int
 	ARRIVALS_DELAY_BUFFER  int
@@ -101,8 +100,6 @@ func LoadConf() {
 	ARBITER_SECRET = getRequired("ARBITER_SECRET")
 
 	PORT = getRequired("PORT")
-
-	ALLOWED_ORIGINS = strings.Split(getRequired("ALLOWED_ORIGINS"), ",")
 
 	ARRIVALS_LOAD_INTERVAL = getRequiredInt("ARRIVALS_LOAD_INTERVAL")
 	ARRIVALS_DELAY_BUFFER = getRequiredInt("ARRIVALS_DELAY_BUFFER")
