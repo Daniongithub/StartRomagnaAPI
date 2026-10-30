@@ -84,10 +84,12 @@ func LoadConf() {
 	WEB_AUTH_PASSWORD = getRequired("WEB_AUTH_PASSWORD")
 
 	// OAuth configuration.
-	OIDC_ISSUER_URL = getRequired("OIDC_ISSUER_URL")
-	OIDC_CLIENT_ID = getRequired("OIDC_CLIENT_ID")
-	OIDC_ALLOWED_GROUPS = strings.Split(getRequired("OIDC_ALLOWED_GROUPS"), ",")
 	ENABLE_AUTH = getRequiredBool("ENABLE_AUTH")
+	if ENABLE_AUTH {
+		OIDC_ISSUER_URL = getRequired("OIDC_ISSUER_URL")
+		OIDC_CLIENT_ID = getRequired("OIDC_CLIENT_ID")
+		OIDC_ALLOWED_GROUPS = strings.Split(getRequired("OIDC_ALLOWED_GROUPS"), ",")
+	}
 
 	DB_HOST = getRequired("DB_HOST")
 	DB_PORT = getRequiredInt("DB_PORT")

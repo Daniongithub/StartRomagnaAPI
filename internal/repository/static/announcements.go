@@ -15,3 +15,13 @@ func GetAnnouncements() []model.Announcement {
 
 	return results
 }
+
+func InsertAnnouncement(mess string) error {
+	_, err := repository.DB_STATIC.Exec("INSERT INTO announcements(message) VALUES(?)", mess)
+	if err != nil {
+		fmt.Println("InsertAnnouncements error:", err)
+		return err
+	}
+
+	return nil
+}

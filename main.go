@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
@@ -11,6 +12,8 @@ import (
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/scheduler"
 	"startromagnaapi/internal/sse"
+
+	"github.com/coreos/go-oidc/v3/oidc"
 )
 
 func main() {
@@ -64,10 +67,21 @@ func main() {
 	mux.HandleFunc("POST /admin/halt", handler.HaltHandler)
 	mux.HandleFunc("POST /admin/resync", handler.ResyncHandler)
 
-	/*
-		if config.ENABLE_AUTH {
+	
+	if config.ENABLE_AUTH {
+		ctx := context.Background()
 
-		}*/
+		provider, err := oidc.NewProvider(ctx, config.OIDC_ISSUER_URL)
+		if err != nil {
+			log.Fatal("impossibile contattare Authentik per il discovery OIDC:", err)
+		}
+
+		verifier := provider.Verifier(&oidc.Config{ClientID: config.OIDC_CLIENT_ID})
+		authMiddleware := handler.RequireAuth(verifier, config.OIDC_ALLOWED_GROUPS)
+
+		mux.Handle("PUT /announcements/update", authMiddleware(http.HandlerFunc(handler.UpdateAnnouncementHandler)))
+		mux.Handle("DELETE /announcements/empty", authMiddleware(http.HandlerFunc(handler.EmptyAnnouncementsHandler)))
+	}
 
 	// Listen on the configured port and start the API.
 	log.Printf("Starting HTTP server on %s", config.PORT)

@@ -4,14 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"startromagnaapi/config"
+	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/static"
 	"startromagnaapi/internal/scheduler"
 	"startromagnaapi/internal/service"
 	"strconv"
+	"strings"
 	"sync/atomic"
+
+	"github.com/coreos/go-oidc/v3/oidc"
 )
 
 // GET /health
@@ -448,4 +453,127 @@ func ResyncHandler(w http.ResponseWriter, r *http.Request) {
 		defer resyncInProgress.Store(false)
 		repository.RunResync(req.MasterHost)
 	}()
+}
+
+// PUT /announcements/update (AUTH REQUIRED)
+func UpdateAnnouncementHandler(w http.ResponseWriter, r *http.Request) {
+	//Sets headers
+	w.Header().Set("Content-Type", "application/json")
+	if r.Header.Get("Content-Type") != "application/json" {
+		w.WriteHeader(http.StatusUnsupportedMediaType) // 415
+		json.NewEncoder(w).Encode(map[string]string{"error": "Expected application/json."})
+		return
+	}
+	var req model.Announcement
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body."})
+		return
+	}
+	defer r.Body.Close()
+
+	//Deletes old announcement
+	err := static.InsertAnnouncement(req.Message)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+
+	err = static.InsertAnnouncement(req.Message)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+	message := "Add request OK"
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode([]byte(message))
+}
+
+// DELETE /announcements/empty (AUTH REQUIRED)
+func EmptyAnnouncementsHandler(w http.ResponseWriter, r *http.Request) {
+	//Sets headers
+	w.Header().Set("Content-Type", "application/json")
+	if r.Header.Get("Content-Type") != "application/json" {
+		w.WriteHeader(http.StatusUnsupportedMediaType) // 415
+		json.NewEncoder(w).Encode(map[string]string{"error": "Expected application/json."})
+		return
+	}
+	var req model.Announcement
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body."})
+		return
+	}
+	defer r.Body.Close()
+
+	err := static.InsertAnnouncement(req.Message)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+	message := "Add request OK"
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode([]byte(message))
+}
+
+// Auth flow
+func RequireAuth(verifier *oidc.IDTokenVerifier, allowedGroups []string) func(http.Handler) http.Handler {
+	allowedSet := make(map[string]bool, len(allowedGroups))
+	for _, g := range allowedGroups {
+		allowedSet[g] = true
+	}
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+
+			authHeader := r.Header.Get("Authorization")
+			log.Println("Authorization header ricevuto:", authHeader)
+			if !strings.HasPrefix(authHeader, "Bearer ") {
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Missing bearer token."})
+				return
+			}
+			rawToken := strings.TrimPrefix(authHeader, "Bearer ")
+
+			idToken, err := verifier.Verify(r.Context(), rawToken)
+			if err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Invalid or expired token."})
+				return
+			}
+
+			var claims struct {
+				Groups []string `json:"groups"`
+			}
+			if err := idToken.Claims(&claims); err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Malformed token claims."})
+				return
+			}
+
+			authorized := false
+			for _, g := range claims.Groups {
+				if allowedSet[g] {
+					authorized = true
+					break
+				}
+			}
+			if !authorized {
+				w.WriteHeader(http.StatusForbidden)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Insufficient group membership."})
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
