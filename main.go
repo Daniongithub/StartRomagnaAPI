@@ -79,8 +79,8 @@ func main() {
 		verifier := provider.Verifier(&oidc.Config{ClientID: config.OIDC_CLIENT_ID})
 		authMiddleware := handler.RequireAuth(verifier, config.OIDC_ALLOWED_GROUPS)
 
-		mux.Handle("PUT /announcements/update", authMiddleware(http.HandlerFunc(handler.UpdateAnnouncementHandler)))
-		mux.Handle("DELETE /announcements/empty", authMiddleware(http.HandlerFunc(handler.EmptyAnnouncementsHandler)))
+		mux.Handle("PUT /announcements/update", cors.Middleware(authMiddleware(http.HandlerFunc(handler.UpdateAnnouncementHandler))))
+		mux.Handle("DELETE /announcements/empty", cors.Middleware(authMiddleware(http.HandlerFunc(handler.EmptyAnnouncementsHandler))))
 	}
 
 	// Listen on the configured port and start the API.
