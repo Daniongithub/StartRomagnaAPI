@@ -112,7 +112,7 @@ type StopTimeWName struct {
 	DepartureTimeStr string    `json:"departure_time"`
 	StopName         string    `db:"stop_name" json:"stop_name"`
 	StopId           string    `db:"stop_id" json:"stop_id"`
-	StopSequence     int       `db:"stop_sequence" json:"-"`
+	StopSequence     int       `db:"stop_sequence" json:"stop_sequence"`
 }
 
 type TripInfo struct {
