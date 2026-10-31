@@ -66,6 +66,8 @@ Ask us the schemas, if needed.
 
 Gli import GTFS sono transazionali: un errore nel download, nella decodifica o nella scrittura conserva lo stato precedente. Le tabelle devono usare un motore transazionale, come InnoDB. Le notifiche SSE vengono emesse dopo il commit. L'RSS continua a essere scaricato direttamente dal sito.
 
+All responses include `Access-Control-Allow-Origin: *`, including errors and OPTIONS responses. No origin allowlist is required.
+
 ## ENV Config
 
 ```env
@@ -92,9 +94,6 @@ REPLICA_PASSWORD=
 ARBITER_SECRET=
 
 PORT=":5005"
-
-# Array of allowed origins
-ALLOWED_ORIGINS="https://example.com,https://example.com"
 
 # Interval (in minutes) where future arrivals get displayed in /arrivals endpoint
 ARRIVALS_LOAD_INTERVAL=90

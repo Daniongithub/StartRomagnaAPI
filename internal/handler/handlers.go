@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
@@ -536,7 +535,6 @@ func RequireAuth(verifier *oidc.IDTokenVerifier, allowedGroups []string) func(ht
 			w.Header().Set("Content-Type", "application/json")
 
 			authHeader := r.Header.Get("Authorization")
-			log.Println("Authorization header ricevuto:", authHeader)
 			if !strings.HasPrefix(authHeader, "Bearer ") {
 				w.WriteHeader(http.StatusUnauthorized)
 				json.NewEncoder(w).Encode(map[string]string{"error": "Missing bearer token."})
