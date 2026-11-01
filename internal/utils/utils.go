@@ -88,3 +88,12 @@ func SortLines(lines []model.Line) {
 		return compareSuffix(sufI, sufJ)
 	})
 }
+
+func FindRouteFromID(arr []model.RoutesResult, routeId string) *model.RoutesResult {
+	for _, val := range arr {
+		if val.Route_id == routeId {
+			return &val
+		}
+	}
+	return nil
+}

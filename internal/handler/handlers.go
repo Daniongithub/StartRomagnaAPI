@@ -264,7 +264,7 @@ func RoutesBasinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results := static.GetRoutesBasin(basin)
+	results := service.ProcessRoutes(basin)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
