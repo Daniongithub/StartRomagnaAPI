@@ -68,6 +68,13 @@ func compareSuffix(a, b string) bool {
 	return len(ra) < len(rb)
 }
 
+func lineValue(l model.RoutesWOffLine) string {
+    if l.DispLine != nil && *l.DispLine != "" {
+        return *l.DispLine
+    }
+    return l.OfficialLine
+}
+
 // Sort lines by their numeric component.
 func SortLines(lines []model.Line) {
 	sort.SliceStable(lines, func(i, j int) bool {
@@ -92,8 +99,8 @@ func SortLines(lines []model.Line) {
 // Sort routes by their numeric component.
 func SortRoutes(lines []model.RoutesWOffLine) {
 	sort.SliceStable(lines, func(i, j int) bool {
-		numI, sufI, hasNumI := parseLine(lines[i].OfficialLine)
-		numJ, sufJ, hasNumJ := parseLine(lines[j].OfficialLine)
+		numI, sufI, hasNumI := parseLine(lineValue(lines[i]))
+		numJ, sufJ, hasNumJ := parseLine(lineValue(lines[j]))
 
 		if hasNumI != hasNumJ {
 			return hasNumI
