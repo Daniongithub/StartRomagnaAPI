@@ -39,3 +39,24 @@ func GetRouteNamefromID(basin, routeId string) string {
 	}
 	return result[0]
 }
+
+func GetOfficialLine(routeId, basin string) *string {
+	var results []string
+	err := repository.DB_STATIC.Select(&results, `
+        SELECT DISTINCT
+            CASE 
+                WHEN r.basin = 'RA' THEN r.route_short_name
+                WHEN r.route_long_name IS NOT NULL AND r.route_long_name <> '' THEN r.route_long_name
+                ELSE r.route_short_name 
+            END AS official_line
+        FROM routes AS r
+        WHERE r.route_id = ? AND r.basin = ?
+    `, routeId, basin)
+	if err != nil {
+		fmt.Println("GetLinesForStop database error:", err)
+	}
+	if len(results) == 0 {
+		return nil
+	}
+	return &results[0]
+}

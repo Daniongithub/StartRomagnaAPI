@@ -67,6 +67,24 @@ type StopInfo struct {
 	School   []Line `json:"school,omitempty"`
 }
 
+type ClassifiedRoutes struct {
+	Urban    []RoutesWOffLine `json:"urban,omitempty"`
+	Suburban []RoutesWOffLine `json:"suburban,omitempty"`
+	Exurban  []RoutesWOffLine `json:"exurban,omitempty"`
+	Shuttle  []RoutesWOffLine `json:"shuttle,omitempty"`
+	School   []RoutesWOffLine `json:"school,omitempty"`
+}
+
+type RoutesWOffLine struct {
+	Basin          string `db:"basin" json:"basin"`
+	RouteId        string `db:"route_id" json:"route_id"`
+	AgencyId       string `db:"agency_id" json:"agency_id"`
+	RouteShortName string `db:"route_short_name" json:"route_short_name"`
+	RouteLongName  string `db:"route_long_name" json:"route_long_name"`
+	RouteType      int    `db:"route_type" json:"route_type"`
+	OfficialLine   string `db:"official_line" json:"official_line"`
+}
+
 type Line struct {
 	Line         string `json:"line"`
 	OfficialLine string `json:"official_line"`

@@ -21,13 +21,13 @@ func GetStopsBasin(basin string) []model.StopsResult {
 func GetStopsFromShapeID(basin, shapeID string) []model.StopsResult {
 	var results []model.StopsResult
 	err := repository.DB_STATIC.Select(&results, `
-  SELECT DISTINCT s.basin, s.stop_name, s.stop_id, s.stop_code, s.stop_lat, s.stop_lon, s.is_dummy
-  FROM stops s
-  INNER JOIN stop_times st ON s.basin = st.basin AND s.stop_id = st.stop_id
-  INNER JOIN trips t ON st.basin = t.basin AND st.trip_id = t.trip_id
-  WHERE s.basin = ? AND t.shape_id = ? AND s.is_dummy = 0
-  ORDER BY s.stop_code, s.stop_id
- `, basin, shapeID)
+		SELECT DISTINCT s.basin, s.stop_name, s.stop_id, s.stop_code, s.stop_lat, s.stop_lon, s.is_dummy
+		FROM stops s
+		INNER JOIN stop_times st ON s.basin = st.basin AND s.stop_id = st.stop_id
+		INNER JOIN trips t ON st.basin = t.basin AND st.trip_id = t.trip_id
+		WHERE s.basin = ? AND t.shape_id = ? AND s.is_dummy = 0
+		ORDER BY s.stop_code, s.stop_id
+ 	`, basin, shapeID)
 	if err != nil {
 		fmt.Println("GetStopsFromShapeID database error:", err)
 	}

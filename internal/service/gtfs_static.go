@@ -6,34 +6,57 @@ import (
 	"startromagnaapi/internal/utils"
 )
 
-func ProcessRoutes(basin string) []model.RoutesResult {
+func ProcessRoutes(basin string) model.ClassifiedRoutes {
 	routes := static.GetRoutesBasin(basin)
 
-	var lines []model.Line
-	//Parses to Line format
-	for _, val := range routes {
-		lines = append(lines, model.Line{
-			Line: val.Route_id,
-		})
-	}
-	//Calls to existing function
-	utils.SortLines(lines)
+	//Classify routes and orders them
+	return classifyRoutes(basin, routes)
+}
 
-	var sorted []model.RoutesResult
-	//Reconstructs ordered array
-	for _, val := range lines {
-		original := utils.FindRouteFromID(routes, val.Line);
-		if original == nil {
-			return nil
+func classifyRoutes(basin string, routes []model.RoutesResult) model.ClassifiedRoutes {
+	var rows []model.RoutesWOffLine
+	for _, val := range routes {
+		offLine1 := static.GetOfficialLine(val.Route_id, val.Basin)
+		var offLine2 string
+		if offLine1 == nil {
+			offLine2 = ""
+		} else {
+			offLine2 = *offLine1
 		}
-		sorted = append(sorted, model.RoutesResult{
-			Basin:    basin,
-			Route_id: val.Line,
-			Agency_id: original.Agency_id,
-			Route_short_name: original.Route_short_name,
-			Route_long_name: original.Route_long_name,
-			Route_type: original.Route_type,
+		rows = append(rows, model.RoutesWOffLine{
+			Basin:          basin,
+			RouteId:        val.Route_id,
+			AgencyId:       val.Agency_id,
+			RouteShortName: val.Route_short_name,
+			RouteLongName:  val.Route_long_name,
+			RouteType:      val.Route_type,
+			OfficialLine:   offLine2,
 		})
 	}
-	return sorted
+
+	buckets := map[lineCategory][]model.RoutesWOffLine{
+		categoryUrban:    make([]model.RoutesWOffLine, 0, len(rows)),
+		categoryExurban:  make([]model.RoutesWOffLine, 0, len(rows)),
+		categorySuburban: nil,
+		categoryShuttle:  nil,
+		categorySchool:   nil,
+	}
+
+	for _, row := range rows {
+		// Separation
+		category := classifyLine(basin, row.OfficialLine)
+		buckets[category] = append(buckets[category], row)
+	}
+
+	for _, lines := range buckets {
+		utils.SortRoutes(lines)
+	}
+
+	return model.ClassifiedRoutes{
+		Urban:    buckets[categoryUrban],
+		Suburban: buckets[categorySuburban],
+		Exurban:  buckets[categoryExurban],
+		Shuttle:  buckets[categoryShuttle],
+		School:   buckets[categorySchool],
+	}
 }

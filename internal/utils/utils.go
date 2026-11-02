@@ -89,6 +89,27 @@ func SortLines(lines []model.Line) {
 	})
 }
 
+// Sort routes by their numeric component.
+func SortRoutes(lines []model.RoutesWOffLine) {
+	sort.SliceStable(lines, func(i, j int) bool {
+		numI, sufI, hasNumI := parseLine(lines[i].OfficialLine)
+		numJ, sufJ, hasNumJ := parseLine(lines[j].OfficialLine)
+
+		if hasNumI != hasNumJ {
+			return hasNumI
+		}
+
+		if !hasNumI {
+			return compareSuffix(sufI, sufJ)
+		}
+
+		if numI != numJ {
+			return numI < numJ
+		}
+		return compareSuffix(sufI, sufJ)
+	})
+}
+
 func FindRouteFromID(arr []model.RoutesResult, routeId string) *model.RoutesResult {
 	for _, val := range arr {
 		if val.Route_id == routeId {
