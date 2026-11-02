@@ -2,7 +2,10 @@ package gtfs
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"time"
+
 	// "log" // Uncomment with the duration metrics below.
 	// "time"
 
@@ -17,7 +20,8 @@ import (
 )
 
 func UpdateStatic() error {
-	// start := time.Now() // Uncomment to measure import duration.
+	start := time.Now() // Uncomment to measure import duration.
+	log.Println("Started static GTFS update.")
 	feeds := make(map[string]*gtfsparserwr.Feed, 3)
 	for _, source := range []struct {
 		basin, file    string
@@ -34,7 +38,7 @@ func UpdateStatic() error {
 	if err := static.SaveSnapshot(feeds); err != nil {
 		return err
 	}
-	// log.Printf("Static GTFS updated in %s", time.Since(start))
+	log.Printf("Static GTFS updated in %s", time.Since(start))
 	return nil
 }
 
