@@ -29,6 +29,7 @@ func classifyRoutes(basin string, routes []model.RoutesResult) model.ClassifiedR
 			AgencyId:       val.Agency_id,
 			RouteShortName: val.Route_short_name,
 			RouteLongName:  val.Route_long_name,
+			DispLine:       *val.Disp_line,
 			RouteType:      val.Route_type,
 			OfficialLine:   offLine2,
 		})
