@@ -81,7 +81,7 @@ type RoutesWOffLine struct {
 	AgencyId       string  `db:"agency_id" json:"agency_id"`
 	RouteShortName string  `db:"route_short_name" json:"route_short_name"`
 	RouteLongName  string  `db:"route_long_name" json:"route_long_name"`
-	DispLine       *string `db:"disp_linea" json:"disp_linea"`
+	DispLine       *string `db:"disp_linea" json:"disp_line"`
 	RouteType      int     `db:"route_type" json:"route_type"`
 	OfficialLine   string  `db:"official_line" json:"official_line"`
 }
