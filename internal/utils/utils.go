@@ -96,25 +96,36 @@ func SortLines(lines []model.Line) {
 	})
 }
 
-// Sort routes by their numeric component.
+// Sort routes by city for FC, then by line number and variant.
 func SortRoutes(lines []model.RoutesWOffLine) {
-	sort.SliceStable(lines, func(i, j int) bool {
-		numI, sufI, hasNumI := parseLine(lineValue(lines[i]))
-		numJ, sufJ, hasNumJ := parseLine(lineValue(lines[j]))
-
-		if hasNumI != hasNumJ {
-			return hasNumI
+	if len(lines) < 2 {
+		return
+	}
+	pattern := regexp.MustCompile(`^(\d+)([A-Za-z]*)\s*(.*)$`)
+	ordered := make([]model.RouteOrder, len(lines))
+	for i, route := range lines {
+		label := strings.TrimSpace(lineValue(route))
+		ordered[i] = model.RouteOrder{Route: route, Number: 1<<31 - 1, City: label}
+		if parts := pattern.FindStringSubmatch(label); parts != nil {
+			ordered[i].Number, _ = strconv.Atoi(parts[1])
+			ordered[i].Variant = parts[2]
+			ordered[i].City = strings.TrimSpace(parts[3])
 		}
-
-		if !hasNumI {
-			return compareSuffix(sufI, sufJ)
+	}
+	groupByCity := lines[0].Basin == "FC"
+	sort.SliceStable(ordered, func(i, j int) bool {
+		a, b := ordered[i], ordered[j]
+		if groupByCity && a.City != b.City {
+			return a.City < b.City
 		}
-
-		if numI != numJ {
-			return numI < numJ
+		if a.Number != b.Number {
+			return a.Number < b.Number
 		}
-		return compareSuffix(sufI, sufJ)
+		return a.Variant < b.Variant
 	})
+	for i := range lines {
+		lines[i] = ordered[i].Route
+	}
 }
 
 func FindRouteFromID(arr []model.RoutesResult, routeId string) *model.RoutesResult {
