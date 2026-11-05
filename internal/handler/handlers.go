@@ -502,13 +502,6 @@ func EmptyAnnouncementsHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Expected application/json."})
 		return
 	}
-	var req model.Announcement
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body."})
-		return
-	}
-	defer r.Body.Close()
 
 	err := static.EmptyAnnouncements()
 
