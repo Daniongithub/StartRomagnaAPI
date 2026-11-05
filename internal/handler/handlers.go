@@ -545,7 +545,7 @@ func RequireAuth(verifier *oidc.IDTokenVerifier, allowedGroups []string) func(ht
 			idToken, err := verifier.Verify(r.Context(), rawToken)
 			if err != nil {
 				w.WriteHeader(http.StatusUnauthorized)
-				json.NewEncoder(w).Encode(map[string]string{"error": "Invalid or expired token.", "details": err.Error()})
+				json.NewEncoder(w).Encode(map[string]string{"error": "Invalid or expired token."})
 				return
 			}
 
