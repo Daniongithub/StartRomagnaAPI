@@ -40,6 +40,7 @@ This project can't be reutilised, because the code is too specific, it'd be impo
 - `GET /vehiclepositions/{basin}` -> `/vehiclepositions` di un solo bacino. | `/vehiclepositions` of a single basin.
 - `GET /vehicleposition/{vehicleid}` -> `/vehiclepositions` di un solo veicolo. | `/vehiclepositions` of a single vehicle.
 - `GET /shape/{basin}/{shapeId}` -> Shape del percorso, dato il bacino e l'id univoco. | Shape of the trip, given the basin and its unique id.
+- `GET /shapeslist/{basin}/{routeId}` -> Lista di shape_id dato il bacino e il route_id. | List of all shape_id given the basin and route_id.
 - `GET /vehicleinfo/{vehicle}` -> Informazioni su un singolo veicolo. | Return information of a signle vehicle.
 - `GET /stopsinfo/{basin}/{stopcode}` -> Ritorna tutte le linee che passano in una fermata, dato il bacino ed il codice fermata. | Returns all the lines that stop in the specified bus stop, given the basin and its id.
 - `GET /announcements` -> Annunci | Announcements
