@@ -177,6 +177,22 @@ func ShapePointsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
+// GET /shapeslist/{basin}/{routeId}
+func ShapesListHandler(w http.ResponseWriter, r *http.Request) {
+	basin := r.PathValue("basin")
+	routeid := r.PathValue("routeId")
+
+	if basin != "RA" && basin != "FC" && basin != "RN" {
+		http.Error(w, "Invalid basin", http.StatusBadRequest)
+		return
+	}
+
+	results := static.GetDistinctShapesBasin(basin, routeid)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
 // GET /vehicleinfo/{vehicle}
 func VehicleinfoHandler(w http.ResponseWriter, r *http.Request) {
 	vehicleId := r.PathValue("vehicle")
