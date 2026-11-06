@@ -86,14 +86,6 @@ type RoutesWOffLine struct {
 	OfficialLine   string  `db:"official_line" json:"official_line"`
 }
 
-// RouteOrder stores the parsed sort fields for a route.
-type RouteOrder struct {
-	Route   RoutesWOffLine
-	Number  int
-	Variant string
-	City    string
-}
-
 type Line struct {
 	Line         string `json:"line"`
 	OfficialLine string `json:"official_line"`

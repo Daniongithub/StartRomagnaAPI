@@ -2,13 +2,10 @@ package service
 
 import (
 	"errors"
-	"regexp"
 	"sort"
-	"strconv"
-	"strings"
-
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository/realtime"
+	"startromagnaapi/internal/utils"
 )
 
 var NoBusesInService = errors.New("No buses in service")
@@ -30,27 +27,6 @@ func ProcessBusesInService() ([]model.BusInService, error) {
 }
 
 // SORT AND GROUP BY LINE
-
-var reLine = regexp.MustCompile(`^(\d+)([A-Za-z]*)\s*(.*)$`)
-
-type lineParts struct {
-	num     int
-	variant string
-	city    string
-}
-
-func splitLine(line string) lineParts {
-	matches := reLine.FindStringSubmatch(strings.TrimSpace(line))
-	if matches == nil {
-		return lineParts{num: 1<<31 - 1, variant: "", city: line}
-	}
-	n, _ := strconv.Atoi(matches[1])
-	return lineParts{
-		num:     n,
-		variant: matches[2],
-		city:    strings.TrimSpace(matches[3]),
-	}
-}
 
 func groupAndSort(items []model.BusInService) []model.BusInService {
 	// Group by basin in order of appearance.
@@ -75,11 +51,11 @@ func groupAndSort(items []model.BusInService) []model.BusInService {
 			cityGroups := make(map[string][]model.BusInService)
 
 			for _, it := range basinItems {
-				p := splitLine(it.Line)
-				if _, exists := cityGroups[p.city]; !exists {
-					cityOrder = append(cityOrder, p.city)
+				p := utils.SplitLine(it.Line)
+				if _, exists := cityGroups[p.City]; !exists {
+					cityOrder = append(cityOrder, p.City)
 				}
-				cityGroups[p.city] = append(cityGroups[p.city], it)
+				cityGroups[p.City] = append(cityGroups[p.City], it)
 			}
 
 			// Place lines without a city suffix first, then sort cities alphabetically.
@@ -97,24 +73,24 @@ func groupAndSort(items []model.BusInService) []model.BusInService {
 			for _, city := range cityOrder {
 				g := cityGroups[city]
 				sort.SliceStable(g, func(i, j int) bool {
-					pi := splitLine(g[i].Line)
-					pj := splitLine(g[j].Line)
-					if pi.num != pj.num {
-						return pi.num < pj.num
+					pi := utils.SplitLine(g[i].Line)
+					pj := utils.SplitLine(g[j].Line)
+					if pi.Num != pj.Num {
+						return pi.Num < pj.Num
 					}
-					return pi.variant < pj.variant
+					return pi.Variant < pj.Variant
 				})
 				result = append(result, g...)
 			}
 		} else {
 			sort.SliceStable(basinItems, func(i, j int) bool {
-				pi := splitLine(basinItems[i].Line)
-				pj := splitLine(basinItems[j].Line)
+				pi := utils.SplitLine(basinItems[i].Line)
+				pj := utils.SplitLine(basinItems[j].Line)
 
-				if pi.num != pj.num {
-					return pi.num < pj.num
+				if pi.Num != pj.Num {
+					return pi.Num < pj.Num
 				}
-				return pi.variant < pj.variant
+				return pi.Variant < pj.Variant
 			})
 
 			result = append(result, basinItems...)

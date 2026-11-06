@@ -69,10 +69,10 @@ func compareSuffix(a, b string) bool {
 }
 
 func lineValue(l model.RoutesWOffLine) string {
-    if l.DispLine != nil && *l.DispLine != "" {
-        return *l.DispLine
-    }
-    return l.OfficialLine
+	if l.DispLine != nil && *l.DispLine != "" {
+		return *l.DispLine
+	}
+	return l.OfficialLine
 }
 
 // Sort lines by their numeric component.
@@ -96,35 +96,84 @@ func SortLines(lines []model.Line) {
 	})
 }
 
+var reLine = regexp.MustCompile(`^(\d+)([A-Za-z]*)\s*(.*)$`)
+
 // Sort routes by city for FC, then by line number and variant.
-func SortRoutes(lines []model.RoutesWOffLine) {
+func SortRoutes(lines []model.RoutesWOffLine) []model.RoutesWOffLine {
 	if len(lines) < 2 {
-		return
+		return nil
 	}
-	pattern := regexp.MustCompile(`^(\d+)([A-Za-z]*)\s*(.*)$`)
-	ordered := make([]model.RouteOrder, len(lines))
-	for i, route := range lines {
-		label := strings.TrimSpace(lineValue(route))
-		ordered[i] = model.RouteOrder{Route: route, Number: 1<<31 - 1, City: label}
-		if parts := pattern.FindStringSubmatch(label); parts != nil {
-			ordered[i].Number, _ = strconv.Atoi(parts[1])
-			ordered[i].Variant = parts[2]
-			ordered[i].City = strings.TrimSpace(parts[3])
+	var result []model.RoutesWOffLine
+	if lines[0].Basin == "FC" {
+		// Group lines by city within the basin.
+		cityOrder := []string{}
+		cityGroups := make(map[string][]model.RoutesWOffLine)
+
+		for _, it := range lines {
+			p := SplitLine(lineValue(it))
+			if _, exists := cityGroups[p.City]; !exists {
+				cityOrder = append(cityOrder, p.City)
+			}
+			cityGroups[p.City] = append(cityGroups[p.City], it)
 		}
+
+		// Place lines without a city suffix first, then sort cities alphabetically.
+		sort.SliceStable(cityOrder, func(i, j int) bool {
+			if cityOrder[i] != "" {
+				return true
+			}
+			if cityOrder[j] != "" {
+				return false
+			}
+			return cityOrder[i] < cityOrder[j]
+		})
+
+		// Sort by line number, then by variant (1, 1B, 2, 3, 4B...).
+		for _, city := range cityOrder {
+			g := cityGroups[city]
+			sort.SliceStable(g, func(i, j int) bool {
+				pi := SplitLine(lineValue(g[i]))
+				pj := SplitLine(lineValue(g[j]))
+				if pi.Num != pj.Num {
+					return pi.Num < pj.Num
+				}
+				return pi.Variant < pj.Variant
+			})
+			result = append(result, g...)
+		}
+	} else {
+		sort.SliceStable(lines, func(i, j int) bool {
+			pi := SplitLine(lineValue(lines[i]))
+			pj := SplitLine(lineValue(lines[j]))
+
+			if pi.Num != pj.Num {
+				return pi.Num < pj.Num
+			}
+			return pi.Variant < pj.Variant
+		})
+
+		result = append(result, lines...)
 	}
-	groupByCity := lines[0].Basin == "FC"
-	sort.SliceStable(ordered, func(i, j int) bool {
-		a, b := ordered[i], ordered[j]
-		if groupByCity && a.City != b.City {
-			return a.City < b.City
-		}
-		if a.Number != b.Number {
-			return a.Number < b.Number
-		}
-		return a.Variant < b.Variant
-	})
-	for i := range lines {
-		lines[i] = ordered[i].Route
+
+	return result
+}
+
+type lineParts struct {
+	Num     int
+	Variant string
+	City    string
+}
+
+func SplitLine(line string) lineParts {
+	matches := reLine.FindStringSubmatch(strings.TrimSpace(line))
+	if matches == nil {
+		return lineParts{Num: 1<<31 - 1, Variant: line, City: ""}
+	}
+	n, _ := strconv.Atoi(matches[1])
+	return lineParts{
+		Num:     n,
+		Variant: matches[2],
+		City:    strings.TrimSpace(matches[3]),
 	}
 }
 

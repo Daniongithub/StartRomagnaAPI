@@ -49,15 +49,16 @@ func classifyRoutes(basin string, routes []model.RoutesResult) model.ClassifiedR
 		buckets[category] = append(buckets[category], row)
 	}
 
-	for _, lines := range buckets {
-		utils.SortRoutes(lines)
+	newBuckets := make(map[lineCategory][]model.RoutesWOffLine)
+	for category, lines := range buckets {
+		newBuckets[category] = utils.SortRoutes(lines)
 	}
 
 	return model.ClassifiedRoutes{
-		Urban:    buckets[categoryUrban],
-		Suburban: buckets[categorySuburban],
-		Exurban:  buckets[categoryExurban],
-		Shuttle:  buckets[categoryShuttle],
-		School:   buckets[categorySchool],
+		Urban:    newBuckets[categoryUrban],
+		Suburban: newBuckets[categorySuburban],
+		Exurban:  newBuckets[categoryExurban],
+		Shuttle:  newBuckets[categoryShuttle],
+		School:   newBuckets[categorySchool],
 	}
 }
