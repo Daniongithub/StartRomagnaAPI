@@ -32,8 +32,8 @@ go.work.sum
 # .vscode/
 
 # Local review notes and regression tests
-/AGENTS.md
-/REVIEW.md
+AGENTS.md
+REVIEW.md
 /internal/cors/cors_test.go
 /internal/gtfs/import_test.go
 /internal/handler/announcements_test.go
