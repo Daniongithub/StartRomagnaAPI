@@ -142,3 +142,9 @@ type TripInfo struct {
 	TripId       string `db:"trip_id" json:"trip_id"`
 	ShapeId      string `db:"shape_id" json:"shape_id"`
 }
+
+type ShapeIDWInfo struct {
+	ShapeId     string `db:"shape_id" json:"shape_id"`
+	Line        string `db:"disp_linea" json:"line"`
+	Destination *string `db:"disp_dest" json:"destination"`
+}

@@ -29,11 +29,11 @@ func GetStopTimesDetailByTrip(basin, tripId string) []model.StopTimeWName {
 func GetTerminusName(basin, tripID string) string {
 	var results []string
 	err := repository.DB_STATIC.Select(&results, `
-  SELECT s.stop_name FROM stop_times st
-  INNER JOIN stops s ON st.stop_id = s.stop_id AND st.basin = s.basin
-  WHERE st.basin = ? AND st.trip_id = ?
-  ORDER BY st.stop_sequence DESC LIMIT 1
- `, basin, tripID)
+		SELECT s.stop_name FROM stop_times st
+		INNER JOIN stops s ON st.stop_id = s.stop_id AND st.basin = s.basin
+		WHERE st.basin = ? AND st.trip_id = ?
+		ORDER BY st.stop_sequence DESC LIMIT 1
+	`, basin, tripID)
 	if err != nil {
 		fmt.Println("GetTerminusName error:", err)
 	}

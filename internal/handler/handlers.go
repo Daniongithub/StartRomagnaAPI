@@ -187,7 +187,7 @@ func ShapesListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results := static.GetDistinctShapesBasin(basin, routeid)
+	results := static.GetHeadsignsByRouteID(basin, routeid)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
