@@ -69,6 +69,21 @@ Gli import GTFS sono transazionali: un errore nel download, nella decodifica o n
 
 All responses include `Access-Control-Allow-Origin: *`, including errors and OPTIONS responses. No origin allowlist is required.
 
+## Command-line execution
+
+```bash
+go build -o startromagnaapi .
+./startromagnaapi --update-static-gtfs
+```
+
+Il flag `--update-static-gtfs` esegue una sola volta l'importazione statica dei tre bacini, usando la stessa operazione dello scheduler delle 04:00, poi termina. Apre soltanto il pool del database statico; non avvia server HTTP, SSE, scheduler, realtime o discovery OIDC. Senza flag il binario continua a funzionare come servizio. `--help` mostra le opzioni senza caricare la configurazione.
+
+Eseguire il comando dalla directory che contiene `.env`. Per questa modalità servono soltanto `START_GTFS_ROOT`, `WEB_AUTH_USER`, `WEB_AUTH_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_USERNAME` e `DB_PASSWORD`.
+
+Un lock MariaDB condiviso protegge sia il comando sia il job dello scheduler: se un'importazione statica è già in corso sullo stesso server DB, il secondo tentativo termina senza avviare download o scritture. Questa protezione richiede che anche il servizio utilizzi la versione aggiornata del binario. La sostituzione dei dati rimane transazionale.
+
+Exit codes: `0` for success, `1` for an import/startup failure or an already running import, `2` for invalid command-line arguments. Without flags, the binary starts the normal API service.
+
 ## ENV Config
 
 ```env

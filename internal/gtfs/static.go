@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
-	// "log" // Uncomment with the duration metrics below.
-	// "time"
+	// "time" // Uncomment with the duration metrics below.
 
 	"startromagnaapi/config"
 	"startromagnaapi/internal/auth"
@@ -20,7 +18,11 @@ import (
 )
 
 func UpdateStatic() error {
-	start := time.Now() // Uncomment to measure import duration.
+	return repository.WithAdvisoryLock(repository.DB_STATIC, "startromagnaapi:update-static-gtfs", updateStatic)
+}
+
+func updateStatic() error {
+	// start := time.Now() // Uncomment to measure import duration.
 	log.Println("Started static GTFS update.")
 	feeds := make(map[string]*gtfsparserwr.Feed, 3)
 	for _, source := range []struct {
@@ -38,7 +40,7 @@ func UpdateStatic() error {
 	if err := static.SaveSnapshot(feeds); err != nil {
 		return err
 	}
-	log.Printf("Static GTFS updated in %s", time.Since(start))
+	// log.Printf("Static GTFS updated in %s", time.Since(start))
 	return nil
 }
 

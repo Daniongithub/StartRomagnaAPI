@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"startromagnaapi/config"
@@ -17,6 +18,10 @@ import (
 )
 
 func main() {
+	os.Exit(runCLI(os.Args[1:], runServer, runStaticGTFSUpdate))
+}
+
+func runServer() {
 	config.LoadConf()
 	repository.InitStatic()
 	repository.InitRT()
@@ -68,7 +73,6 @@ func main() {
 	mux.HandleFunc("POST /admin/halt", handler.HaltHandler)
 	mux.HandleFunc("POST /admin/resync", handler.ResyncHandler)
 
-	
 	if config.ENABLE_AUTH {
 		ctx := context.Background()
 
