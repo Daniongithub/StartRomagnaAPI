@@ -51,3 +51,6 @@ REVIEW.md
 /internal/service/integration_test.go
 /internal/sse/hub_test.go
 /internal/testutil/
+
+start.sh
+startromagnaapi
