@@ -102,8 +102,13 @@ func initDB(name, user, password string) *sqlx.DB {
 	return db
 }
 
-func InitStatic() {
+// Initialize the static pool without invoking database-role management.
+func InitStaticConnection() {
 	DB_STATIC = initDB("start_gtfs_static", config.DB_USERNAME, config.DB_PASSWORD)
+}
+
+func InitStatic() {
+	InitStaticConnection()
 	if err := IsPrimary(DB_STATIC); err != nil {
 		log.Printf("Failed to determine the primary database: %v", err)
 	}

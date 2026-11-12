@@ -46,6 +46,15 @@ const (
 )
 
 func LoadConf() {
+	loadConf(false)
+}
+
+// Load only the settings required by the one-shot static GTFS import.
+func LoadStaticGTFSConf() {
+	loadConf(true)
+}
+
+func loadConf(staticOnly bool) {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalln("Missing .env file. The application cannot continue.", err)
 	}
@@ -78,9 +87,21 @@ func LoadConf() {
 	}
 
 	START_GTFS_ROOT = getRequired("START_GTFS_ROOT")
-	START_GTFS_RT_ROOT = getRequired("START_GTFS_RT_ROOT")
 	WEB_AUTH_USER = getRequired("WEB_AUTH_USER")
 	WEB_AUTH_PASSWORD = getRequired("WEB_AUTH_PASSWORD")
+
+	DB_HOST = getRequired("DB_HOST")
+	DB_PORT = getRequiredInt("DB_PORT")
+	DB_USERNAME = getRequired("DB_USERNAME")
+	DB_PASSWORD = getRequired("DB_PASSWORD")
+	if DB_PORT < 1 || DB_PORT > 65535 {
+		log.Fatal("DB_PORT must be between 1 and 65535")
+	}
+	if staticOnly {
+		return
+	}
+
+	START_GTFS_RT_ROOT = getRequired("START_GTFS_RT_ROOT")
 
 	// OAuth configuration.
 	ENABLE_AUTH = getRequiredBool("ENABLE_AUTH")
@@ -90,11 +111,7 @@ func LoadConf() {
 		OIDC_ALLOWED_GROUPS = strings.Split(getRequired("OIDC_ALLOWED_GROUPS"), ",")
 	}
 
-	DB_HOST = getRequired("DB_HOST")
-	DB_PORT = getRequiredInt("DB_PORT")
-	DB_USERNAME = getRequired("DB_USERNAME")
 	DB_DOMAIN = getRequired("DB_DOMAIN")
-	DB_PASSWORD = getRequired("DB_PASSWORD")
 	DB_ORCH_USERNAME = getRequired("DB_ORCH_USERNAME")
 	DB_ORCH_PASSWORD = getRequired("DB_ORCH_PASSWORD")
 	ARBITER_SECRET = getRequired("ARBITER_SECRET")
@@ -103,9 +120,6 @@ func LoadConf() {
 
 	ARRIVALS_LOAD_INTERVAL = getRequiredInt("ARRIVALS_LOAD_INTERVAL")
 	ARRIVALS_DELAY_BUFFER = getRequiredInt("ARRIVALS_DELAY_BUFFER")
-	if DB_PORT < 1 || DB_PORT > 65535 {
-		log.Fatal("DB_PORT must be between 1 and 65535")
-	}
 	if ARRIVALS_LOAD_INTERVAL <= 0 || ARRIVALS_DELAY_BUFFER < 0 {
 		log.Fatal("Invalid arrival intervals")
 	}
