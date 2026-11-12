@@ -105,8 +105,9 @@ type Shape struct {
 }
 
 type Announcement struct {
-	Id      string `db:"id" json:"-"`
-	Message string `db:"message" json:"message"`
+	Id      string     `db:"id" json:"-"`
+	Message string     `db:"message" json:"message"`
+	Expiry  time.Time `db:"expiry" json:"expiry"`
 }
 
 type RouteInfo struct {
@@ -144,7 +145,7 @@ type TripInfo struct {
 }
 
 type ShapeIDWInfo struct {
-	ShapeId     string `db:"shape_id" json:"shape_id"`
-	Line        string `db:"disp_linea" json:"line"`
+	ShapeId     string  `db:"shape_id" json:"shape_id"`
+	Line        string  `db:"disp_linea" json:"line"`
 	Destination *string `db:"disp_dest" json:"destination"`
 }

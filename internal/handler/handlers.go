@@ -496,7 +496,7 @@ func UpdateAnnouncementHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = static.InsertAnnouncement(req.Message)
+	err = static.InsertAnnouncement(req.Message, req.Expiry)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
