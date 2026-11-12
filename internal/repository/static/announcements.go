@@ -36,3 +36,13 @@ func EmptyAnnouncements() error {
 
 	return nil
 }
+
+func DeleteAnnouncement(id string) error {
+	_, err := repository.DB_STATIC.Exec("DELETE FROM announcements WHERE id = ?", id)
+	if err != nil {
+		fmt.Println("DeleteAnnouncement error:", err)
+		return err
+	}
+
+	return nil
+}
