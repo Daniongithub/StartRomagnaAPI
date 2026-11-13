@@ -73,7 +73,7 @@ All responses include `Access-Control-Allow-Origin: *`, including errors and OPT
 
 ```bash
 go build -o startromagnaapi .
-./startromagnaapi --update-static-gtfs
+./startromagnaapi
 ```
 
 Il flag `--update-static-gtfs` esegue una sola volta l'importazione statica dei tre bacini, usando la stessa operazione dello scheduler delle 04:00, poi termina. Apre soltanto il pool del database statico; non avvia server HTTP, SSE, scheduler, realtime o discovery OIDC. Senza flag il binario continua a funzionare come servizio. `--help` mostra le opzioni senza caricare la configurazione.
@@ -92,22 +92,18 @@ START_GTFS_RT_ROOT=
 WEB_AUTH_USER=
 WEB_AUTH_PASSWORD=
 
+# OAuth configuration
 OIDC_ISSUER_URL=
 OIDC_CLIENT_ID=
 OIDC_ALLOWED_GROUPS=
-ENABLE_AUTH=false
+ENABLE_AUTH=false # enable auth-related endpoints only if auth provider is set
 
 DB_HOST=
 DB_PORT=
 DB_USERNAME=
-DB_DOMAIN=
 DB_PASSWORD=
-# db orchestrating config
-DB_ORCH_USERNAME=
-DB_ORCH_PASSWORD=
-REPLICA_USERNAME=
-REPLICA_PASSWORD=
-ARBITER_SECRET=
+
+IS_PRIMARY=true # sync static GTFS and vehicle status on DB
 
 PORT=":5005"
 
