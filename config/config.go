@@ -5,7 +5,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync/atomic"
 
 	"github.com/joho/godotenv"
 )
@@ -21,20 +20,14 @@ var (
 	OIDC_ALLOWED_GROUPS []string
 	ENABLE_AUTH         bool
 
-	DB_HOST          string
-	DB_PORT          int
-	DB_USERNAME      string
-	DB_DOMAIN        string
-	DB_PASSWORD      string
-	DB_ORCH_USERNAME string
-	DB_ORCH_PASSWORD string
-	REPLICA_USERNAME string
-	REPLICA_PASSWORD string
-	ARBITER_SECRET   string
+	DB_HOST     string
+	DB_PORT     int
+	DB_USERNAME string
+	DB_PASSWORD string
 
 	PORT string
 
-	IS_PRIMARY atomic.Bool
+	IS_PRIMARY bool
 
 	ARRIVALS_LOAD_INTERVAL int
 	ARRIVALS_DELAY_BUFFER  int
@@ -45,16 +38,7 @@ const (
 	ROUTE_INFO_URL = "https://www.startromagna.it/orari-e-percorsi-vers-2-0/"
 )
 
-func LoadConf() {
-	loadConf(false)
-}
-
-// Load only the settings required by the one-shot static GTFS import.
-func LoadStaticGTFSConf() {
-	loadConf(true)
-}
-
-func loadConf(staticOnly bool) {
+func Load() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalln("Missing .env file. The application cannot continue.", err)
 	}
@@ -97,9 +81,7 @@ func loadConf(staticOnly bool) {
 	if DB_PORT < 1 || DB_PORT > 65535 {
 		log.Fatal("DB_PORT must be between 1 and 65535")
 	}
-	if staticOnly {
-		return
-	}
+	IS_PRIMARY = getRequiredBool("IS_PRIMARY")
 
 	START_GTFS_RT_ROOT = getRequired("START_GTFS_RT_ROOT")
 
@@ -110,11 +92,6 @@ func loadConf(staticOnly bool) {
 		OIDC_CLIENT_ID = getRequired("OIDC_CLIENT_ID")
 		OIDC_ALLOWED_GROUPS = strings.Split(getRequired("OIDC_ALLOWED_GROUPS"), ",")
 	}
-
-	DB_DOMAIN = getRequired("DB_DOMAIN")
-	DB_ORCH_USERNAME = getRequired("DB_ORCH_USERNAME")
-	DB_ORCH_PASSWORD = getRequired("DB_ORCH_PASSWORD")
-	ARBITER_SECRET = getRequired("ARBITER_SECRET")
 
 	PORT = getRequired("PORT")
 

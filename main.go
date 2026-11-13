@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"startromagnaapi/config"
@@ -18,27 +17,20 @@ import (
 )
 
 func main() {
-	os.Exit(runCLI(os.Args[1:], runServer, runStaticGTFSUpdate))
-}
-
-func runServer() {
-	config.LoadConf()
+	config.Load()
 	repository.InitStatic()
 	repository.InitRT()
 	repository.InitMezzi()
-	repository.InitOrchestrator()
 	// Initialize server-sent events for frontend synchronization.
 	sse.InitHub()
 
-	if config.IS_PRIMARY.Load() {
-		// Start background updates only on the primary database.
-
+	if config.IS_PRIMARY {
 		if err := scheduler.Start(); err != nil {
 			log.Fatalf("Failed to start scheduler: %v", err)
 		}
 		defer scheduler.Stop()
 	} else {
-		log.Print("Scheduler not started: Primary database is unavailable or read-only")
+		log.Println("IS_PRIMARY set to false, not updating GTFS data.")
 	}
 
 	mux := http.NewServeMux()
@@ -68,17 +60,13 @@ func runServer() {
 	mux.HandleFunc("GET /static/routes/{basin}", handler.RoutesBasinHandler)
 	mux.HandleFunc("GET /static/shapes/{basin}", handler.ShapesBasinHandler)
 	mux.HandleFunc("GET /static/stops/{basin}", handler.StopsBasinHandler)
-	mux.HandleFunc("POST /admin/promote", handler.PromoteHandler)
-	mux.HandleFunc("POST /admin/demote", handler.DemoteHandler)
-	mux.HandleFunc("POST /admin/halt", handler.HaltHandler)
-	mux.HandleFunc("POST /admin/resync", handler.ResyncHandler)
 
 	if config.ENABLE_AUTH {
 		ctx := context.Background()
 
 		provider, err := oidc.NewProvider(ctx, config.OIDC_ISSUER_URL)
 		if err != nil {
-			log.Fatal("impossibile contattare Authentik per il discovery OIDC:", err)
+			log.Fatal("Impossibile contattare Authentik per il discovery OIDC:", err)
 		}
 
 		verifier := provider.Verifier(&oidc.Config{ClientID: config.OIDC_CLIENT_ID})
@@ -91,5 +79,5 @@ func runServer() {
 	// Listen on the configured port and start the API.
 	log.Printf("Starting HTTP server on %s", config.PORT)
 	server := &http.Server{Addr: config.PORT, Handler: cors.Middleware(mux), ReadHeaderTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}
-	log.Printf("HTTP server stopped: %v", server.ListenAndServe())
+	server.ListenAndServe()
 }

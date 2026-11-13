@@ -3,26 +3,21 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/static"
-	"startromagnaapi/internal/scheduler"
 	"startromagnaapi/internal/service"
 	"strconv"
 	"strings"
-	"sync/atomic"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 )
 
 // GET /health
 func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
-
-	repository.IsPrimary(repository.DB_STATIC)
 	results, err := repository.GetDBStatus(repository.DB_STATIC.DB)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -315,160 +310,6 @@ func StopsBasinHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
-}
-
-func arbiterAuthorized(r *http.Request) bool {
-	return config.ARBITER_SECRET != "" && r.Header.Get("X-Arbiter-Secret") == config.ARBITER_SECRET
-}
-
-// POST /admin/promote
-func PromoteHandler(w http.ResponseWriter, r *http.Request) {
-	if !arbiterAuthorized(r) {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	db := repository.DB_ORCH // Use the orchestrator connection pool.
-
-	if _, err := db.Exec("SET SESSION sql_log_bin = 0"); err != nil {
-		http.Error(w, fmt.Sprintf("Stop binlog failed: %v", err), http.StatusInternalServerError)
-		return
-	}
-	defer db.Exec("SET SESSION sql_log_bin = 1")
-	if _, err := db.Exec(`STOP SLAVE`); err != nil {
-		http.Error(w, fmt.Sprintf("Stop slave failed: %v", err), http.StatusInternalServerError)
-		return
-	}
-	if _, err := db.Exec(`RESET SLAVE ALL`); err != nil {
-		http.Error(w, fmt.Sprintf("Reset slave failed: %v", err), http.StatusInternalServerError)
-		return
-	}
-	if _, err := db.Exec(`
-		GRANT INSERT, UPDATE, DELETE ON start_gtfs_static.* TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
-		GRANT INSERT, UPDATE, DELETE ON start_gtfs_rt.*     TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
-		GRANT UPDATE ON ertpl_mezzi.*                       TO '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
-		FLUSH PRIVILEGES;
-	`); err != nil {
-		http.Error(w, fmt.Sprintf("Grant privileges failed: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	scheduler.Start()
-
-	repository.IsPrimary(repository.DB_STATIC)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "promoted"})
-}
-
-type demoteRequest struct {
-	NewMasterHost string `json:"newMasterHost"`
-}
-
-// POST /admin/demote
-func DemoteHandler(w http.ResponseWriter, r *http.Request) {
-	if !arbiterAuthorized(r) {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var req demoteRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.NewMasterHost == "" {
-		http.Error(w, "Invalid or missing newMasterHost", http.StatusBadRequest)
-		return
-	}
-
-	if config.REPLICA_USERNAME == "" || config.REPLICA_PASSWORD == "" {
-		http.Error(w, "Replica not configured", http.StatusInternalServerError)
-		return
-	}
-
-	db := repository.DB_ORCH
-
-	if _, err := db.Exec("SET SESSION sql_log_bin = 0"); err != nil {
-		http.Error(w, fmt.Sprintf("Stop binlog failed: %v", err), http.StatusInternalServerError)
-		return
-	}
-	defer db.Exec("SET SESSION sql_log_bin = 1")
-	if _, err := db.Exec(`
-		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_static.* FROM '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
-		REVOKE INSERT, UPDATE, DELETE ON start_gtfs_rt.*     FROM '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
-		REVOKE UPDATE ON ertpl_mezzi.*                       FROM '` + config.DB_USERNAME + `'@'` + config.DB_DOMAIN + `';
-		FLUSH PRIVILEGES;
-	`); err != nil {
-		http.Error(w, fmt.Sprintf("Revoke privileges failed: %v", err), http.StatusInternalServerError)
-		return
-	}
-	scheduler.Stop()
-	if _, err := db.Exec("STOP SLAVE"); err != nil {
-		http.Error(w, fmt.Sprintf("Stop slave failed: %v", err), http.StatusInternalServerError)
-		return
-	}
-	if _, err := db.Exec(
-		"CHANGE MASTER TO MASTER_HOST=?, MASTER_PORT=3306, MASTER_USER=?, MASTER_PASSWORD=?, MASTER_USE_GTID=slave_pos",
-		req.NewMasterHost, config.REPLICA_USERNAME, config.REPLICA_PASSWORD,
-	); err != nil {
-		http.Error(w, fmt.Sprintf("Change master failed: %v", err), http.StatusInternalServerError)
-		return
-	}
-	if _, err := db.Exec("START SLAVE"); err != nil {
-		http.Error(w, fmt.Sprintf("Ctart slave failed: %v", err), http.StatusInternalServerError)
-		return
-	}
-	repository.IsPrimary(repository.DB_STATIC)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "demoted", "newMaster": req.NewMasterHost})
-}
-
-// POST /admin/halt
-func HaltHandler(w http.ResponseWriter, r *http.Request) {
-	if !arbiterAuthorized(r) {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	scheduler.Stop()
-	if err := repository.HaltLocal(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	repository.IsPrimary(repository.DB_STATIC)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "unconfigured"})
-}
-
-type resyncRequest struct {
-	MasterHost string `json:"masterHost"`
-}
-
-// POST /admin/resync
-func ResyncHandler(w http.ResponseWriter, r *http.Request) {
-	if !arbiterAuthorized(r) {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var req resyncRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.MasterHost == "" {
-		http.Error(w, "Invalid or missing masterHost", http.StatusBadRequest)
-		return
-	}
-
-	var resyncInProgress atomic.Bool
-
-	if !arbiterAuthorized(r) { /* ... */
-	}
-	if !resyncInProgress.CompareAndSwap(false, true) {
-		http.Error(w, "Resync already in progress", http.StatusConflict)
-		return
-	}
-	scheduler.Stop()
-	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode(map[string]string{"status": "Resync started"})
-	go func() {
-		defer resyncInProgress.Store(false)
-		repository.RunResync(req.MasterHost)
-	}()
 }
 
 // PUT /announcements/update (AUTH REQUIRED)

@@ -65,7 +65,7 @@ func InitScheduler() (gocron.Scheduler, error) {
 		{"*/15 * * * * *", true, func() { run("trip updates", gtfs.UpdateTripUpdates, "trip_updates") }},
 		{"*/15 * * * * *", true, func() { run("vehicle positions", gtfs.UpdateVehiclePositions, "vehicle_positions") }},
 		{"0 0 * * *", false, func() { run("route infos", gtfs.UpdateRouteInfos, "") }},
-		{"0 * * * *", false, func() { run("route infos", clearExpiredAnn, "") }},
+		{"* * * * *", false, func() { run("route infos", clearExpiredAnn, "") }},
 	}
 	for _, job := range jobs {
 		if _, err := s.NewJob(gocron.CronJob(job.cron, job.seconds), gocron.NewTask(job.task), gocron.WithSingletonMode(gocron.LimitModeReschedule)); err != nil {
