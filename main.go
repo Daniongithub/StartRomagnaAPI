@@ -25,12 +25,16 @@ func main() {
 	sse.InitHub()
 
 	if config.IS_PRIMARY {
-		if err := scheduler.Start(); err != nil {
+		if err := scheduler.Start(true); err != nil {
 			log.Fatalf("Failed to start scheduler: %v", err)
 		}
 		defer scheduler.Stop()
 	} else {
-		log.Println("IS_PRIMARY set to false, not updating GTFS data.")
+		log.Println("IS_PRIMARY set to false, not updating static GTFS data.")
+		if err := scheduler.Start(false); err != nil {
+			log.Fatalf("Failed to start scheduler: %v", err)
+		}
+		defer scheduler.Stop()
 	}
 
 	mux := http.NewServeMux()

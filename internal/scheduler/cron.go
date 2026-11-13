@@ -20,13 +20,13 @@ var (
 	running gocron.Scheduler
 )
 
-func Start() error {
+func Start(doST bool) error {
 	mu.Lock()
 	defer mu.Unlock()
 	if running != nil {
 		return nil
 	}
-	s, err := InitScheduler()
+	s, err := InitScheduler(doST)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func Stop() {
 	running = nil
 }
 
-func InitScheduler() (gocron.Scheduler, error) {
+func InitScheduler(doST bool) (gocron.Scheduler, error) {
 	loc, err := time.LoadLocation("Europe/Rome")
 	if err != nil {
 		return nil, err
@@ -53,21 +53,28 @@ func InitScheduler() (gocron.Scheduler, error) {
 	if err != nil {
 		return nil, err
 	}
-	jobs := []struct {
+	type jobs struct {
 		cron    string
 		seconds bool
 		task    func()
-	}{
-		{"0 4 * * *", false, func() { run("static", gtfs.UpdateStatic, "") }},
-		{"0 0 * * *", false, realtime.DeleteAllServiceAlerts},
-		{"* * * * *", false, func() { run("service alerts", gtfs.UpdateAlerts, "service_alerts") }},
-		{"*/5 * * * *", false, mezzi.UpdateVehiclesStatus},
-		{"*/15 * * * * *", true, func() { run("trip updates", gtfs.UpdateTripUpdates, "trip_updates") }},
-		{"*/15 * * * * *", true, func() { run("vehicle positions", gtfs.UpdateVehiclePositions, "vehicle_positions") }},
-		{"0 0 * * *", false, func() { run("route infos", gtfs.UpdateRouteInfos, "") }},
-		{"* * * * *", false, func() { run("route infos", clearExpiredAnn, "") }},
 	}
-	for _, job := range jobs {
+	var crons []jobs
+	crons = append(crons,
+		jobs{"* * * * *", false, func() { run("service alerts", gtfs.UpdateAlerts, "service_alerts") }},
+		jobs{"0 0 * * *", false, realtime.DeleteAllServiceAlerts},
+		jobs{"*/15 * * * * *", true, func() { run("trip updates", gtfs.UpdateTripUpdates, "trip_updates") }},
+		jobs{"*/15 * * * * *", true, func() { run("vehicle positions", gtfs.UpdateVehiclePositions, "vehicle_positions") }},
+		jobs{"* * * * *", false, func() { run("expired announcements", clearExpiredAnn, "") }},
+	)
+	if doST {
+		crons = append(crons,
+			jobs{"0 4 * * *", false, func() { run("static", gtfs.UpdateStatic, "") }},
+			jobs{"*/5 * * * *", false, mezzi.UpdateVehiclesStatus},
+			jobs{"0 0 * * *", false, func() { run("route infos", gtfs.UpdateRouteInfos, "") }},
+		)
+	}
+
+	for _, job := range crons {
 		if _, err := s.NewJob(gocron.CronJob(job.cron, job.seconds), gocron.NewTask(job.task), gocron.WithSingletonMode(gocron.LimitModeReschedule)); err != nil {
 			s.Shutdown()
 			return nil, fmt.Errorf("Schedule %s: %w", job.cron, err)
