@@ -105,8 +105,8 @@ type Shape struct {
 }
 
 type Announcement struct {
-	Id      string     `db:"id" json:"-"`
-	Message string     `db:"message" json:"message"`
+	Id      string    `db:"id" json:"-"`
+	Message string    `db:"message" json:"message"`
 	Expiry  time.Time `db:"expiry" json:"expiry"`
 }
 
@@ -116,6 +116,11 @@ type RouteInfo struct {
 	StartText string `db:"start_text" json:"start_text"`
 	InfobusId int    `db:"infobus_id" json:"infobus_id"`
 	PDFLink   string `db:"pdf_link" json:"pdf_link"`
+}
+
+type Timetable struct {
+	Stops []StopTimeWName `json:"stops"`
+	Trips []Trip          `json:"trips"`
 }
 
 type Trip struct {
@@ -131,6 +136,7 @@ type StopTimeWName struct {
 	DepartureTime    MySQLTime `db:"departure_time" json:"-"`
 	DepartureTimeStr string    `json:"departure_time"`
 	StopName         string    `db:"stop_name" json:"stop_name"`
+	StopCode         string    `db:"stop_code" json:"stop_code"`
 	StopId           string    `db:"stop_id" json:"stop_id"`
 	StopSequence     int       `db:"stop_sequence" json:"stop_sequence"`
 }

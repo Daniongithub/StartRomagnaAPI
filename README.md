@@ -35,7 +35,7 @@ This project can't be reutilised, because the code is too specific, it'd be impo
 - `GET /arrivals/{stopcode}` -> Bus previsti in arrivo per la fermata specificata. | Returns the list of buses predicted to be arriving in the specified bus stop.
 - `GET /busesinservice` -> Tutti i bus in servizio di START, in tempo reale, con informazioni sui mezzi. | Returns all the buses currently in service, with some vehicle information.
 - `GET /nextstops/{tripid}` -> Ritorna le prossime fermate di una corsa in svolgimento. | Returns the next stops of an ongoing trip.
-- `GET /timetable/{basin}/{routeid}/{directionid}` -> Ritorna tutte le corse della linea selezionata oggi. DirectionId è 0 o 1 | Returns all trips for the desired route today. DirectionId is 0 or 1.
+- `GET /timetable/{basin}/{routeid}/{directionid}` -> Ritorna tutte le corse della linea selezionata oggi e la lista globale dei passaggi in fermata. DirectionId è 0 o 1. | Returns today's trips and a global list of stop passages. DirectionId is 0 or 1.
 - `GET /vehiclepositions` -> Tutte le posizioni dei veicoli in tempo reale. | All vehicles' positions.
 - `GET /vehiclepositions/{basin}` -> `/vehiclepositions` di un solo bacino. | `/vehiclepositions` of a single basin.
 - `GET /vehicleposition/{vehicleid}` -> `/vehiclepositions` di un solo veicolo. | `/vehiclepositions` of a single vehicle.
@@ -52,6 +52,10 @@ This project can't be reutilised, because the code is too specific, it'd be impo
 - `GET /static/stops/{basin}` -> Lista di tutte le fermate di un bacino. | Returns the list of all the bus stops of a basin.
 - `/panel/announcements/` -> Pannello annunci protetto da OIDC; disponibile solo con `ENABLE_AUTH=true`.
 - `GET /api/announcements` -> Alias pubblico di `GET /announcements`.
+
+The timetable response is an object with `stops` and `trips`. The previous top-level trip array is now available under `trips`.
+
+`stops` contains every passage of every returned trip, including repeated visits and stops shared by different trips. Each entry includes `stop_name`, `stop_code`, `stop_id`, `trip_id`, `stop_sequence`, `arrival_time` and `departure_time`. Entries are sorted by `stop_sequence`, then arrival time (including GTFS hours above 24:00), then `trip_id` for ties. Stops marked `is_dummy = true` are excluded from both the global list and each trip's `stop_times`. Empty lists are returned as `[]`.
 
 ## Note sul funzionamento - Notes on operation
 

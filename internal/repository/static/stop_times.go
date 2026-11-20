@@ -11,13 +11,13 @@ import (
 )
 
 func GetStopTimesDetailByTrip(basin, tripId string) []model.StopTimeWName {
-	var results []model.StopTimeWName
+	results := make([]model.StopTimeWName, 0)
 	err := repository.DB_STATIC.Select(&results, `
-		SELECT st.*, s.stop_name FROM stop_times AS st
+		SELECT st.*, s.stop_name, s.stop_code FROM stop_times AS st
 		INNER JOIN stops AS s
 		ON st.stop_id = s.stop_id AND st.basin = s.basin
-		WHERE st.basin = ? AND st.trip_id = ?
-		ORDER BY st.stop_sequence
+		WHERE st.basin = ? AND st.trip_id = ? AND s.is_dummy = 0
+		ORDER BY st.stop_sequence, st.arrival_time
 	`, basin, tripId)
 	if err != nil {
 		fmt.Println("GetStopTimesByTrip database error:", err)

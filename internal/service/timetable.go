@@ -1,14 +1,19 @@
 package service
 
 import (
+	"sort"
+	"strings"
+
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository/static"
-	"strings"
 )
 
-func ProcessTimetable(basin, routeId, directionId string) []model.Trip {
+func ProcessTimetable(basin, routeId, directionId string) model.Timetable {
 	trips := static.GetTodayTripInfoFromRouteID(basin, routeId, directionId)
-	var timetable []model.Trip
+	timetable := model.Timetable{
+		Stops: make([]model.StopTimeWName, 0),
+		Trips: make([]model.Trip, 0, len(trips)),
+	}
 	enrich := newBusEnricher()
 	for _, val := range trips {
 		val.OfficialLine, val.Line, val.Destination = enrich.lineInfo(val.Basin, routeId, val.ShapeId, val.TripId)
@@ -21,11 +26,24 @@ func ProcessTimetable(basin, routeId, directionId string) []model.Trip {
 			departure := val.DepartureTime.SQLString()
 			val.DepartureTimeStr = departure[:strings.LastIndex(departure, ":")]
 		}
-		timetable = append(timetable, model.Trip{
+		timetable.Trips = append(timetable.Trips, model.Trip{
 			TripInfo:  val,
 			StopTimes: formattedTimes,
 		})
+		// Retain every passage, including repeated stops within or across trips.
+		timetable.Stops = append(timetable.Stops, formattedTimes...)
 	}
 
+	sort.SliceStable(timetable.Stops, func(i, j int) bool {
+		a, b := &timetable.Stops[i], &timetable.Stops[j]
+		if a.StopSequence != b.StopSequence {
+			return a.StopSequence < b.StopSequence
+		}
+		arrivalA, arrivalB := a.ArrivalTime.ServiceDuration(), b.ArrivalTime.ServiceDuration()
+		if arrivalA != arrivalB {
+			return arrivalA < arrivalB
+		}
+		return a.TripTd < b.TripTd
+	})
 	return timetable
 }
