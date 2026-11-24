@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
@@ -338,7 +337,6 @@ func UpdateAnnouncementHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println(req.Expiry)
 	err = static.InsertAnnouncement(req.Message, req.Expiry)
 
 	if err != nil {
