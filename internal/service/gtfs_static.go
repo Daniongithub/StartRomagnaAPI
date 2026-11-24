@@ -45,7 +45,12 @@ func classifyRoutes(basin string, routes []model.RoutesResult) model.ClassifiedR
 
 	for _, row := range rows {
 		// Separation
-		category := classifyLine(basin, row.OfficialLine)
+		var category lineCategory
+		if row.DispLine != nil {
+			category = classifyLine(basin, *row.DispLine)
+		} else {
+			category = classifyLine(basin, row.OfficialLine)
+		}
 		buckets[category] = append(buckets[category], row)
 	}
 

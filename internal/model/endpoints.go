@@ -119,6 +119,7 @@ type RouteInfo struct {
 }
 
 type Timetable struct {
+	Line  string          `json:"line"`
 	Stops []StopTimeWName `json:"stops"`
 	Trips []Trip          `json:"trips"`
 }

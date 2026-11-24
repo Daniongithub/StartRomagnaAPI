@@ -10,7 +10,9 @@ import (
 
 func ProcessTimetable(basin, routeId, directionId string) model.Timetable {
 	trips := static.GetTodayTripInfoFromRouteID(basin, routeId, directionId)
+	line := static.GetLineName(routeId, basin)
 	timetable := model.Timetable{
+		Line: *line,
 		Stops: make([]model.StopTimeWName, 0),
 		Trips: make([]model.Trip, 0, len(trips)),
 	}

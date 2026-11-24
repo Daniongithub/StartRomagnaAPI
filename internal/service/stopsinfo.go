@@ -22,6 +22,7 @@ const (
 var (
 	// 1xx / 2xx, with optional letter suffix (e.g. "132p")
 	exurbanTokenRegex = regexp.MustCompile(`^[12]\d{2}[A-Za-z]*$`)
+	exurbanFCTokenRegex = regexp.MustCompile(`^([12]\d{2}[A-Za-z]*|[A-Za-z\W]+)$`)
 	// 9x with optional letter suffix (e.g. "94", "94A")
 	suburbanTokenRegex = regexp.MustCompile(`^(9\d)[A-Za-z]?$`)
 	// School lines start with "S" (e.g. "S1 Forlì")
@@ -63,7 +64,7 @@ func classifyLine(basin, lineName string) lineCategory {
 		if schoolTokenRegex.MatchString(token) {
 			return categorySchool
 		}
-		if exurbanTokenRegex.MatchString(token) {
+		if exurbanFCTokenRegex.MatchString(token) {
 			return categoryExurban
 		}
 		if m := suburbanTokenRegex.FindStringSubmatch(token); m != nil {
