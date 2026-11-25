@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"startromagnaapi/internal/notify"
 )
 
 var SSE_HUB Hub
@@ -67,7 +69,9 @@ func (h *Hub) SSEHandler(w http.ResponseWriter, r *http.Request) {
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		http.Error(w, "Streaming is not supported", http.StatusInternalServerError)
+		err := fmt.Errorf("Streaming is not supported")
+		notify.ReportError("Failed to start the event stream", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

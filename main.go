@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"net/http"
 	"time"
 
 	"startromagnaapi/config"
 	"startromagnaapi/internal/cors"
 	"startromagnaapi/internal/handler"
+	"startromagnaapi/internal/notify"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/scheduler"
 	"startromagnaapi/internal/sse"
@@ -24,18 +26,13 @@ func main() {
 	// Initialize server-sent events for frontend synchronization.
 	sse.InitHub()
 
-	if config.IS_PRIMARY {
-		if err := scheduler.Start(true); err != nil {
-			log.Fatalf("Failed to start scheduler: %v", err)
-		}
-		defer scheduler.Stop()
-	} else {
+	if !config.IS_PRIMARY {
 		log.Println("IS_PRIMARY set to false, not updating static GTFS data.")
-		if err := scheduler.Start(false); err != nil {
-			log.Fatalf("Failed to start scheduler: %v", err)
-		}
-		defer scheduler.Stop()
 	}
+	if err := scheduler.Start(config.IS_PRIMARY); err != nil {
+		notify.Fatal("Failed to start scheduler", err)
+	}
+	defer scheduler.Stop()
 
 	mux := http.NewServeMux()
 
@@ -70,7 +67,7 @@ func main() {
 
 		provider, err := oidc.NewProvider(ctx, config.OIDC_ISSUER_URL)
 		if err != nil {
-			log.Fatal("Impossibile contattare Authentik per il discovery OIDC:", err)
+			notify.Fatal("OIDC provider discovery failed", err)
 		}
 
 		verifier := provider.Verifier(&oidc.Config{ClientID: config.OIDC_CLIENT_ID})
@@ -81,7 +78,14 @@ func main() {
 	}
 
 	// Listen on the configured port and start the API.
-	log.Printf("Starting HTTP server on %s", config.PORT)
-	server := &http.Server{Addr: config.PORT, Handler: cors.Middleware(mux), ReadHeaderTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}
-	server.ListenAndServe()
+	server := &http.Server{Addr: config.PORT, Handler: cors.Middleware(notify.HTTPPanics(mux)), ReadHeaderTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}
+	listener, err := net.Listen("tcp", server.Addr)
+	if err != nil {
+		notify.Fatal("Failed to start the HTTP listener", err)
+	}
+	log.Printf("Starting HTTP server on %s", listener.Addr())
+	notify.Startup()
+	if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
+		notify.Fatal("HTTP server stopped unexpectedly", err)
+	}
 }

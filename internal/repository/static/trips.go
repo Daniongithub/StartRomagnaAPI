@@ -1,9 +1,8 @@
 package static
 
 import (
-	"fmt"
-
 	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/notify"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/utils"
 )
@@ -12,7 +11,7 @@ func GetTripsBasin(basin string) []model.TripsResult {
 	var results []model.TripsResult
 	err := repository.DB_STATIC.Select(&results, "SELECT * FROM trips WHERE basin = ? ORDER BY route_id", basin)
 	if err != nil {
-		fmt.Println("GetTripsBasin error:", err)
+		notify.ReportError("Failed to read trips by basin", err)
 	}
 
 	return results
@@ -36,7 +35,7 @@ func GetTodayTripInfoFromRouteID(basin, routeId, directionId string) []model.Tri
 		ORDER BY st.arrival_time
 	`, basin, routeId, cdDate, directionId)
 	if err != nil {
-		fmt.Println("GetTripIDsFromRouteID error:", err)
+		notify.ReportError("Failed to read today's trips by route", err)
 	}
 
 	return results

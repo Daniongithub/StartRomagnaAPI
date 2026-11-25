@@ -69,7 +69,7 @@ Trip updates and vehicle positions refresh every 15 seconds; alerts refresh ever
 We use a single MariaDB database, with 3 DB inside: `start_gtfs_static`, `start_gtfs_rt` and `ertpl_mezzi` (our vehicles information DB).
 Ask us the schemas, if needed.
 
-Gli import GTFS sono transazionali: un errore nel download, nella decodifica o nella scrittura conserva lo stato precedente. Le tabelle devono usare un motore transazionale, come InnoDB. Le notifiche SSE vengono emesse dopo il commit. L'RSS continua a essere scaricato direttamente dal sito.
+Gli import statici aggiornano ogni bacino in una transazione separata. Se un download, la validazione o una scrittura falliscono, il bacino interessato conserva i dati precedenti e l'importazione prosegue con gli altri bacini. Un lock MariaDB evita aggiornamenti statici concorrenti sullo stesso database. Le tabelle devono usare un motore transazionale, come InnoDB. Le notifiche SSE vengono emesse dopo il commit. L'RSS continua a essere scaricato direttamente dal sito.
 
 All responses include `Access-Control-Allow-Origin: *`, including errors and OPTIONS responses. No origin allowlist is required.
 
@@ -80,13 +80,7 @@ go build -o startromagnaapi .
 ./startromagnaapi
 ```
 
-Il flag `--update-static-gtfs` esegue una sola volta l'importazione statica dei tre bacini, usando la stessa operazione dello scheduler delle 04:00, poi termina. Apre soltanto il pool del database statico; non avvia server HTTP, SSE, scheduler, realtime o discovery OIDC. Senza flag il binario continua a funzionare come servizio. `--help` mostra le opzioni senza caricare la configurazione.
-
-Eseguire il comando dalla directory che contiene `.env`. Per questa modalità servono soltanto `START_GTFS_ROOT`, `WEB_AUTH_USER`, `WEB_AUTH_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_USERNAME` e `DB_PASSWORD`.
-
-Un lock MariaDB condiviso protegge sia il comando sia il job dello scheduler: se un'importazione statica è già in corso sullo stesso server DB, il secondo tentativo termina senza avviare download o scritture. Questa protezione richiede che anche il servizio utilizzi la versione aggiornata del binario. La sostituzione dei dati rimane transazionale.
-
-Exit codes: `0` for success, `1` for an import/startup failure or an already running import, `2` for invalid command-line arguments. Without flags, the binary starts the normal API service.
+Eseguire il comando dalla directory che contiene `.env`.
 
 ## ENV Config
 
@@ -115,6 +109,16 @@ PORT=":5005"
 ARRIVALS_LOAD_INTERVAL=90
 # Max visualized delay before trip gets deleted from /arrivals endpoint
 ARRIVALS_DELAY_BUFFER=90
+
+# Optional Telegram notifications
+TELEGRAM_ENABLED=false
+TELEGRAM_BOT_TOKEN=
+# Comma-separated numeric chat IDs
+TELEGRAM_CHAT_IDS=
+# Optional name for this instance. Defaults to the system hostname.
+TELEGRAM_HOST_NAME=
+# Writable, persistent directory. Defaults to .telegram-state next to .env.
+TELEGRAM_STATE_DIR=
 ```
 
 Con `ENABLE_AUTH=true`, il redirect URI del client OIDC deve essere
@@ -129,7 +133,26 @@ registrarli con `Panel.RegisterAPI` prima di montare `Panel.Mux()`; i relativi
 endpoint sono protetti dalla sessione OIDC.
 
 > [!WARNING]
-> Tutte queste env vars sono RICHIESTE. Se non fornite, il programma uscirà. | All of these env vars are MANDATORY. If those are without values, the program will exit.
+> Le variabili `OIDC_*` sono richieste quando `ENABLE_AUTH=true`. Il token e gli ID delle chat Telegram sono richiesti quando `TELEGRAM_ENABLED=true`. Le variabili di configurazione GTFS, database, porta, ruolo e intervalli sono obbligatorie.
+
+### Notifiche Telegram
+
+Le notifiche sono facoltative. Con `TELEGRAM_ENABLED=true`, ogni istanza segnala gli errori operativi dei job GTFS statici e realtime, del database, del feed RSS e dell'API. Per gli import statici l'avviso indica anche il bacino e la fase fallita. Gli errori ravvicinati vengono raggruppati, con un avviso per operazione ogni 30 minuti per host. Il riepilogo arriva via Telegram e il dettaglio tecnico è nei log.
+
+Il messaggio di prova viene inviato alla prima associazione tra bot, host e chat. Ai riavvii l'istanza usa lo stato salvato in `.telegram-state`, accanto a `.env`. Per i deploy che sostituiscono la directory di lavoro, imposta `TELEGRAM_STATE_DIR` su una directory persistente e scrivibile dall'utente del servizio. Una nuova chat riceve il test al primo avvio con la configurazione aggiornata.
+
+Per gli errori fatali, il processo tenta la consegna prima di terminare, con un limite di 5 secondi. Gli errori nella lettura di `.env` possono essere notificati se la configurazione Telegram valida è già presente nell'ambiente del processo.
+
+```env
+TELEGRAM_ENABLED=true
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_IDS=123456789,987654321
+TELEGRAM_HOST_NAME=server-daniele
+```
+
+Usa lo stesso token su entrambi gli host e assegna a ciascuno un `TELEGRAM_HOST_NAME` diverso. Se omesso, viene usato il nome di sistema. Ogni host invia ai destinatari elencati nella sua configurazione. Puoi usare entrambi gli ID privati o l'ID di un gruppo che contiene il bot. Tratta il token come una password.
+
+Per trovare gli ID privati, ogni destinatario deve aprire il bot e inviargli `/start`. Leggi poi `message.chat.id` per ciascun messaggio con il metodo [getUpdates della Bot API](https://core.telegram.org/bots/api#getupdates). Per un gruppo, aggiungi il bot e invia un comando rivolto al bot nel gruppo.
 
 ## Crediti - Credits
 

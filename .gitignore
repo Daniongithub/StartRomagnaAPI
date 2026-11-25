@@ -26,6 +26,7 @@ go.work.sum
 
 # env file
 .env
+/.telegram-state/
 
 # Editor/IDE
 # .idea/
@@ -40,6 +41,7 @@ REVIEW.md
 /internal/gtfs/import_test.go
 /internal/handler/announcements_test.go
 /internal/model/time_test.go
+/internal/notify/telegram_test.go
 /internal/repository/transaction_test.go
 /internal/repository/dbs_test.go
 /internal/repository/advisory_lock_test.go

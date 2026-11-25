@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"startromagnaapi/internal/model"
 	"time"
 
@@ -14,7 +15,7 @@ func GetRSSFeed(url string) (model.FeedResponse, error) {
 	parser := gofeed.NewParser()
 	feed, err := parser.ParseURL(url)
 	if err != nil {
-		return model.FeedResponse{}, ErrFeed
+		return model.FeedResponse{}, fmt.Errorf("%w: %w", ErrFeed, err)
 	}
 
 	response := model.FeedResponse{

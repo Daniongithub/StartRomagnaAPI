@@ -1,10 +1,11 @@
 package config
 
 import (
-	"log"
 	"os"
 	"strconv"
 	"strings"
+
+	"startromagnaapi/internal/notify"
 
 	"github.com/joho/godotenv"
 )
@@ -39,14 +40,23 @@ const (
 )
 
 func Load() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatalln("Missing .env file. The application cannot continue.", err)
+	envErr := godotenv.Load()
+	telegram, telegramErr := loadTelegram(os.Getenv, os.Hostname)
+	if telegramErr == nil {
+		notify.ConfigureTelegram(telegram.BotToken, telegram.ChatIDs, telegram.HostName, telegram.StateDir)
+	}
+	if envErr != nil {
+		// Dotenv parse errors can contain the contents of a configuration line.
+		notify.Fatal("Failed to load the .env file", nil)
+	}
+	if telegramErr != nil {
+		notify.Fatal(telegramErr.Error(), nil)
 	}
 
 	getRequired := func(key string) string {
 		value, exists := os.LookupEnv(key)
 		if !exists || strings.TrimSpace(value) == "" {
-			log.Fatalf("Missing required environment variable: %s", key)
+			notify.Fatal("Missing required environment variable "+key, nil)
 		}
 		return value
 	}
@@ -54,7 +64,7 @@ func Load() {
 	getRequiredBool := func(key string) bool {
 		value, err := strconv.ParseBool(strings.TrimSpace(getRequired(key)))
 		if err != nil {
-			log.Fatalf("Invalid boolean value for %s", key)
+			notify.Fatal("Invalid boolean value for "+key, nil)
 		}
 		return value
 	}
@@ -64,7 +74,7 @@ func Load() {
 
 		result, err := strconv.Atoi(value)
 		if err != nil {
-			log.Fatalf("Invalid integer value for %s: %q", key, value)
+			notify.Fatal("Invalid integer value for "+key, nil)
 		}
 
 		return result
@@ -79,7 +89,7 @@ func Load() {
 	DB_USERNAME = getRequired("DB_USERNAME")
 	DB_PASSWORD = getRequired("DB_PASSWORD")
 	if DB_PORT < 1 || DB_PORT > 65535 {
-		log.Fatal("DB_PORT must be between 1 and 65535")
+		notify.Fatal("DB_PORT must be between 1 and 65535", nil)
 	}
 	IS_PRIMARY = getRequiredBool("IS_PRIMARY")
 
@@ -98,6 +108,6 @@ func Load() {
 	ARRIVALS_LOAD_INTERVAL = getRequiredInt("ARRIVALS_LOAD_INTERVAL")
 	ARRIVALS_DELAY_BUFFER = getRequiredInt("ARRIVALS_DELAY_BUFFER")
 	if ARRIVALS_LOAD_INTERVAL <= 0 || ARRIVALS_DELAY_BUFFER < 0 {
-		log.Fatal("Invalid arrival intervals")
+		notify.Fatal("Invalid arrival intervals", nil)
 	}
 }

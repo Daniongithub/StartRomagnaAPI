@@ -1,11 +1,11 @@
 package static
 
 import (
-	"fmt"
 	"time"
 
 	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/notify"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/utils"
 )
@@ -20,7 +20,7 @@ func GetStopTimesDetailByTrip(basin, tripId string) []model.StopTimeWName {
 		ORDER BY st.stop_sequence, st.arrival_time
 	`, basin, tripId)
 	if err != nil {
-		fmt.Println("GetStopTimesByTrip database error:", err)
+		notify.ReportError("Failed to read stop times by trip", err)
 	}
 
 	return results
@@ -35,7 +35,7 @@ func GetTerminusName(basin, tripID string) string {
 		ORDER BY st.stop_sequence DESC LIMIT 1
 	`, basin, tripID)
 	if err != nil {
-		fmt.Println("GetTerminusName error:", err)
+		notify.ReportError("Failed to read a trip's terminus", err)
 	}
 	if len(results) == 0 {
 		return ""
@@ -81,7 +81,7 @@ func GetArrivals(stopCode string) []model.Arrival {
         ORDER BY cd.date, st.arrival_time;
     `, stopCode, queryStartTime, endTime, queryStartTime, endTime)
 	if err != nil {
-		fmt.Println("GetLastStop error:", err)
+		notify.ReportError("Failed to read arrivals", err)
 	}
 
 	return results

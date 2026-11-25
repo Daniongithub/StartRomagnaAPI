@@ -1,12 +1,15 @@
 package scheduler
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"sync"
 	"time"
 
 	"startromagnaapi/internal/gtfs"
+	"startromagnaapi/internal/notify"
+	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/mezzi"
 	"startromagnaapi/internal/repository/realtime"
 	"startromagnaapi/internal/repository/static"
@@ -68,7 +71,7 @@ func InitScheduler(doST bool) (gocron.Scheduler, error) {
 	)
 	if doST {
 		crons = append(crons,
-			jobs{"0 4 * * *", false, func() { run("static", gtfs.UpdateStatic, "") }},
+			jobs{"0 4 * * *", false, runStatic},
 			jobs{"*/5 * * * *", false, mezzi.UpdateVehiclesStatus},
 			jobs{"0 0 * * *", false, func() { run("route infos", gtfs.UpdateRouteInfos, "") }},
 		)
@@ -87,7 +90,7 @@ func InitScheduler(doST bool) (gocron.Scheduler, error) {
 func run(name string, update func() error, event string) {
 	// start := time.Now()
 	if err := update(); err != nil {
-		log.Printf("Failed to update %s: %v", name, err)
+		notify.ReportError("Failed to update "+name, err)
 		return
 	}
 	if event != "" {
@@ -97,13 +100,30 @@ func run(name string, update func() error, event string) {
 	// log.Printf("Updated %s in %s", name, time.Since(start))
 }
 
+func runStatic() {
+	err := gtfs.UpdateStatic()
+	switch {
+	case err == nil:
+		log.Println("Updated all static GTFS feeds")
+	case errors.Is(err, repository.ErrAdvisoryLockBusy):
+		log.Printf("Skipped static GTFS update: %v", err)
+	default:
+		const operation = "Static GTFS update reported errors"
+		message := operation
+		if importErr, ok := errors.AsType[*gtfs.StaticImportError](err); ok {
+			message += "\n" + importErr.Summary()
+		}
+		notify.ReportErrorWithSummary(operation, err, message)
+	}
+}
+
 func clearExpiredAnn() error {
 	now := time.Now()
 	var err error
 	announcements := static.GetAnnouncements()
 	for _, val := range announcements {
 		if val.Expiry.Before(now) {
-			err = static.DeleteAnnouncement(val.Id)
+			err = errors.Join(err, static.DeleteAnnouncement(val.Id))
 		}
 	}
 

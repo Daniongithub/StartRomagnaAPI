@@ -2,8 +2,8 @@ package static
 
 import (
 	"database/sql"
-	"fmt"
 
+	"startromagnaapi/internal/notify"
 	"startromagnaapi/internal/repository"
 )
 
@@ -13,7 +13,7 @@ func GetCalDatesRange(basin string) (string, string) {
 	err := repository.DB_STATIC.QueryRow("SELECT MIN(date), MAX(date) FROM calendar_dates WHERE basin = ?", basin).Scan(&min, &max)
 
 	if err != nil {
-		fmt.Println("GetCalDatesRange error:", err)
+		notify.ReportError("Failed to read a basin's calendar range", err)
 		return "", ""
 	}
 

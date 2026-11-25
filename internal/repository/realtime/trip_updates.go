@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/notify"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/utils"
 
@@ -16,7 +17,7 @@ func GetVehicles() []model.VehicleReport {
 	var results []model.VehicleReport
 	err := repository.DB_RT.Select(&results, `SELECT DISTINCT vehicle, basin FROM trip_updates WHERE vehicle != 0 ORDER BY vehicle`)
 	if err != nil {
-		fmt.Println("GetVehicles error:", err)
+		notify.ReportError("Failed to read active vehicles", err)
 	}
 
 	return results
@@ -109,12 +110,12 @@ func getBuses(id *string) []model.BusInService {
 	query += " ORDER BY r.basin, t.route_id, r.vehicle"
 	err := repository.DB_RT.Select(&results, query, args...)
 	if err != nil {
-		fmt.Println("GetBuses error:", err)
+		notify.ReportError("Failed to read buses in service", err)
 	}
 
 	loc, err := time.LoadLocation("Europe/Rome")
 	if err != nil {
-		fmt.Println("LoadLocation error:", err)
+		notify.ReportError("Failed to load the Europe/Rome time zone", err)
 		return results
 	}
 

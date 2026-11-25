@@ -1,10 +1,10 @@
 package realtime
 
 import (
-	"fmt"
 	"time"
 
 	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/notify"
 	"startromagnaapi/internal/repository"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
@@ -20,12 +20,12 @@ func GetVehiclePositions() []model.BusInService {
 		ORDER BY vp.basin, t.route_id
 	`)
 	if err != nil {
-		fmt.Println("GetVehicles error:", err)
+		notify.ReportError("Failed to read active vehicles", err)
 	}
 
 	loc, err := time.LoadLocation("Europe/Rome")
 	if err != nil {
-		fmt.Println("LoadLocation error:", err)
+		notify.ReportError("Failed to load the Europe/Rome time zone", err)
 		return results
 	}
 
@@ -46,12 +46,12 @@ func GetVehiclePositionsBasin(basin string) []model.BusInService {
 		ORDER BY vp.basin, t.route_id
 	`, basin)
 	if err != nil {
-		fmt.Println("GetVehiclePositionsBasin error:", err)
+		notify.ReportError("Failed to read vehicle positions", err)
 	}
 
 	loc, err := time.LoadLocation("Europe/Rome")
 	if err != nil {
-		fmt.Println("LoadLocation error:", err)
+		notify.ReportError("Failed to load the Europe/Rome time zone", err)
 		return results
 	}
 
@@ -71,7 +71,7 @@ func GetVehicleLocationID(id string) *model.BusInService {
 		WHERE vp.vehicle = ?
 	`, id)
 	if err != nil {
-		fmt.Println("GetVehiclePositionsBasin error:", err)
+		notify.ReportError("Failed to read vehicle positions", err)
 	}
 
 	if len(results) == 0 {
@@ -80,7 +80,7 @@ func GetVehicleLocationID(id string) *model.BusInService {
 
 	loc, err := time.LoadLocation("Europe/Rome")
 	if err != nil {
-		fmt.Println("LoadLocation error:", err)
+		notify.ReportError("Failed to load the Europe/Rome time zone", err)
 		return &results[0]
 	}
 

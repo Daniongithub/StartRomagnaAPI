@@ -1,9 +1,8 @@
 package static
 
 import (
-	"fmt"
-
 	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/notify"
 	"startromagnaapi/internal/repository"
 
 	"github.com/jmoiron/sqlx"
@@ -13,7 +12,7 @@ func GetRouteInfos() []model.RouteInfo {
 	var results []model.RouteInfo
 	err := repository.DB_STATIC.Select(&results, "SELECT * FROM route_infos")
 	if err != nil {
-		fmt.Println("GetRouteInfos error:", err)
+		notify.ReportError("Failed to read route information", err)
 	}
 
 	return results
@@ -23,7 +22,7 @@ func GetInfoBusId(routeId string) []string {
 	var results []string
 	err := repository.DB_STATIC.Select(&results, "SELECT infobus_id FROM route_infos WHERE route_id = ?", routeId)
 	if err != nil {
-		fmt.Println("GetInfoBusId error:", err)
+		notify.ReportError("Failed to read a route's InfoBus ID", err)
 	}
 
 	return results

@@ -4,13 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"net"
 	"strconv"
 	"time"
 
 	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/notify"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/go-sql-driver/mysql"
@@ -59,7 +59,7 @@ func pingDB(db *sqlx.DB) error {
 func initDB(name, user, password string) *sqlx.DB {
 	db, err := newDB(config.DB_HOST, config.DB_PORT, user, password, name)
 	if err != nil {
-		log.Fatalf("Failed to connect to database %s: %v", name, err)
+		notify.Fatal("Failed to connect to database "+name, err)
 	}
 	return db
 }

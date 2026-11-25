@@ -11,6 +11,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var ErrAdvisoryLockBusy = errors.New("Database operation is already running")
+
 // WithAdvisoryLock coordinates cooperating processes through one database session.
 func WithAdvisoryLock(db *sqlx.DB, name string, update func() error) (err error) {
 	if db == nil {
@@ -33,7 +35,7 @@ func WithAdvisoryLock(db *sqlx.DB, name string, update func() error) (err error)
 		return fmt.Errorf("Database failed to acquire lock %q", name)
 	}
 	if acquired.Int64 != 1 {
-		return fmt.Errorf("Database operation %q is already running", name)
+		return fmt.Errorf("%w: %q", ErrAdvisoryLockBusy, name)
 	}
 	defer func() {
 		releaseCtx, releaseCancel := context.WithTimeout(context.Background(), 10*time.Second)

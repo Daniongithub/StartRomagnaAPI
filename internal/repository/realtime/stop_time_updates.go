@@ -1,9 +1,8 @@
 package realtime
 
 import (
-	"fmt"
-
 	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/notify"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/utils"
 
@@ -24,7 +23,7 @@ func GetNextStops(tripId string) model.NextStops {
 		ORDER BY st.stop_sequence
 	`, tripId)
 	if err != nil {
-		fmt.Println("GetNextStops db error:", err)
+		notify.ReportError("Failed to read upcoming stops", err)
 	}
 
 	out := model.NextStops{
@@ -49,7 +48,7 @@ func GetFirstStop(tripId string) *model.StopWDel {
         LIMIT 1
     `, tripId)
 	if err != nil {
-		fmt.Println("GetFirstStop error:", err)
+		notify.ReportError("Failed to read the first stop of a trip", err)
 	}
 	if len(results) == 0 {
 		return nil

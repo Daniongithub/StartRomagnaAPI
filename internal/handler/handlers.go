@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"startromagnaapi/config"
 	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/notify"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/static"
 	"startromagnaapi/internal/service"
@@ -19,6 +20,7 @@ import (
 func HealthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	results, err := repository.GetDBStatus(repository.DB_STATIC.DB)
 	if err != nil {
+		notify.ReportError("Database health check failed", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -32,6 +34,7 @@ func RSSFeedHandler(w http.ResponseWriter, r *http.Request) {
 	results, err := service.GetRSSFeed(config.FEED_URL)
 
 	if err != nil {
+		notify.ReportError("Failed to retrieve the RSS feed", err)
 		if errors.Is(err, service.ErrFeed) {
 			http.Error(w, "Rss feed error", http.StatusNotFound)
 			return
@@ -67,6 +70,7 @@ func ArrivalsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		notify.ReportError("Failed to process arrivals", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -84,6 +88,7 @@ func BusesinserviceHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		notify.ReportError("Failed to process buses in service", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -199,6 +204,7 @@ func VehicleinfoHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		notify.ReportError("Failed to process vehicle details", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}

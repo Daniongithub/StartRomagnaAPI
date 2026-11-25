@@ -1,9 +1,9 @@
 package realtime
 
 import (
-	"fmt"
 	"time"
 
+	"startromagnaapi/internal/notify"
 	"startromagnaapi/internal/repository"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
@@ -62,6 +62,6 @@ func SaveAlerts(feeds map[string]*gtfs.FeedMessage) error {
 func DeleteAllServiceAlerts() {
 	_, err := repository.DB_RT.Exec("DELETE FROM service_alerts")
 	if err != nil {
-		fmt.Println("DeleteAllServiceAlerts db error:", err)
+		notify.ReportError("Failed to clear service alerts", err)
 	}
 }

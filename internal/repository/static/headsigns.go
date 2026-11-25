@@ -1,9 +1,8 @@
 package static
 
 import (
-	"fmt"
-
 	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/notify"
 	"startromagnaapi/internal/repository"
 )
 
@@ -11,7 +10,7 @@ func GetHeadsignsByID(basin, shapeId string) *model.Headsign {
 	var results []model.Headsign
 	err := repository.DB_STATIC.Select(&results, "SELECT * FROM headsigns WHERE shape_id = ? AND basin = ?", shapeId, basin)
 	if err != nil {
-		fmt.Println("GetHeadsignsByID database error:", err)
+		notify.ReportError("Failed to read headsigns by ID", err)
 	}
 	if len(results) == 0 {
 		return nil
@@ -39,7 +38,7 @@ func GetHeadsignsByRouteID(basin, routeid string) []model.ShapeIDWInfo {
 		WHERE h.basin = ? AND t.route_id = ?
 	`, basin, routeid)
 	if err != nil {
-		fmt.Println("GetDistinctShapesBasin database error:", err)
+		notify.ReportError("Failed to read a route's shapes", err)
 	}
 
 	return results

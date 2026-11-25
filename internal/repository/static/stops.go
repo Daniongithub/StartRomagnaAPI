@@ -1,9 +1,8 @@
 package static
 
 import (
-	"fmt"
-
 	"startromagnaapi/internal/model"
+	"startromagnaapi/internal/notify"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/utils"
 )
@@ -12,7 +11,7 @@ func GetStopsBasin(basin string) []model.StopsResult {
 	var results []model.StopsResult
 	err := repository.DB_STATIC.Select(&results, `SELECT * FROM stops WHERE basin = ? AND is_dummy = 0 ORDER BY stop_code`, basin)
 	if err != nil {
-		fmt.Println("GetStopsBasin database error:", err)
+		notify.ReportError("Failed to read stops by basin", err)
 	}
 
 	return results
@@ -29,7 +28,7 @@ func GetStopsFromShapeID(basin, shapeID string) []model.StopsResult {
 		ORDER BY s.stop_code, s.stop_id
  	`, basin, shapeID)
 	if err != nil {
-		fmt.Println("GetStopsFromShapeID database error:", err)
+		notify.ReportError("Failed to read stops by shape", err)
 	}
 	return results
 }
@@ -55,7 +54,7 @@ func GetLinesForStop(stopcode, basin string) []model.LineRow {
         WHERE s.stop_code = ? AND s.basin = ? AND cd.date = ? AND cd.exception_type = 1
     `, stopcode, basin, cdDate)
 	if err != nil {
-		fmt.Println("GetLinesForStop database error:", err)
+		notify.ReportError("Failed to read lines by stop", err)
 	}
 	return results
 }
