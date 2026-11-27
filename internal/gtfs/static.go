@@ -3,22 +3,19 @@ package gtfs
 import (
 	"errors"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
-	"net/url"
 	"strings"
 
 	// "time" // Uncomment with the duration metrics below.
 
 	"startromagnaapi/config"
-	"startromagnaapi/internal/auth"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/static"
 	"startromagnaapi/internal/service"
 
 	gtfsparserwr "github.com/Leocraft1/gtfsparser-with-reader"
 	"github.com/jmoiron/sqlx"
+	"github.com/jlaffaye/ftp"
 )
 
 var errInvalidStaticFeed = errors.New("Invalid static GTFS feed")
@@ -48,7 +45,7 @@ func updateStatic() error {
 	}{
 		{"RA", "GTFSStatic_Ravenna.zip", true}, {"FC", "GTFSStatic_FOCE.zip", false}, {"RN", "GTFSStatic_Rimini.zip", false},
 	} {
-		feed, err := getStatic(config.START_GTFS_ROOT+"/AVM/"+source.file, source.skipValidation)
+		feed, err := getStatic("/start/gtfs/AVM/"+source.file, source.skipValidation)
 		stage := "Download failed"
 		if err == nil {
 			stage = "Database import failed"
@@ -87,46 +84,28 @@ func UpdateRouteInfos() error {
 	})
 }
 
-func getStatic(feedURL string, skipValidation bool) (*gtfsparserwr.Feed, error) {
-	req, err := auth.BasicAuth(http.MethodGet, feedURL, nil)
+func getStatic(feedPath string, skipValidation bool) (*gtfsparserwr.Feed, error) {
+	//FTP connection
+    conn, err := ftp.Dial(config.START_GTFS_FTP)
 	if err != nil {
-		return nil, fmt.Errorf("Invalid static feed URL")
+		log.Fatalf("Failed to create FTP client: %s", err)
 	}
-
-	resp, err := auth.Client.Do(req)
+	//Login to FTP
+	err = conn.Login(config.FTP_USERNAME, config.FTP_PASSWORD)
 	if err != nil {
-		var requestErr *url.Error
-		if errors.As(err, &requestErr) {
-			err = requestErr.Err
-		}
-		return nil, fmt.Errorf("Download static feed: %w", err)
+		log.Fatalf("Failed to login to FTP: %s", err)
 	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Static feed: HTTP %d", resp.StatusCode)
+    defer conn.Quit()
+	zipped, err := conn.Retr(feedPath)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to open static GTFS file")
 	}
 
 	feed := gtfsparserwr.NewFeed()
-	// Skip stop-time validation for feeds with known data issues.
-	if skipValidation {
-		feed.Opts.SkipStopTimeValidation = true
+
+	if err := feed.ParseReader(zipped); err != nil {
+		return nil, fmt.Errorf("GetStaticFeed: parse gtfs: %w", err)
 	}
 
-	if err := parseStaticFeed(feed, resp.Body); err != nil {
-		return nil, fmt.Errorf("%w: %w", errInvalidStaticFeed, err)
-	}
-
-	return feed, nil
-}
-
-func parseStaticFeed(feed *gtfsparserwr.Feed, body io.Reader) (err error) {
-	// The parser can panic while reading a malformed CSV header.
-	defer func() {
-		if failure := recover(); failure != nil {
-			err = fmt.Errorf("Static GTFS parser panic: %v", failure)
-		}
-	}()
-	return feed.ParseReader(body)
+	return feed, nil 
 }

@@ -85,10 +85,9 @@ Eseguire il comando dalla directory che contiene `.env`.
 ## ENV Config
 
 ```env
-START_GTFS_ROOT=
-START_GTFS_RT_ROOT=
-WEB_AUTH_USER=
-WEB_AUTH_PASSWORD=
+START_GTFS_FTP=
+FTP_USERNAME=
+FTP_PASSWORD=
 
 # OAuth configuration
 OIDC_ISSUER_URL=

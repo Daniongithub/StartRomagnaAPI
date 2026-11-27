@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"startromagnaapi/internal/auth"
 	"startromagnaapi/internal/model"
 	"startromagnaapi/internal/repository/static"
 	"strings"
 )
 
 func ScrapeRouteInfo(url string) (*model.RouteInfoRaw, error) {
-	resp, err := auth.Client.Get(url)
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("ScrapeRouteInfo: HTTP request failed: %w", err)
 	}

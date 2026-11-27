@@ -24,6 +24,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/dimchansky/utfbom v1.2.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/jlaffaye/ftp v0.2.4
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/klauspost/compress v1.20.3 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect

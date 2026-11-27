@@ -3,16 +3,16 @@ package gtfs
 import (
 	"fmt"
 	"io"
-	"net/http"
+	"log"
 	"strings"
 	"sync"
 
 	"startromagnaapi/config"
-	"startromagnaapi/internal/auth"
 	"startromagnaapi/internal/repository"
 	"startromagnaapi/internal/repository/realtime"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
+	"github.com/jlaffaye/ftp"
 	"github.com/jmoiron/sqlx"
 	"google.golang.org/protobuf/proto"
 )
@@ -88,45 +88,42 @@ func UpdateVehiclePositions() error {
 }
 
 func rtURL(basin, ft string) string {
-	return config.START_GTFS_RT_ROOT + "/start-gtfs-rt-" + ft + "-" + strings.ToLower(basin) + ".pb"
+	return "/start/gtfs-rt/start-gtfs-rt-" + ft + "-" + strings.ToLower(basin) + ".pb"
 }
 
-func getRT(url string) (*gtfs.FeedMessage, error) {
-	req, err := auth.BasicAuth(http.MethodGet, url, nil)
+func getRT(path string) (*gtfs.FeedMessage, error) {
+	//FTP connection
+    conn, err := ftp.Dial(config.START_GTFS_FTP)
 	if err != nil {
-		return nil, fmt.Errorf("Create request: %w", err)
+		log.Fatalf("Failed to create FTP client: %s", err)
+	}
+	//Login to FTP
+	err = conn.Login(config.FTP_USERNAME, config.FTP_PASSWORD)
+	if err != nil {
+		log.Fatalf("Failed to login to FTP: %s", err)
+	}
+    defer conn.Quit()
+	zipped, err := conn.Retr(path)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to open realtime GTFS file")
 	}
 
-	resp, err := auth.Client.Do(req)
+	body, err := io.ReadAll(zipped)
 	if err != nil {
-		return nil, fmt.Errorf("Request %s: %w", url, err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(
-			"Request %s: server returned %s",
-			url,
-			resp.Status,
-		)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Read %s: %w", url, err)
+		return nil, fmt.Errorf("Read %s: %w", path, err)
 	}
 
 	var feed gtfs.FeedMessage
 
 	if err := proto.Unmarshal(body, &feed); err != nil {
-		return nil, fmt.Errorf("Unmarshal %s: %w", url, err)
+		return nil, fmt.Errorf("Unmarshal %s: %w", path, err)
 	}
 
 	if feed.Header == nil {
-		return nil, fmt.Errorf("Feed %s: missing header", url)
+		return nil, fmt.Errorf("Feed %s: missing header", path)
 	}
 	if feed.GetHeader().GetIncrementality() != gtfs.FeedHeader_FULL_DATASET {
-		return nil, fmt.Errorf("Feed %s: differential feeds are unsupported", url)
+		return nil, fmt.Errorf("Feed %s: differential feeds are unsupported", path)
 	}
 	return &feed, nil
 }

@@ -11,10 +11,9 @@ import (
 )
 
 var (
-	START_GTFS_ROOT    string
-	START_GTFS_RT_ROOT string
-	WEB_AUTH_USER      string
-	WEB_AUTH_PASSWORD  string
+	START_GTFS_FTP string
+	FTP_USERNAME  string
+	FTP_PASSWORD  string
 
 	OIDC_ISSUER_URL     string
 	OIDC_CLIENT_ID      string
@@ -80,9 +79,9 @@ func Load() {
 		return result
 	}
 
-	START_GTFS_ROOT = getRequired("START_GTFS_ROOT")
-	WEB_AUTH_USER = getRequired("WEB_AUTH_USER")
-	WEB_AUTH_PASSWORD = getRequired("WEB_AUTH_PASSWORD")
+	START_GTFS_FTP = getRequired("START_GTFS_FTP")
+	FTP_USERNAME = getRequired("FTP_USERNAME")
+	FTP_PASSWORD = getRequired("FTP_PASSWORD")
 
 	DB_HOST = getRequired("DB_HOST")
 	DB_PORT = getRequiredInt("DB_PORT")
@@ -92,8 +91,6 @@ func Load() {
 		notify.Fatal("DB_PORT must be between 1 and 65535", nil)
 	}
 	IS_PRIMARY = getRequiredBool("IS_PRIMARY")
-
-	START_GTFS_RT_ROOT = getRequired("START_GTFS_RT_ROOT")
 
 	// OAuth configuration.
 	ENABLE_AUTH = getRequiredBool("ENABLE_AUTH")
